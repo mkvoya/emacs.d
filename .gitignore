@@ -3,3 +3,10 @@ auto-save-list
 *~
 savehist
 backup
+
+emojis/
+eshell/
+smex-items
+transient/
+tutorial/
+var/
