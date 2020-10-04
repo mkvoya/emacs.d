@@ -258,15 +258,15 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(TeX-PDF-mode t)
  '(TeX-source-correlate-method 'synctex)
  '(TeX-source-correlate-mode t)
  '(TeX-source-correlate-start-server t)
  '(ansi-color-names-vector
    ["#272822" "#F92672" "#A6E22E" "#E6DB74" "#66D9EF" "#FD5FF0" "#A1EFE4" "#F8F8F2"])
+ '(centaur-tabs-mode t nil (centaur-tabs))
  '(compilation-message-face 'default)
  '(custom-safe-themes
-   '("3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" "962dacd99e5a99801ca7257f25be7be0cebc333ad07be97efd6ff59755e6148f" "f78de13274781fbb6b01afd43327a4535438ebaeec91d93ebdbba1e3fba34d3c" default))
+   '("9e39a8334e0e476157bfdb8e42e1cea43fad02c9ec7c0dbd5498cf02b9adeaf1" "9089d25e2a77e6044b4a97a2b9fe0c82351a19fdd3e68a885f40f86bbe3b3900" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" "3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" "962dacd99e5a99801ca7257f25be7be0cebc333ad07be97efd6ff59755e6148f" "f78de13274781fbb6b01afd43327a4535438ebaeec91d93ebdbba1e3fba34d3c" default))
  '(fci-rule-color "#3C3D37")
  '(global-yascroll-bar-mode t)
  '(highlight-changes-colors '("#FD5FF0" "#AE81FF"))
@@ -282,7 +282,7 @@
  '(magit-diff-use-overlays nil)
  '(org-agenda-files '("~/Dropbox/Dreams/org/main.org"))
  '(package-selected-packages
-   '(org-superstar jinja2-mode csv-mode smex sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+   '(exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode smex sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(vc-annotate-background nil)
@@ -569,9 +569,9 @@
 ;;; Dictionary, from https://github.com/manateelazycat/sdcv
 ;; brew install stardict sdcv
 ;; (use-package posframe)
-(require 'posframe)
+;;(require 'posframe)
 ;; (use-package sdcv)
-(require 'sdcv)
+;;(require 'sdcv)
 
 ;; Default config
 (setq sdcv-say-word-p t)               ;say word after translation
@@ -615,9 +615,22 @@
 ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
 ;; 打开 org-indent mode
 (setq org-startup-indented t)
+(require 'org-superstar)
+(add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
+
 ;; 设置 bullet list
 ;; (setq org-bullets-bullet-list '("☰" "☷" "☯" "☭"))
-(setq org-superstar-headline-bullets-list '("☰" "☷" "☯" "☭"))
+(with-eval-after-load 'org-superstar
+  (set-face-attribute 'org-superstar-item nil :height 1.2)
+  (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
+  (set-face-attribute 'org-superstar-leading nil :height 1.3))
+;; Set different bullets, with one getting a terminal fallback.
+(setq org-superstar-headline-bullets-list
+      '("◉" "◈" "○" "▷"))
+;; Stop cycling bullets to emphasize hierarchy of headlines.
+(setq org-superstar-cycle-headline-bullets nil)
+;; Hide away leading stars on terminal.
+(setq org-superstar-leading-fallback ?\s)
 
 
 ;; 调试好久的颜色，效果超赞！todo keywords 增加背景色
@@ -649,6 +662,54 @@
             (overlay-put ov 'line-height line-height)
             (overlay-put ov 'line-spacing (1- line-height))))))))
 (add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
+
+;;; Tabbar
+(setq centaur-tabs-set-icons t)
+(setq centaur-tabs-gray-out-icons 'buffer)
+(setq centaur-tabs-set-bar 'over)
+(setq centaur-tabs-modified-marker "*")
+
+(set-face-attribute 'default nil :height 160)
+
+
+;;; Telega --- telegram client
+(setq telega-proxies
+      (list
+       '(:server "127.0.0.1" :port 1086 :enable t
+                 :type (:@type "proxyTypeSocks5"))
+       ))
+
+
+;;; AucTex
+;; from https://gist.github.com/stefano-meschiari/9217695
+(setq TeX-auto-save t)
+(setq Tex-parse-self t)
+;; Guess/Ask for the master file.
+(setq-default TeX-master nil)
+(add-hook 'LaTeX-mode-hook 'visual-line-mode)
+(add-hook 'LaTeX-mode-hook 'flyspell-mode)
+(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+(setq reftex-plug-into-AUCTeX t)
+(setq TeX-PDF-mode t)
+
+;; make latexmk available via C-c C-c
+;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
+(add-hook 'LaTeX-mode-hook (lambda ()
+  (push
+    '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t
+:help "Run latexmk on file")
+    TeX-command-list)))
+(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+
+(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+(setq TeX-view-program-list
+      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+
+;;; Get shell env from user shell.
+(when (memq window-system '(mac ns x))
+  (exec-path-from-shell-initialize))
 
 
 (provide 'init)
