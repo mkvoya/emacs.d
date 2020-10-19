@@ -1,0 +1,3 @@
+[submodule "3rd-parties/transclusion-minor-mode"]
+	path = 3rd-parties/transclusion-minor-mode
+	url = https://github.com/whacked/transclusion-minor-mode.git

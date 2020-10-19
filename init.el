@@ -29,14 +29,26 @@
 (require 'bind-key)
 
 
-;;; Library
-(use-package dash
-  :defer t)
 ;;; Tabbar
-(setq centaur-tabs-set-icons t)
-(setq centaur-tabs-gray-out-icons 'buffer)
-(setq centaur-tabs-set-bar 'over)
-(setq centaur-tabs-modified-marker "*")
+(use-package centaur-tabs
+  :ensure t
+  :demand
+  :config
+  (setq centaur-tabs-set-icons t)
+  (setq centaur-tabs-gray-out-icons 'buffer)
+  (setq centaur-tabs-set-bar 'over)
+  (setq centaur-tabs-modified-marker "*")
+  (centaur-tabs-mode t)
+  :bind
+  ("C-<prior>" . centaur-tabs-backward)
+  ("C-<next>" . centaur-tabs-forward))
+
+(use-package diff-hl
+  :ensure t
+  :config
+  (global-diff-hl-mode)
+  (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+  (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
 
 ;;; Backups
 (setq
@@ -182,9 +194,11 @@
   :config
   (powerline-center-evil-theme))
 
-(setq line-number-mode t)
+;; (setq line-number-mode 0)
+
 (setq linum-format "%d ")
-(global-linum-mode t)
+;; (global-linum-mode t)
+(add-hook 'prog-mode-hook 'linum-on)
 
 (load-theme 'manoj-dark)
 
@@ -285,7 +299,7 @@
  '(magit-diff-use-overlays nil)
  '(org-agenda-files '("~/Dropbox/Dreams/org/main.org"))
  '(package-selected-packages
-   '(powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode smex sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+   '(heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode smex sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(vc-annotate-background nil)
@@ -454,10 +468,6 @@
 ;(use-package auctex-latexmk)
 
 
-;; Auctex
-(setq Tex-auto-save t)
-(setq Tex-parse-self t)
-(setq-default Tex-master nil)
 
 (global-set-key (kbd "C-c d") 'define-word-at-point)
 (global-set-key (kbd "C-c D") 'define-word)
@@ -521,12 +531,8 @@
 (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
 (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt)
 ;;; Evil rebind
-(defun mk/betterq ()
-  ;; Better
-  (if (one-window-p t) (kill-this-buffer) (delete-window)))
-
 ;; :q should kill the current buffer rather than quitting emacs entirely
-(evil-ex-define-cmd "q" (if (one-window-p t) (kill-this-buffer) (delete-window)))
+(evil-ex-define-cmd "q" '(if (one-window-p t) (kill-this-buffer) (close)))
 ;; (evil-ex-define-cmd "q" 'mk/betterq)
 ;; Need to type out :quit to close emacs
 (evil-ex-define-cmd "quit" 'evil-quit)
@@ -709,63 +715,172 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-;;; Helm
-;; from https://tuhdo.github.io/helm-intro.html
-(require 'helm)
-(require 'helm-config)
-;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
-;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
-;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
-(global-set-key (kbd "C-c h") 'helm-command-prefix)
-(global-unset-key (kbd "C-x c"))
+;;; Disable Helm for now.
+;;;; Helm
+;;; from https://tuhdo.github.io/helm-intro.html
+;(require 'helm)
+;(require 'helm-config)
+;;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+;;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+;;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+;(global-set-key (kbd "C-c h") 'helm-command-prefix)
+;(global-unset-key (kbd "C-x c"))
+;
+;(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+;(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
+;(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+;
+;
+;(when (executable-find "curl")
+;  (setq helm-google-suggest-use-curl-p t))
+;
+;(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+;      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+;      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+;      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+;      helm-ff-file-name-history-use-recentf t
+;      helm-echo-input-in-header-line t)
+;
+;(defun spacemacs//helm-hide-minibuffer-maybe ()
+;  "Hide minibuffer in Helm session if we use the header line as input field."
+;  (when (with-helm-buffer helm-echo-input-in-header-line)
+;    (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
+;      (overlay-put ov 'window (selected-window))
+;      (overlay-put ov 'face
+;                   (let ((bg-color (face-background 'default nil)))
+;                     `(:background ,bg-color :foreground ,bg-color)))
+;      (setq-local cursor-type nil))))
+;
+;
+;(add-hook 'helm-minibuffer-set-up-hook
+;          'spacemacs//helm-hide-minibuffer-maybe)
+;
+;(setq helm-autoresize-max-height 0)
+;(setq helm-autoresize-min-height 20)
+;(helm-autoresize-mode 1)
+;
+;(global-set-key (kbd "M-x") 'helm-M-x)
+;(setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
+;(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+;(global-set-key (kbd "C-x b") 'helm-mini)
+;(setq helm-buffers-fuzzy-matching t
+;      helm-recentf-fuzzy-match    t)
+;(global-set-key (kbd "C-x C-f") 'helm-find-files)
+;
+;
+;
+;(helm-mode 1)
 
-(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
-(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
-(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+;;; Now try with ivy
 
+(ivy-mode 1)
+(setq ivy-use-virtual-buffers t)
+(setq enable-recursive-minibuffers t)
+;; enable this if you want `swiper' to use it
+;; (setq search-default-mode #'char-fold-to-regexp)
+(global-set-key "\C-s" 'swiper)
+(global-set-key (kbd "C-c C-r") 'ivy-resume)
+(global-set-key (kbd "<f6>") 'ivy-resume)
+(counsel-mode 1) ; parts of the following are duplicated with this mode.
+(global-set-key (kbd "M-x") 'counsel-M-x)
+(global-set-key (kbd "C-x C-f") 'counsel-find-file)
+(global-set-key (kbd "<f1> f") 'counsel-describe-function)
+(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+(global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
+(global-set-key (kbd "<f1> l") 'counsel-find-library)
+(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+(global-set-key (kbd "C-c g") 'counsel-git)
+(global-set-key (kbd "C-c j") 'counsel-git-grep)
+(global-set-key (kbd "C-c k") 'counsel-ag)
+(global-set-key (kbd "C-x l") 'counsel-locate)
+(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+(define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
 
-(when (executable-find "curl")
-  (setq helm-google-suggest-use-curl-p t))
-
-(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
-      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
-      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
-      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
-      helm-ff-file-name-history-use-recentf t
-      helm-echo-input-in-header-line t)
-
-(defun spacemacs//helm-hide-minibuffer-maybe ()
-  "Hide minibuffer in Helm session if we use the header line as input field."
-  (when (with-helm-buffer helm-echo-input-in-header-line)
-    (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
-      (overlay-put ov 'window (selected-window))
-      (overlay-put ov 'face
-                   (let ((bg-color (face-background 'default nil)))
-                     `(:background ,bg-color :foreground ,bg-color)))
-      (setq-local cursor-type nil))))
-
-
-(add-hook 'helm-minibuffer-set-up-hook
-          'spacemacs//helm-hide-minibuffer-maybe)
-
-(setq helm-autoresize-max-height 0)
-(setq helm-autoresize-min-height 20)
-(helm-autoresize-mode 1)
-
-(global-set-key (kbd "M-x") 'helm-M-x)
-(setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
-(global-set-key (kbd "M-y") 'helm-show-kill-ring)
-(global-set-key (kbd "C-x b") 'helm-mini)
-(setq helm-buffers-fuzzy-matching t
-      helm-recentf-fuzzy-match    t)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
-
-
-
-(helm-mode 1)
 
 (when window-system (set-frame-size (selected-frame) 80 60))
 
+(use-package projectile
+  :ensure t
+  :config
+  (projectile-mode +1)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+
+(use-package dashboard
+    :ensure t
+    :diminish dashboard-mode
+    :config
+    (setq dashboard-banner-logo-title "What a nice day!")
+    ;;(setq dashboard-startup-banner "/path/to/image")
+    (setq dashboard-items '((recents  . 10)
+                            (bookmarks . 10)
+                            (projects . 5)
+                            (agenda . 5)
+                            (registers . 5)))
+    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+    (dashboard-setup-startup-hook))
+
+;;; Prevent Extraneous Tabs
+(setq-default indent-tabs-mode nil)
+(setq-default fill-column 80)
+
+;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
+(defun mk/tex-mode-hook ()
+  (setq fill-column 999))
+(add-hook 'TeX-mode-hook #'mk/tex-mode-hook)
+
+
+;;; View Large Files
+(use-package vlf
+  :defer t)
+
+(global-set-key (kbd "C-c c") 'org-capture)
+(setq org-capture-templates nil)
+(add-to-list 'org-capture-templates
+             '("j" "Journals" entry
+               (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
+               "* %U - %^{heading}\n  %?"))
+;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
+(add-to-list 'org-capture-templates
+             '("t" "Tasks" entry
+               (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
+               "* TODO %?\n  %u\n  %a"))
+
+;;; Paste Image From https://emacs-china.org/t/topic/6601/4
+(defun org-insert-image ()
+  "insert a image from clipboard"
+  (interactive)
+  (let* ((path (concat default-directory "img/"))
+         (image-file (concat
+                      path
+                      (buffer-name)
+                      (format-time-string "_%Y%m%d_%H%M%S.png"))))
+    (if (not (file-exists-p path))
+        (mkdir path))
+    (do-applescript (concat
+                     "set the_path to \"" image-file "\" \n"
+                     "set png_data to the clipboard as «class PNGf» \n"
+                     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
+                     "write png_data to the_file \n"
+                     "close access the_file"))
+    ;; (shell-command (concat "pngpaste " image-file))
+    (org-insert-link nil
+                     (concat "file:" image-file)
+                     "")
+    (message image-file))
+  (org-display-inline-images)
+  )
+
+;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/baohaojun")
+;; (load-library "bhj-fonts")
+
+(add-to-list 'load-path "~/.emacs.d/mk/")
+(load-library "config-fonts")
+(load-library "config-appearances")
+
+;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
+(global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
 
 
 (provide 'init)
