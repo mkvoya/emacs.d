@@ -22,7 +22,6 @@
 ;;(setq mac-option-modifier 'super) ; Switch Cmd and Opt(Alt)
 
 
-
 (eval-when-compile
   (require 'use-package))
 ;;; (require 'diminish)
@@ -39,6 +38,7 @@
   (setq centaur-tabs-set-bar 'over)
   (setq centaur-tabs-modified-marker "*")
   (centaur-tabs-mode t)
+  (centaur-tabs-group-by-projectile-project)
   :bind
   ("C-<prior>" . centaur-tabs-backward)
   ("C-<next>" . centaur-tabs-forward))
@@ -170,6 +170,8 @@
   :defer t
   :config
   (yas-global-mode 1))
+(use-package yasnippet-snippets
+  :ensure t)
 
 ; Autocomplete
 (use-package company
@@ -178,14 +180,25 @@
   :config
   ;(add-hook 'prog-mode-hook 'company-mode)
   (setq company-dabbrev-downcase nil
-	company-show-numbers t
-	company-minimum-prefix-length 2)
+        company-show-numbers t
+        company-minimum-prefix-length 2)
   (setq company-tooltip-flip-when-above t)
   (global-company-mode 1)
-  ;(company-auctex-init)
-  ;;(company-statistics-mode 1)
-  )
+  ;; (company-statistics-mode 1)
+  ;; (require 'company-emoji)
+  (add-to-list 'company-backends 'company-emoji))
 
+(use-package company-auctex
+  :ensure t
+  :after (company)
+  :config
+  (company-auctex-init))
+(use-package company-reftex
+  :ensure t
+  :after (company)
+  :config
+  (add-to-list 'company-backends 'company-reftex-labels)
+  (add-to-list 'company-backends 'company-reftex-citations))
 
 
 ; Powerline
@@ -201,6 +214,7 @@
 (add-hook 'prog-mode-hook 'linum-on)
 
 (load-theme 'manoj-dark)
+;; (load-theme 'hemisu-light)
 
 (setq c-default-style "linux"
       c-basic-offset 8)
@@ -242,28 +256,29 @@
 (use-package monokai-theme
   :ensure t
   :config
-  (load-theme 'monokai t)
-  (setq monokai-background "#080C14")
-  (message "HI"))
+;;  (load-theme 'monokai t)
+;;  (setq monokai-background "#080C14")
+  )
 (use-package grandshell-theme
   :ensure t
   :config
-;  (load-theme 'grandshell t)
+;;  (load-theme 'grandshell t)
   )
 (use-package alect-themes
   :ensure t
   :config
-;  (load-theme 'alect-black t)
+;;  (load-theme 'alect-black t)
   )
 
-;(use-package spaceline-config
-;  :ensure t
-;  :config
-;  (spaceline-spacemacs-theme))
+;;(use-package spaceline-config
+;;  :ensure t
+;;  :config
+;;  (spaceline-spacemacs-theme))
 
 (use-package airline-themes
-  :ensure t)
-(load-theme 'airline-light t)
+  :ensure t
+  :config
+  (load-theme 'airline-light t))
 
 
 (require 'evil)
@@ -280,6 +295,9 @@
  '(TeX-source-correlate-start-server t)
  '(ansi-color-names-vector
    ["#272822" "#F92672" "#A6E22E" "#E6DB74" "#66D9EF" "#FD5FF0" "#A1EFE4" "#F8F8F2"])
+ '(auto-dark-emacs/dark-theme 'manoj-dark)
+ '(auto-dark-emacs/light-theme 'doom-one-light)
+ '(auto-dark-emacs/polling-interval-seconds 600)
  '(centaur-tabs-mode t nil (centaur-tabs))
  '(compilation-message-face 'default)
  '(custom-safe-themes
@@ -296,12 +314,20 @@
      ("#A75B00" . 70)
      ("#F309DF" . 85)
      ("#3C3D37" . 100)))
+ '(jdee-db-active-breakpoint-face-colors (cons "#f0f0f0" "#4078f2"))
+ '(jdee-db-requested-breakpoint-face-colors (cons "#f0f0f0" "#50a14f"))
+ '(jdee-db-spec-breakpoint-face-colors (cons "#f0f0f0" "#9ca0a4"))
  '(magit-diff-use-overlays nil)
- '(org-agenda-files '("~/Dropbox/Dreams/org/main.org"))
+ '(objed-cursor-color "#e45649")
+ '(org-agenda-files
+   '("~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/Collections/DNA/Survey.org" "~/Dropbox/Dreams/org/main.org"))
  '(package-selected-packages
-   '(heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode smex sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+   '(pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep dired-sidebar org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+ '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
+ '(rustic-ansi-faces
+   ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
  '(vc-annotate-background nil)
  '(vc-annotate-color-map
    '((20 . "#F92672")
@@ -331,27 +357,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-;;; FONT
-;;;;;;;;; DO NOT WORK FOR CLI
-;;;;; INSTALL FILES
-;(call-process "git" nil t nil "clone" "https://github.com/powerline/fonts.git" "/tmp/fonts")
-;(call-process "ls" nil t nil "/tmp/fonts")
-;(call-process "/tmp/fonts/install.sh" nil t)
-
-;;;;;;(add-to-list 'default-frame-alist '(font . "3270"))
-;;;;;;(add-to-list 'default-frame-alist '(font . "DejaVu Sans Mono for Powerline"))
-;;;;;;
-;;;;;;(set-face-attribute 'default nil :family "DejaVu Sans Mono for Powerline")
-;;;;;;;(set-face-attribute 'default nil :height 94)
-;;;;;;(set-fontset-font "fontset-default" 'unicode "DejaVu Sans Mono for Powerline")
-;;;;;;
-;;;;;;;;
-;;;;;;
-;;;;;;(set-face-attribute 'mode-line nil :family "DejaVu Sans Mono for Powerline")
-;;;;;;(set-face-attribute 'mode-line-inactive nil :family "DejaVu Sans Mono for Powerline")
-;;;;;;(set-face-attribute 'powerline-inactive1 nil :family "DejaVu Sans Mono for Powerline")
-;;;;;;(set-face-attribute 'powerline-active1 nil :family "DejaVu Sans Mono for Powerline")
 
 (set-face-attribute 'default nil :height 160)
 
@@ -464,10 +469,6 @@
 ;; (setq evil-magit-use-y-for-yank nil)
 (require 'evil-magit)
 
-;(use-package auctex)
-;(use-package auctex-latexmk)
-
-
 
 (global-set-key (kbd "C-c d") 'define-word-at-point)
 (global-set-key (kbd "C-c D") 'define-word)
@@ -491,16 +492,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (setq confirm-kill-emacs 'y-or-n-p)
-
-;;; Org mode
-; Enable Org mode
-(require 'org)
-; Org mode TODO states
-(setq org-todo-keywords
-      '((sequence "TODO" "HAND" "WAIT" "DONE")))
-
-(global-set-key (kbd "C-c a") 'org-agenda)
-
 
 ;;; MK's cheatsheet
 (require 'cheatsheet)
@@ -555,9 +546,6 @@
 
 (use-package emojify
   :hook (after-init . global-emojify-mode))
-
-;(require 'company-emoji)
-;(add-to-list 'company-backends 'company-emoji)
 
 (use-package unicode-fonts
    :ensure t
@@ -614,65 +602,6 @@
         ))
 
 
-;;; Smex --- enhaced M-x
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "M-X") 'smex-major-mode-commands)
-;; This is your old M-x.
-(global-set-key (kbd "C-c C-c M-x") 'execute-extended-command)
-
-;;; Org Style
-;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-;; 打开 org-indent mode
-(setq org-startup-indented t)
-(require 'org-superstar)
-(add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
-
-;; 设置 bullet list
-;; (setq org-bullets-bullet-list '("☰" "☷" "☯" "☭"))
-(with-eval-after-load 'org-superstar
-  (set-face-attribute 'org-superstar-item nil :height 1.2)
-  (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
-  (set-face-attribute 'org-superstar-leading nil :height 1.3))
-;; Set different bullets, with one getting a terminal fallback.
-(setq org-superstar-headline-bullets-list
-      '("◉" "◈" "○" "▷"))
-;; Stop cycling bullets to emphasize hierarchy of headlines.
-(setq org-superstar-cycle-headline-bullets nil)
-;; Hide away leading stars on terminal.
-(setq org-superstar-leading-fallback ?\s)
-
-
-;; 调试好久的颜色，效果超赞！todo keywords 增加背景色
-(setf org-todo-keyword-faces '(("TODO" . (:foreground "white" :background "#95A5A6"   :weight bold))
-			       ("HAND" . (:foreground "white" :background "#2E8B57"  :weight bold))
-			       ("DONE" . (:foreground "white" :background "#3498DB" :weight bold))))
-;; agenda 里面时间块彩色显示
-;; From: https://emacs-china.org/t/org-agenda/8679/3
-(defun ljg/org-agenda-time-grid-spacing ()
-  "Set different line spacing w.r.t. time duration."
-  (save-excursion
-    (let* ((background (alist-get 'background-mode (frame-parameters)))
-           (background-dark-p (string= background "dark"))
-           (colors (list "#1ABC9C" "#2ECC71" "#3498DB" "#9966ff"))
-           pos
-           duration)
-      (nconc colors colors)
-      (goto-char (point-min))
-      (while (setq pos (next-single-property-change (point) 'duration))
-        (goto-char pos)
-        (when (and (not (equal pos (point-at-eol)))
-                   (setq duration (org-get-at-bol 'duration)))
-          (let ((line-height (if (< duration 30) 1.0 (+ 0.5 (/ duration 60))))
-                (ov (make-overlay (point-at-bol) (1+ (point-at-eol)))))
-            (overlay-put ov 'face `(:background ,(car colors)
-                                                :foreground
-                                                ,(if background-dark-p "black" "white")))
-            (setq colors (cdr colors))
-            (overlay-put ov 'line-height line-height)
-            (overlay-put ov 'line-spacing (1- line-height))))))))
-(add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
-
-
 (set-face-attribute 'default nil :height 160)
 
 
@@ -685,94 +614,60 @@
 
 
 ;;; AucTex
-;; from https://gist.github.com/stefano-meschiari/9217695
-(setq TeX-auto-save t)
-(setq Tex-parse-self t)
-;; Guess/Ask for the master file.
-(setq-default TeX-master nil)
-(add-hook 'LaTeX-mode-hook 'visual-line-mode)
-(add-hook 'LaTeX-mode-hook 'flyspell-mode)
-(add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-(add-hook 'LaTeX-mode-hook 'turn-on-reftex)
-(setq reftex-plug-into-AUCTeX t)
-(setq TeX-PDF-mode t)
+(use-package tex
+  :ensure auctex
+  :config
+  ;; make latexmk available via C-c C-c
+  ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
+  (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+  ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
+  (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
+  ;; from https://gist.github.com/stefano-meschiari/9217695
+  (setq TeX-auto-save t)
+  (setq Tex-parse-self t)
+  ;; Guess/Ask for the master file.
+  (setq-default TeX-master nil)
+  (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+  (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+  (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
+  (setq reftex-plug-into-AUCTeX t)
+  (setq TeX-PDF-mode t)
 
-;; make latexmk available via C-c C-c
-;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
-(add-hook 'LaTeX-mode-hook (lambda ()
-  (push
-    '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t
-:help "Run latexmk on file")
-    TeX-command-list)))
-(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
+  ;; From https://emacs.stackexchange.com/questions/19472/how-to-let-auctex-open-pdf-with-pdf-tools
+  ;; Use pdf-tools to open PDF files
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-source-correlate-start-server t)
+  ;; Update PDF buffers after successful LaTeX runs
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
 
-(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-(setq TeX-view-program-list
-      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+  ;; (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+  ;; (setq TeX-view-program-list
+  ;;       '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+  ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
+  (require 'pdf-view)
+  (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
+                                   ,(face-attribute 'default :background)))
+  (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
+  (add-hook 'pdf-view-mode-hook (lambda ()
+                                  (pdf-view-midnight-minor-mode)))
+
+  )
+(use-package auctex-latexmk)
+(use-package reftex
+  :config
+  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
+  (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+  )
 
 
 ;;; Get shell env from user shell.
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-;;; Disable Helm for now.
-;;;; Helm
-;;; from https://tuhdo.github.io/helm-intro.html
-;(require 'helm)
-;(require 'helm-config)
-;;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
-;;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
-;;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
-;(global-set-key (kbd "C-c h") 'helm-command-prefix)
-;(global-unset-key (kbd "C-x c"))
-;
-;(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
-;(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
-;(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
-;
-;
-;(when (executable-find "curl")
-;  (setq helm-google-suggest-use-curl-p t))
-;
-;(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
-;      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
-;      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
-;      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
-;      helm-ff-file-name-history-use-recentf t
-;      helm-echo-input-in-header-line t)
-;
-;(defun spacemacs//helm-hide-minibuffer-maybe ()
-;  "Hide minibuffer in Helm session if we use the header line as input field."
-;  (when (with-helm-buffer helm-echo-input-in-header-line)
-;    (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
-;      (overlay-put ov 'window (selected-window))
-;      (overlay-put ov 'face
-;                   (let ((bg-color (face-background 'default nil)))
-;                     `(:background ,bg-color :foreground ,bg-color)))
-;      (setq-local cursor-type nil))))
-;
-;
-;(add-hook 'helm-minibuffer-set-up-hook
-;          'spacemacs//helm-hide-minibuffer-maybe)
-;
-;(setq helm-autoresize-max-height 0)
-;(setq helm-autoresize-min-height 20)
-;(helm-autoresize-mode 1)
-;
-;(global-set-key (kbd "M-x") 'helm-M-x)
-;(setq helm-M-x-fuzzy-match t) ;; optional fuzzy matching for helm-M-x
-;(global-set-key (kbd "M-y") 'helm-show-kill-ring)
-;(global-set-key (kbd "C-x b") 'helm-mini)
-;(setq helm-buffers-fuzzy-matching t
-;      helm-recentf-fuzzy-match    t)
-;(global-set-key (kbd "C-x C-f") 'helm-find-files)
-;
-;
-;
-;(helm-mode 1)
-
-;;; Now try with ivy
-
+;;; Disable Helm and use ivy.
 (ivy-mode 1)
 (setq ivy-use-virtual-buffers t)
 (setq enable-recursive-minibuffers t)
@@ -827,60 +722,88 @@
 
 ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
 (defun mk/tex-mode-hook ()
-  (setq fill-column 999))
+  (setq fill-column 1024))
 (add-hook 'TeX-mode-hook #'mk/tex-mode-hook)
 
+(use-package quelpa
+  :init
+  (setq quelpa-update-melpa-p nil)
+  :ensure t)
+(use-package quelpa-use-package
+  :ensure t)
+(use-package svg-tag-mode
+  :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
+                        :fetcher github
+                        :files ("svg-tag-mode.el")))
+
+(use-package langtool
+  :quelpa (langtool :repo "mhayashi1120/Emacs-langtool"
+                    :fetcher github
+                    :files ("langtool.el"))
+  :init
+  (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_1/libexec/languagetool-server.jar")
+  (setq langtool-server-user-arguments '("-p" "8099")))
+
+(use-package pdf-continuous-scroll-mode
+  :quelpa (pdf-continuous-scroll-mode :repo "dalanicolai/pdf-continuous-scroll-mode.el"
+                                      :fetcher github
+                                      :files ("pdf-continuous-scroll-mode.el"))
+  :config
+  (with-eval-after-load 'pdf-view
+    (require 'pdf-continuous-scroll-mode))
+  (add-hook 'pdf-view-mode-hook 'pdf-continuous-scroll-mode)
+  )
+
+
+(use-package wucuo
+  :ensure t
+  :config
+  (add-hook 'prog-mode-hook #'wucuo-start)
+  (add-hook 'text-mode-hook #'wucuo-start)
+  (setq ispell-program-name "aspell")
+  ;; You could add extra option "--camel-case" for since Aspell 0.60.8
+  ;; @see https://github.com/redguardtoo/emacs.d/issues/796
+  (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--run-together" "--run-together-limit=16" "--camel-case")))
 
 ;;; View Large Files
 (use-package vlf
   :defer t)
 
-(global-set-key (kbd "C-c c") 'org-capture)
-(setq org-capture-templates nil)
-(add-to-list 'org-capture-templates
-             '("j" "Journals" entry
-               (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
-               "* %U - %^{heading}\n  %?"))
-;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
-(add-to-list 'org-capture-templates
-             '("t" "Tasks" entry
-               (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
-               "* TODO %?\n  %u\n  %a"))
+(use-package config-fonts
+  :load-path "~/.emacs.d/mk"
+  :ensure nil) ; local package does not need ensure
+(use-package config-appearances
+  :load-path "~/.emacs.d/mk"
+  :ensure nil) ; local package does not need ensure
+(use-package config-org
+  :load-path "~/.emacs.d/mk"
+  :ensure nil) ; local package does not need ensure
 
-;;; Paste Image From https://emacs-china.org/t/topic/6601/4
-(defun org-insert-image ()
-  "insert a image from clipboard"
-  (interactive)
-  (let* ((path (concat default-directory "img/"))
-         (image-file (concat
-                      path
-                      (buffer-name)
-                      (format-time-string "_%Y%m%d_%H%M%S.png"))))
-    (if (not (file-exists-p path))
-        (mkdir path))
-    (do-applescript (concat
-                     "set the_path to \"" image-file "\" \n"
-                     "set png_data to the clipboard as «class PNGf» \n"
-                     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
-                     "write png_data to the_file \n"
-                     "close access the_file"))
-    ;; (shell-command (concat "pngpaste " image-file))
-    (org-insert-link nil
-                     (concat "file:" image-file)
-                     "")
-    (message image-file))
-  (org-display-inline-images)
-  )
-
-;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/baohaojun")
-;; (load-library "bhj-fonts")
-
-(add-to-list 'load-path "~/.emacs.d/mk/")
-(load-library "config-fonts")
-(load-library "config-appearances")
+(use-package auto-dark-emacs
+  :load-path "~/.emacs.d/3rd-parties/auto-dark-emacs/"
+  :ensure nil) ; local package does not need ensure
+(use-package iscroll
+  :load-path "~/.emacs.d/3rd-parties/casouri/"
+  :ensure nil) ; local package does not need ensure
 
 ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
 (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+;; Open ibuffer upon "C-c i"
+(global-set-key (kbd "C-c i") 'ibuffer)
+
+(use-package nameframe)
+(use-package nameframe-projectile
+  :config
+  (nameframe-projectile-mode t)
+  (global-set-key (kbd "M-P") 'nameframe-switch-frame))
+
+
+;; with use-package
+(use-package maple-explorer
+  :quelpa (:fetcher github :repo "honmaple/emacs-maple-explorer")
+  :commands (maple-explorer-file maple-explorer-buffer maple-explorer-imenu maple-explorer-recentf)
+  :config
+  (setq maple-explorer-file-display-alist '((side . left) (slot . -1))))
 
 
 (provide 'init)

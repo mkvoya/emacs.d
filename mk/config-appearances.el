@@ -1,5 +1,9 @@
+;;; package -- summary
+;;; Commentary:
+;;;
 ;;; Theme
 
+;;; Code:
 ;; ;; Dark and Light theme
 ;; (use-package heaven-and-hell
 ;;   :ensure t
@@ -13,3 +17,9 @@
 ;;   :hook (after-init . heaven-and-hell-init-hook)
 ;;   :bind (("C-c <f6>" . heaven-and-hell-load-default-theme)
 ;;          ("<f6>" . heaven-and-hell-toggle-theme)))
+
+(set-face-background 'hl-line "#3ef446")
+(set-face-foreground 'highlight nil)
+
+(provide 'config-appearances)
+;;; config-appearances.el ends here

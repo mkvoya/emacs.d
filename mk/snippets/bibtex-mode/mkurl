@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: mkurl
+# key: mkurl
+# --
+@misc{,
+  author = {},
+  title = {},
+  howpublished = {\url{}},
+  publisher = {},
+  month = {},
+  year = {}
+}
+
+$0
