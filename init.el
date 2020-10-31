@@ -219,8 +219,8 @@
 (setq c-default-style "linux"
       c-basic-offset 8)
 (setq-default c-basic-offset 8
-	      tab-width 8
-	      indent-tabs-mode t)
+              tab-width 8
+              indent-tabs-mode t)
 
 ; Whitespace[built-in], check: http://ergoemacs.org/emacs/whitespace-mode.html
 (use-package whitespace)
@@ -238,14 +238,14 @@
 
 ; style I want to use in c++ mode
 (c-add-style "my-style"
-	     '("stroustrup"
-	       (c-basic-offset . 4)            ; indent by four spaces
-	       (tab-width . 4)
-	       (indent-tabs-mode . t)        ; use tabs
-	       (c-offsets-alist . ((inline-open . 0)  ; custom indentation rules
-				   (brace-list-open . 0)
-				   (innamespace . [0])
-				   (statement-case-open . +)))))
+             '("stroustrup"
+               (c-basic-offset . 4)            ; indent by four spaces
+               (tab-width . 4)
+               (indent-tabs-mode . t)        ; use tabs
+               (c-offsets-alist . ((inline-open . 0)  ; custom indentation rules
+                                   (brace-list-open . 0)
+                                   (innamespace . [0])
+                                   (statement-case-open . +)))))
 
 (defun my-c++-mode-hook ()
   (c-set-style "my-style"))        ; use my-style defined above
@@ -322,7 +322,7 @@
  '(org-agenda-files
    '("~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/Collections/DNA/Survey.org" "~/Dropbox/Dreams/org/main.org"))
  '(package-selected-packages
-   '(pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep dired-sidebar org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+   '(iscroll pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep dired-sidebar org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -392,8 +392,8 @@
 (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode)
 
 ;(add-hook 'prog-mode-hook
-;	  (lambda () (add-to-list 'write-file-functions
-;				  'delete-trailing-whitespace)))
+;         (lambda () (add-to-list 'write-file-functions
+;                                 'delete-trailing-whitespace)))
 
 (use-package neotree
   :ensure t
@@ -496,8 +496,8 @@
 ;;; MK's cheatsheet
 (require 'cheatsheet)
 (cheatsheet-add :group 'Common
-		:key "C-x u"
-		:description "Emacs Undo")
+                :key "C-x u"
+                :description "Emacs Undo")
 
 ;;; Smart Tab
 (require 'smart-tab)
@@ -782,9 +782,11 @@
 (use-package auto-dark-emacs
   :load-path "~/.emacs.d/3rd-parties/auto-dark-emacs/"
   :ensure nil) ; local package does not need ensure
+
 (use-package iscroll
-  :load-path "~/.emacs.d/3rd-parties/casouri/"
-  :ensure nil) ; local package does not need ensure
+  :quelpa (iscroll :repo "casouri/lunarymacs"
+                   :fetcher github
+                   :files ("site-lisp/iscroll.el")))
 
 ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
 (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))

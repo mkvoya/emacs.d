@@ -14,13 +14,33 @@
 
 ;; Org mode TODO states
 (setq org-todo-keywords
-      '((sequence "TODO" "HAND" "WAIT" "|" "DONE(d!)")))
+      '((sequence
+         "TODO(t)"
+         "HAND(h)"
+         "WAIT(w)"
+         "|"
+         "DONE(d!)"
+         "CANCELED(c@)"
+         )))
 ;; Keyword colors
 (setf org-todo-keyword-faces
-      '(("TODO" . (:foreground "white" :background "red" :weight bold))
-        ("HAND" . (:foreground "white" :background "green" :weight bold))
-        ("WAIT" . (:foreground "orange" :weight bold))
-        ("DONE" . (:foreground "white" :background "blue" :weight bold))))
+      '(
+        ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
+        ("TODO" . (:foreground "#ff39a3" :weight bold))
+        ("HAND"  . "orangered")
+        ;; ("WAIT" . (:foreground "orange" :weight bold))
+        ("WAIT" . "pink")
+        ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
+        ("DONE" . "#008080")
+        ;; ("FIXME" . "IndianRed")
+        ;; ("☟ NEXT" . (:foreground "DeepSkyBlue"
+        ;;                         ;; :background "#7A586A"
+        ;;                         :weight bold))
+        ;; ("☕ BREAK" . "gray")
+        ;; ("❤ LOVE" . (:foreground "VioletRed4"
+        ;;                       ;; :background "#7A586A"
+        ;;                       :weight bold))
+        ))
 
 
 ;;; Org Style
@@ -157,9 +177,6 @@
 
 ;; Org export code style
 (setq org-html-htmlize-output-type 'css)
-
-
-
 
 (provide 'config-org)
 ;;; config-org.el ends here
