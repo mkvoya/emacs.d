@@ -18,7 +18,7 @@
 ;;   :bind (("C-c <f6>" . heaven-and-hell-load-default-theme)
 ;;          ("<f6>" . heaven-and-hell-toggle-theme)))
 
-(set-face-background 'hl-line "#3ef446")
+(set-face-background 'hl-line "#e9e9e9")
 (set-face-foreground 'highlight nil)
 
 (provide 'config-appearances)

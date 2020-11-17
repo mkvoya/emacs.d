@@ -18,6 +18,8 @@
          "TODO(t)"
          "HAND(h)"
          "WAIT(w)"
+         "LONG-TERM(l)"
+         "DELEGATE(e)"
          "|"
          "DONE(d!)"
          "CANCELED(c@)"
@@ -32,6 +34,7 @@
         ("WAIT" . "pink")
         ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
         ("DONE" . "#008080")
+        ("DELEGATE"  . "DeepSkyBlue")
         ;; ("FIXME" . "IndianRed")
         ;; ("☟ NEXT" . (:foreground "DeepSkyBlue"
         ;;                         ;; :background "#7A586A"
@@ -45,19 +48,21 @@
 
 ;;; Org Style
 ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-;; 打开 org-indent mode
-(setq org-startup-indented t)
+;; ;; 打开 org-indent mode
+;; (setq org-startup-indented t)
 (require 'org-superstar)
 (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
 
 ;; 设置 bullet list
-(with-eval-after-load 'org-superstar
-  (set-face-attribute 'org-superstar-item nil :height 1.2)
-  (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
-  (set-face-attribute 'org-superstar-leading nil :height 1.3))
+;; (with-eval-after-load 'org-superstar
+;;   (set-face-attribute 'org-superstar-item nil :height 1.2)
+;;   (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
+;;   (set-face-attribute 'org-superstar-leading nil :height 1.3))
 ;; Set different bullets, with one getting a terminal fallback.
+;; (setq org-superstar-headline-bullets-list
+;;       '("◉" "◈" "○" "▷"))
 (setq org-superstar-headline-bullets-list
-      '("◉" "◈" "○" "▷"))
+      '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
 ;; Stop cycling bullets to emphasize hierarchy of headlines.
 (setq org-superstar-cycle-headline-bullets nil)
 ;; Hide away leading stars on terminal.
@@ -91,6 +96,7 @@
 
 
 ;; Captures
+(require 'org-capture)
 (setq org-capture-templates nil)
 (add-to-list 'org-capture-templates
              '("j" "Journals" entry
@@ -110,7 +116,9 @@
 (defun org-insert-image ()
   "Insert a image from clipboard."
   (interactive)
-  (let* ((path (concat default-directory "img/"))
+  (let* ((path (concat default-directory
+                       (buffer-name)
+                       ".assets/"))
          (image-file (concat
                       path
                       (buffer-name)
@@ -131,10 +139,6 @@
   (org-display-inline-images)
   )
 
-(setq org-latex-to-pdf-process
-      '("xelatex -interaction nonstopmode %f"
-        "xelatex -interaction nonstopmode %f")) ;; for multiple passes
-
 ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
 (require 'appt)
 
@@ -144,7 +148,7 @@
  appt-message-warning-time '15 ;; send first warning 15 minutes before appointment
  appt-display-mode-line nil ;; don't show in the modeline
  appt-display-format 'window) ;; pass warnings to the designated window function
-(setq appt-disp-window-function (function t/appt-display-native))
+(setq appt-disp-window-function (function ct/appt-display-native))
 
 (appt-activate 1) ;; activate appointment notification
 ; (display-time) ;; Clock in modeline
@@ -153,6 +157,7 @@
 (defvar alerter-command (executable-find "alerter") "The path to alerter.")
 
 (defun ct/send-notification (title msg)
+  "Send notification (TITLE MSG)."
   (let ((notifier-path (executable-find "alerter")))
     (start-process
      "Appointment Alert"
@@ -163,6 +168,7 @@
      "-sender" "org.gnu.Emacs"
      "-activate" "org.gnu.Emacs")))
 (defun ct/appt-display-native (min-to-app new-time msg)
+  "Appt display native (MIN-TO-APP NEW-TIME MSG)."
   (ct/send-notification
    (format "Appointment in %s minutes" min-to-app) ; Title
    (format "%s" msg))) ; Message/detail text
@@ -175,8 +181,93 @@
 ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
 (setq org-log-done 'time)
 
+(require 'ox-html)
 ;; Org export code style
 (setq org-html-htmlize-output-type 'css)
 
+(add-hook (quote org-mode-hook)
+          (lambda ()
+            (org-shifttab 5)))
+
+(setq-default org-html-doctype "html5")
+(setq-default org-html-html5-fancy t)
+
+;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+;;; But I don't need the odd levels only
+(setq org-adapt-indentation t
+      org-hide-leading-stars t)
+      ;;org-odd-levels-only t)
+
+(require 'ox-icalendar)
+(setq org-icalendar-alarm-time 5)
+(setq org-icalendar-combined-agenda-file "~/Dropbox/Dreams/Org/org.ics"
+      org-icalendar-include-todo 'all
+      org-icalendar-store-UID t
+      org-icalendar-timezone ""
+      org-icalendar-use-deadline
+      '(event-if-not-todo event-if-todo event-if-todo-not-done todo-due)
+      org-icalendar-use-scheduled
+      '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
+
+
+(use-package org-caldav
+  :ensure t
+  :after (async)
+  :config
+  (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+  (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
+  (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
+  (setq org-caldav-files '("~/Dropbox/Dreams/Org/IPADS.sched.org"
+                           "~/Dropbox/Dreams/Org/Main.org"
+                           "~/Dropbox/Dreams/Org/Inbox.org"
+                           ))
+  ;; (setq org-icalendar-timezone "America/Los_Angeles")
+  (setq org-icalendar-timezone "Asia/Shanghai")
+
+  (defun mkvoya/sync-to-radicale-async ()
+    "Sync org agenda to =https://dong.mk/radicale/= upon org file save."
+    (interactive)
+    (when (eq major-mode 'org-mode)
+      (async-start
+       ;; Do this asynchronously.
+       (lambda ()
+         (require 'org)
+         (require 'package)
+         (package-initialize)
+         (add-to-list 'load-path "~/.emacs.d/mk")
+         (require 'config-org)
+         (require 'ox-icalendar)
+         (require 'org-caldav)
+         ;; (let (mkvoya/saved-option org-caldav-show-sync-results)
+         ;;  (setq org-caldav-show-sync-results nil)
+           (org-caldav-sync)
+         ;;  (setq org-caldav-show-sync-results mkvoya/saved-option)
+         ;;  )
+         )
+       ;; Reap the result
+       (lambda (result)
+         (message "Async sync to radicale sync okay: %s." result)
+         ))))
+  (add-hook 'after-save-hook #'mkvoya/sync-to-radicale-async)
+  )
+
+
+;; Two more extensions could be relavant.
+;; org-super-links
+;; org-wild-notifier.el
+(use-package org-wild-notifier
+  :ensure t
+  :config
+  (org-wild-notifier-mode t)
+  ;;; Overwrite
+  (defun org-wild-notifier--notify (event-msg)
+    "Notify about an event using `alert' library.
+EVENT-MSG is a string representation of the event."
+    (ct/send-notification event-msg org-wild-notifier-notification-title)
+    (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
+  )
+
+
+;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
 (provide 'config-org)
 ;;; config-org.el ends here

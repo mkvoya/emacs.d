@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+# name: Org Skeleton
+# key: <org
+# --
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://dong.mk/file/org.css" />
+#+TITLE:
+#+AUTHOR: Mingkai Dong
+#+DATE: `(format-time-string "%FT%T%z" (current-time))`
+#+EMAIL: mingkaidong@gmail.com
+#+LANGUAGE: en
+#+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
+

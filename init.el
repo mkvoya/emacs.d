@@ -9,8 +9,7 @@
 (require 'package)
 (setq package-enable-at-startup nil)
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
-;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -24,7 +23,7 @@
 
 (eval-when-compile
   (require 'use-package))
-;;; (require 'diminish)
+;;; (require 'diminish); => use delight
 (require 'bind-key)
 
 
@@ -92,8 +91,18 @@
 ; Sentence
 (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
-; Mode line format
-(use-package smart-mode-line :defer t)
+;; Mode line format
+;; Instead of powerline
+(use-package smart-mode-line
+  :ensure t
+  :config
+  (setq sml/no-confirm-load-theme t)
+  (setq sml/theme 'respectful)
+  ;; (setq sml/theme 'light)
+  (setq sml/shorten-modes t)
+  (setq sml/shorten-directory t)
+  (sml/setup)
+  )
 
 ; lazy answer
 (fset 'yes-or-no-p 'y-or-n-p)
@@ -129,7 +138,7 @@
 (use-package undo-tree
   :ensure t
   :defer t
-  :diminish undo-tree-mode
+  :delight
   :config
   (progn
     (global-undo-tree-mode)
@@ -170,6 +179,7 @@
   :defer t
   :config
   (yas-global-mode 1))
+
 (use-package yasnippet-snippets
   :ensure t)
 
@@ -186,7 +196,32 @@
   (global-company-mode 1)
   ;; (company-statistics-mode 1)
   ;; (require 'company-emoji)
-  (add-to-list 'company-backends 'company-emoji))
+  (setq company-backends
+        '((company-files
+           company-keywords
+           company-capf
+           company-yasnippet
+           company-ispell
+           company-lsp
+           )
+          (company-abbrev company-dabbrev)))
+  (with-eval-after-load 'company
+    (define-key company-active-map (kbd "\C-n") #'company-select-next)
+    (define-key company-active-map (kbd "\C-p") #'company-select-previous)
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
+    (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
+    (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
+    (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
+    (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
+    (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
+    )
+  (advice-add 'company-complete-common :before (lambda ()
+                                                 (setq my-company-point (point))))
+  (advice-add 'company-complete-common :after (lambda ()
+                                                (when (equal my-company-point (point)) (yas-expand))))
+  )
 
 (use-package company-auctex
   :ensure t
@@ -201,20 +236,27 @@
   (add-to-list 'company-backends 'company-reftex-citations))
 
 
-; Powerline
-(use-package powerline
-  :ensure t
-  :config
-  (powerline-center-evil-theme))
+;; Powerline, airline, smart-mode-line
+;; ; Powerline
+;; (use-package powerline
+;;   :ensure t
+;;   :config
+;;   (powerline-center-evil-theme)
+;;   (setq powerline-default-separator 'utf-8)
+;;   (setq powerline-utf-8-separator-left #x27bd)
+;;   (setq powerline-utf-8-separator-right #x2b05)
+;;   (setq-default powerline-height (truncate (* 0.6 (frame-char-height))))
+;;   )
 
 ;; (setq line-number-mode 0)
 
 (setq linum-format "%d ")
 ;; (global-linum-mode t)
-(add-hook 'prog-mode-hook 'linum-on)
+(add-hook 'prog-mode-hook 'linum-mode)
+(add-hook 'ps-mode-hook 'doc-view-toggle-display)
 
-(load-theme 'manoj-dark)
-;; (load-theme 'hemisu-light)
+;; (load-theme 'manoj-dark)
+(load-theme 'doom-one-light t)
 
 (setq c-default-style "linux"
       c-basic-offset 8)
@@ -225,7 +267,8 @@
 ; Whitespace[built-in], check: http://ergoemacs.org/emacs/whitespace-mode.html
 (use-package whitespace)
 (setq whitespace-style
-'(face trailing tabs newline tab-mark newline-mark lines-tail))
+'(face trailing tabs newline tab-mark newline-mark))
+;; '(face trailing tabs newline tab-mark newline-mark lines-tail))
 (setq whitespace-display-mappings
 '((newline-mark 10 [8617 10])
   (tab-mark 9 [8594 9] [92 9])))
@@ -275,14 +318,23 @@
 ;;  :config
 ;;  (spaceline-spacemacs-theme))
 
-(use-package airline-themes
+;; (use-package airline-themes
+;;   :ensure t
+;;   :config
+;;   (load-theme 'airline-light t))
+
+
+(use-package evil
   :ensure t
+  :after smart-mode-line
   :config
-  (load-theme 'airline-light t))
+  ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
+  (setq evil-emacs-state-cursor '(hollow))
+  (evil-mode 1))
 
-
-(require 'evil)
-  (evil-mode 1)
+ ;; '(auto-dark-emacs/dark-theme 'manoj-dark)
+ ;; '(auto-dark-emacs/light-theme 'doom-one-light)
+ ;; '(auto-dark-emacs/polling-interval-seconds 600)
 
 
 (custom-set-variables
@@ -295,13 +347,10 @@
  '(TeX-source-correlate-start-server t)
  '(ansi-color-names-vector
    ["#272822" "#F92672" "#A6E22E" "#E6DB74" "#66D9EF" "#FD5FF0" "#A1EFE4" "#F8F8F2"])
- '(auto-dark-emacs/dark-theme 'manoj-dark)
- '(auto-dark-emacs/light-theme 'doom-one-light)
- '(auto-dark-emacs/polling-interval-seconds 600)
  '(centaur-tabs-mode t nil (centaur-tabs))
  '(compilation-message-face 'default)
  '(custom-safe-themes
-   '("9e39a8334e0e476157bfdb8e42e1cea43fad02c9ec7c0dbd5498cf02b9adeaf1" "9089d25e2a77e6044b4a97a2b9fe0c82351a19fdd3e68a885f40f86bbe3b3900" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" "3eb93cd9a0da0f3e86b5d932ac0e3b5f0f50de7a0b805d4eb1f67782e9eb67a4" "962dacd99e5a99801ca7257f25be7be0cebc333ad07be97efd6ff59755e6148f" "f78de13274781fbb6b01afd43327a4535438ebaeec91d93ebdbba1e3fba34d3c" default))
+   '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" default))
  '(fci-rule-color "#3C3D37")
  '(global-yascroll-bar-mode t)
  '(highlight-changes-colors '("#FD5FF0" "#AE81FF"))
@@ -320,9 +369,9 @@
  '(magit-diff-use-overlays nil)
  '(objed-cursor-color "#e45649")
  '(org-agenda-files
-   '("~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/Collections/DNA/Survey.org" "~/Dropbox/Dreams/org/main.org"))
+   '("~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
  '(package-selected-packages
-   '(iscroll pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep dired-sidebar org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard powerline-evil which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme centaur-tabs telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts company-emoji emojify flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold powerline use-package miniedit guide-key evil company color-theme-solarized))
+   '(org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker iscroll pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -356,13 +405,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(mode-line ((t (:background "#afffff" :foreground "#005fff" :box nil :overline nil :underline nil)))))
 
 (set-face-attribute 'default nil :height 160)
 
-(setq powerline-default-separator 'utf-8)
-(setq powerline-utf-8-separator-left #x27bd)
-(setq powerline-utf-8-separator-right #x2b05)
 
 (add-hook 'prog-mode-hook #'hs-minor-mode)
 
@@ -476,17 +522,6 @@
 
 
 
-(add-hook 'LaTeX-mode-hook
-(lambda ()
-  (push
-   '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-     :help "Run latexmk on file")
-    TeX-command-list)))
-(add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
-
-(setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-(setq TeX-view-program-list
-      '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -619,9 +654,10 @@
   :config
   ;; make latexmk available via C-c C-c
   ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
-  (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "latexmk")))
   ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
   (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
+  (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "Make")))
+  ;; (setq-default TeX-command-default "Make")
   ;; from https://gist.github.com/stefano-meschiari/9217695
   (setq TeX-auto-save t)
   (setq Tex-parse-self t)
@@ -635,16 +671,25 @@
   (setq TeX-PDF-mode t)
 
   ;; From https://emacs.stackexchange.com/questions/19472/how-to-let-auctex-open-pdf-with-pdf-tools
-  ;; Use pdf-tools to open PDF files
-  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-        TeX-source-correlate-start-server t)
-  ;; Update PDF buffers after successful LaTeX runs
-  (add-hook 'TeX-after-compilation-finished-functions
-            #'TeX-revert-document-buffer)
+  ;; ;; Use pdf-tools to open PDF files
+  ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+  ;;       TeX-source-correlate-start-server t)
+  ;; ;; Update PDF buffers after successful LaTeX runs
+  ;; (add-hook 'TeX-after-compilation-finished-functions
+  ;;           #'TeX-revert-document-buffer)
 
-  ;; (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-  ;; (setq TeX-view-program-list
-  ;;       '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+  (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+  (setq TeX-view-program-list
+        '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -g %n %o %b")))
+        ;; '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+
+  ;; (add-hook 'LaTeX-mode-hook
+  ;;           (lambda ()
+  ;;             (push
+  ;;              '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+  ;;                :help "Run latexmk on file")
+  ;;              TeX-command-list)))
+
 
   ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
   (require 'pdf-view)
@@ -653,6 +698,7 @@
   (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
   (add-hook 'pdf-view-mode-hook (lambda ()
                                   (pdf-view-midnight-minor-mode)))
+  (setq TeX-error-overview-open-after-TeX-run t)
 
   )
 (use-package auctex-latexmk)
@@ -676,27 +722,33 @@
 (global-set-key "\C-s" 'swiper)
 (global-set-key (kbd "C-c C-r") 'ivy-resume)
 (global-set-key (kbd "<f6>") 'ivy-resume)
-(counsel-mode 1) ; parts of the following are duplicated with this mode.
-(global-set-key (kbd "M-x") 'counsel-M-x)
-(global-set-key (kbd "C-x C-f") 'counsel-find-file)
-(global-set-key (kbd "<f1> f") 'counsel-describe-function)
-(global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-(global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
-(global-set-key (kbd "<f1> l") 'counsel-find-library)
-(global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-(global-set-key (kbd "<f2> u") 'counsel-unicode-char)
-(global-set-key (kbd "C-c g") 'counsel-git)
-(global-set-key (kbd "C-c j") 'counsel-git-grep)
-(global-set-key (kbd "C-c k") 'counsel-ag)
-(global-set-key (kbd "C-x l") 'counsel-locate)
-(global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
-(define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
+
+(use-package counsel
+  :delight
+  :config
+  (counsel-mode 1) ; parts of the following are duplicated with this mode.
+  (global-set-key (kbd "M-x") 'counsel-M-x)
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
+  (global-set-key (kbd "<f1> f") 'counsel-describe-function)
+  (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
+  (global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
+  (global-set-key (kbd "<f1> l") 'counsel-find-library)
+  (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
+  (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
+  (global-set-key (kbd "C-c g") 'counsel-git)
+  (global-set-key (kbd "C-c j") 'counsel-git-grep)
+  (global-set-key (kbd "C-c k") 'counsel-ag)
+  (global-set-key (kbd "C-x l") 'counsel-locate)
+  (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
+  (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
+  )
 
 
 (when window-system (set-frame-size (selected-frame) 80 60))
 
 (use-package projectile
   :ensure t
+  :delight '(:eval (concat " P[" (projectile-project-name) "]"))
   :config
   (projectile-mode +1)
   (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
@@ -742,7 +794,19 @@
                     :files ("langtool.el"))
   :init
   (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_1/libexec/languagetool-server.jar")
-  (setq langtool-server-user-arguments '("-p" "8099")))
+  (setq langtool-server-user-arguments '("-p" "8099"))
+
+  ;; (defun langtool-autoshow-detail-popup (overlays)
+  ;;   (when (require 'popup nil t)
+  ;;     ;; Do not interrupt current popup
+  ;;     (unless (or popup-instances
+  ;;                 ;; suppress popup after type `C-g` .
+  ;;                 (memq last-command '(keyboard-quit)))
+  ;;       (let ((msg (langtool-details-error-message overlays)))
+  ;;         (popup-tip msg)))))
+  ;; (setq langtool-autoshow-message-function
+  ;;       'langtool-autoshow-detail-popup)
+  )
 
 (use-package pdf-continuous-scroll-mode
   :quelpa (pdf-continuous-scroll-mode :repo "dalanicolai/pdf-continuous-scroll-mode.el"
@@ -779,33 +843,92 @@
   :load-path "~/.emacs.d/mk"
   :ensure nil) ; local package does not need ensure
 
-(use-package auto-dark-emacs
-  :load-path "~/.emacs.d/3rd-parties/auto-dark-emacs/"
-  :ensure nil) ; local package does not need ensure
+;; ;; Disable for now
+;; (use-package auto-dark-emacs
+;;   :load-path "~/.emacs.d/3rd-parties/auto-dark-emacs/"
+;;   :ensure nil) ; local package does not need ensure
 
-(use-package iscroll
-  :quelpa (iscroll :repo "casouri/lunarymacs"
-                   :fetcher github
-                   :files ("site-lisp/iscroll.el")))
+;; (use-package iscroll
+;;   :quelpa (iscroll :repo "casouri/lunarymacs"
+;;                    :fetcher github
+;;                    :files ("site-lisp/iscroll.el")))
 
 ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
 (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
 ;; Open ibuffer upon "C-c i"
 (global-set-key (kbd "C-c i") 'ibuffer)
 
-(use-package nameframe)
-(use-package nameframe-projectile
-  :config
-  (nameframe-projectile-mode t)
-  (global-set-key (kbd "M-P") 'nameframe-switch-frame))
+;; (use-package nameframe)
+;; (use-package nameframe-projectile
+;;   :config
+;;   (nameframe-projectile-mode t)
+;;   (global-set-key (kbd "M-P") 'nameframe-switch-frame))
 
 
 ;; with use-package
 (use-package maple-explorer
-  :quelpa (:fetcher github :repo "honmaple/emacs-maple-explorer")
+  :quelpa (maple-explorer
+           :fetcher github
+           :repo "honmaple/emacs-maple-explorer")
   :commands (maple-explorer-file maple-explorer-buffer maple-explorer-imenu maple-explorer-recentf)
   :config
   (setq maple-explorer-file-display-alist '((side . left) (slot . -1))))
+
+
+;;preview files in dired
+(use-package peep-dired
+  :ensure t
+  :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+  :bind (:map dired-mode-map
+              ("P" . peep-dired)))
+
+;; Prevent polluting the system slipboard
+;; (setq select-enable-clipboard nil)
+
+;; Dired-sidebar is not good to use.
+;; (use-package dired-sidebar
+;;   :ensure t
+;;   :commands (dired-sidebar-toggle-sidebar))
+
+;; (use-package dired-subtree
+;;   :config
+;;   (bind-keys :map dired-mode-map
+;;              ("<S-return>" . dired-subtree-toggle)))
+
+
+(defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
+(add-hook 'prog-mode-hook #'make-underscore-part-of-words)
+
+(require 'tramp)
+(setq tramp-debug-buffer t)
+(setq tramp-verbose 10)
+
+(setq alert-default-style 'libnotify)
+
+(setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
+
+(use-package delight
+  :config
+  (delight '((abbrev-mode " Abv" "abbrev")
+             (smart-tab-mode " \\t" "smart-tab")
+             (eldoc-mode nil "eldoc")
+             (yas-mode)
+             (Undo-Tree)
+             (overwrite-mode " Ov" t)))
+  (delight 'rainbow-mode)
+  (delight 'emacs-lisp-mode "Elisp" :major))
+
+(add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
+
+
+(use-package calfw
+  :ensure t)
+(use-package calfw-org
+  :ensure t
+  :after (calfw org))
+
+(use-package async
+  :ensure t)
 
 
 (provide 'init)
