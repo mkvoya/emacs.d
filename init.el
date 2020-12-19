@@ -27,20 +27,20 @@
 (require 'bind-key)
 
 
-;;; Tabbar
-(use-package centaur-tabs
-  :ensure t
-  :demand
-  :config
-  (setq centaur-tabs-set-icons t)
-  (setq centaur-tabs-gray-out-icons 'buffer)
-  (setq centaur-tabs-set-bar 'over)
-  (setq centaur-tabs-modified-marker "*")
-  (centaur-tabs-mode t)
-  (centaur-tabs-group-by-projectile-project)
-  :bind
-  ("C-<prior>" . centaur-tabs-backward)
-  ("C-<next>" . centaur-tabs-forward))
+;; ;;; Tabbar
+;; (use-package centaur-tabs
+;;   :ensure t
+;;   :demand
+;;   :config
+;;   (setq centaur-tabs-set-icons t)
+;;   (setq centaur-tabs-gray-out-icons 'buffer)
+;;   (setq centaur-tabs-set-bar 'over)
+;;   (setq centaur-tabs-modified-marker "*")
+;;   (centaur-tabs-mode t)
+;;   (centaur-tabs-group-by-projectile-project)
+;;   :bind
+;;   ("C-<prior>" . centaur-tabs-backward)
+;;   ("C-<next>" . centaur-tabs-forward))
 
 (use-package diff-hl
   :ensure t
@@ -347,7 +347,7 @@
  '(TeX-source-correlate-start-server t)
  '(ansi-color-names-vector
    ["#272822" "#F92672" "#A6E22E" "#E6DB74" "#66D9EF" "#FD5FF0" "#A1EFE4" "#F8F8F2"])
- '(centaur-tabs-mode t nil (centaur-tabs))
+ '(column-number-mode t)
  '(compilation-message-face 'default)
  '(custom-safe-themes
    '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" default))
@@ -367,16 +367,19 @@
  '(jdee-db-requested-breakpoint-face-colors (cons "#f0f0f0" "#50a14f"))
  '(jdee-db-spec-breakpoint-face-colors (cons "#f0f0f0" "#9ca0a4"))
  '(magit-diff-use-overlays nil)
+ '(menu-bar-mode nil)
  '(objed-cursor-color "#e45649")
  '(org-agenda-files
    '("~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
+ '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker iscroll pdf-continuous-scroll-mode wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock swiper-helm counsel ivy vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock counsel vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
  '(rustic-ansi-faces
    ["#fafafa" "#e45649" "#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42"])
+ '(tool-bar-mode nil)
  '(vc-annotate-background nil)
  '(vc-annotate-color-map
    '((20 . "#F92672")
@@ -405,10 +408,12 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(default ((t (:inherit nil :stipple nil :background "#fafafa" :foreground "#383a42" :inverse-video nil :box nil :strike-through nil :extend nil :overline nil :underline nil :slant normal :weight normal :height 140 :width normal :foundry "nil" :family "Sarasa Mono SC"))))
  '(mode-line ((t (:background "#afffff" :foreground "#005fff" :box nil :overline nil :underline nil)))))
 
-(set-face-attribute 'default nil :height 160)
+;; (set-face-attribute 'default nil :height 160)
 
+(set-face-attribute 'default nil :height 160)
 
 (add-hook 'prog-mode-hook #'hs-minor-mode)
 
@@ -529,10 +534,25 @@
 (setq confirm-kill-emacs 'y-or-n-p)
 
 ;;; MK's cheatsheet
-(require 'cheatsheet)
-(cheatsheet-add :group 'Common
-                :key "C-x u"
-                :description "Emacs Undo")
+(use-package cheatsheet
+  :ensure t
+  :config
+  (cheatsheet-add :group 'Emacs
+                  :key "C-x u"
+                  :description "Emacs Undo.")
+  (cheatsheet-add :group 'Emacs
+                  :key "C-x e"
+                  :description "Execute the e-lisp expression under the cursor.")
+  (cheatsheet-add :group 'OrgMode
+                  :key "C-c h"
+                  :description "Open Home Org.")
+  (cheatsheet-add :group 'OrgMode
+                  :key "C-c a"
+                  :description "Open Org Agenda.")
+  (cheatsheet-add :group 'OrgMode
+                  :key "C-c c"
+                  :description "Capture.")
+  )
 
 ;;; Smart Tab
 (require 'smart-tab)
@@ -558,8 +578,14 @@
 (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt)
 ;;; Evil rebind
 ;; :q should kill the current buffer rather than quitting emacs entirely
-(evil-ex-define-cmd "q" '(if (one-window-p t) (kill-this-buffer) (close)))
-;; (evil-ex-define-cmd "q" 'mk/betterq)
+(defun mkvoya/ex-quit ()
+  "Evil ex quit."
+  (interactive)
+  (if (one-window-p "visible")
+      (kill-this-buffer)
+    (evil-window-delete)))
+(evil-ex-define-cmd "q" #'mkvoya/ex-quit)
+;; (evil-ex-define-cmd "q" 'mkvoya/betterq)
 ;; Need to type out :quit to close emacs
 (evil-ex-define-cmd "quit" 'evil-quit)
 
@@ -569,18 +595,20 @@
   :mode (("README\\.md\\'" . gfm-mode)
         ("\\.md\\'" . markdown-mode)
         ("\\.markdown\\'" . markdown-mode))
-  :init (setq markdown-command "multimarkdown"))
+  :init (setq markdown-command "multimarkdown")
+  :config
+  ;; (custom-set-variables '(markdown-command "/usr/local/bin/pandoc"))
+  (setq markdown-command "/usr/local/bin/pandoc")
 
-;; (custom-set-variables '(markdown-command "/usr/local/bin/pandoc"))
-(setq markdown-command "/usr/local/bin/pandoc")
+  (setq markdown-preview-stylesheets (list "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"))
+  ;;"http://thomasf.github.io/solarized-css/solarized-light.min.css"))
+  )
 
-(setq markdown-preview-stylesheets (list "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"))
-;;"http://thomasf.github.io/solarized-css/solarized-light.min.css"))
+(use-package flymd
+  :after (markdown-mode))
 
-(require 'flymd)
-
-(use-package emojify
-  :hook (after-init . global-emojify-mode))
+;; (use-package emojify
+;;   :hook (after-init . global-emojify-mode))
 
 (use-package unicode-fonts
    :ensure t
@@ -637,7 +665,7 @@
         ))
 
 
-(set-face-attribute 'default nil :height 160)
+;; (set-face-attribute 'default nil :height 160)
 
 
 ;;; Telega --- telegram client
@@ -699,7 +727,13 @@
   (add-hook 'pdf-view-mode-hook (lambda ()
                                   (pdf-view-midnight-minor-mode)))
   (setq TeX-error-overview-open-after-TeX-run t)
-
+  ;; (setq mkvoya/tex-auto-compile nil)
+  ;; (defun mkvoya/tex-try-auto-compile ()
+  ;;   (when (and (eq major-mode 'TeX-mode)
+  ;;              (mkvoya/tex-auto-compile))
+  ;;     (TeX-command-run))
+  ;;   )
+  ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
   )
 (use-package auctex-latexmk)
 (use-package reftex
@@ -713,18 +747,35 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-;;; Disable Helm and use ivy.
-(ivy-mode 1)
-(setq ivy-use-virtual-buffers t)
-(setq enable-recursive-minibuffers t)
-;; enable this if you want `swiper' to use it
-;; (setq search-default-mode #'char-fold-to-regexp)
-(global-set-key "\C-s" 'swiper)
-(global-set-key (kbd "C-c C-r") 'ivy-resume)
-(global-set-key (kbd "<f6>") 'ivy-resume)
+;; ;;; Disable Helm and use ivy.
+;; (ivy-mode 1)
+;; (setq ivy-use-virtual-buffers t)
+;; (setq enable-recursive-minibuffers t)
+;; ;; enable this if you want `swiper' to use it
+;; ;; (setq search-default-mode #'char-fold-to-regexp)
+;; (global-set-key "\C-s" 'swiper)
+;; (global-set-key (kbd "C-c C-r") 'ivy-resume)
+;; (global-set-key (kbd "<f6>") 'ivy-resume)
+
+(use-package selectrum
+  :ensure t
+  :config
+  (selectrum-mode +1)
+  )
+(use-package selectrum-prescient
+  :ensure t
+  :after (selectrum)
+  :config
+  ;; to make sorting and filtering more intelligent
+  (selectrum-prescient-mode +1)
+  ;; to save your command history on disk, so the sorting gets more
+  ;; intelligent over time
+  (prescient-persist-mode +1)
+  )
 
 (use-package counsel
   :delight
+  :after (projectile)
   :config
   (counsel-mode 1) ; parts of the following are duplicated with this mode.
   (global-set-key (kbd "M-x") 'counsel-M-x)
@@ -736,6 +787,7 @@
   (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
   (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
   (global-set-key (kbd "C-c g") 'counsel-git)
+  (global-set-key (kbd "C-c p p") 'counsel-projectile-switch-project)
   (global-set-key (kbd "C-c j") 'counsel-git-grep)
   (global-set-key (kbd "C-c k") 'counsel-ag)
   (global-set-key (kbd "C-x l") 'counsel-locate)
@@ -751,8 +803,9 @@
   :delight '(:eval (concat " P[" (projectile-project-name) "]"))
   :config
   (projectile-mode +1)
-  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map))
+  ;; (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  ;; (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+  )
 
 (use-package dashboard
     :ensure t
@@ -773,9 +826,9 @@
 (setq-default fill-column 80)
 
 ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
-(defun mk/tex-mode-hook ()
+(defun mkvoya/tex-mode-hook ()
   (setq fill-column 1024))
-(add-hook 'TeX-mode-hook #'mk/tex-mode-hook)
+(add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
 
 (use-package quelpa
   :init
@@ -793,7 +846,8 @@
                     :fetcher github
                     :files ("langtool.el"))
   :init
-  (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_1/libexec/languagetool-server.jar")
+  (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_2/libexec/languagetool-server.jar")
+  ;; (setq langtool-bin "/usr/local/bin/langtool")
   (setq langtool-server-user-arguments '("-p" "8099"))
 
   ;; (defun langtool-autoshow-detail-popup (overlays)
@@ -807,17 +861,6 @@
   ;; (setq langtool-autoshow-message-function
   ;;       'langtool-autoshow-detail-popup)
   )
-
-(use-package pdf-continuous-scroll-mode
-  :quelpa (pdf-continuous-scroll-mode :repo "dalanicolai/pdf-continuous-scroll-mode.el"
-                                      :fetcher github
-                                      :files ("pdf-continuous-scroll-mode.el"))
-  :config
-  (with-eval-after-load 'pdf-view
-    (require 'pdf-continuous-scroll-mode))
-  (add-hook 'pdf-view-mode-hook 'pdf-continuous-scroll-mode)
-  )
-
 
 (use-package wucuo
   :ensure t
@@ -834,14 +877,17 @@
   :defer t)
 
 (use-package config-fonts
-  :load-path "~/.emacs.d/mk"
+  :load-path "~/.emacs.d/mkvoya"
   :ensure nil) ; local package does not need ensure
 (use-package config-appearances
-  :load-path "~/.emacs.d/mk"
+  :load-path "~/.emacs.d/mkvoya"
   :ensure nil) ; local package does not need ensure
 (use-package config-org
-  :load-path "~/.emacs.d/mk"
+  :load-path "~/.emacs.d/mkvoya"
   :ensure nil) ; local package does not need ensure
+;; (use-package config-mail
+;;   :load-path "~/.emacs.d/mkvoya"
+;;   :ensure nil) ; local package does not need ensure
 
 ;; ;; Disable for now
 ;; (use-package auto-dark-emacs
@@ -929,6 +975,145 @@
 
 (use-package async
   :ensure t)
+
+(modify-syntax-entry ?_ "w")
+
+;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
+;; Compilation output
+(setq compilation-scroll-output t)
+;; (setq compilation-scroll-output 'first-error)
+
+
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
+(use-package mu4e)
+(require 'mu4e)
+
+(use-package mu4e-alert
+  :ensure t
+  :after mu4e
+  :init
+  (setq mu4e-alert-interesting-mail-query
+        "flag:unread maildir:/Subscribe/INBOX "
+        )
+  (mu4e-alert-enable-mode-line-display)
+  (defun gjstein-refresh-mu4e-alert-mode-line ()
+    (interactive)
+    (mu4e~proc-kill)
+    (mu4e-alert-enable-mode-line-display)
+    )
+  (run-with-timer 0 60 'gjstein-refresh-mu4e-alert-mode-line)
+  (setq exec-path (append '("/usr/local/opt/terminal-notifier/bin/") exec-path))
+  (mu4e-alert-set-default-style 'notifier)
+  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+  )
+
+
+;; Choose the style you prefer for desktop notifications
+;; On Mac OSX you can set style to
+;; 1. notifier      - Notifications using the `terminal-notifier' program, requires `terminal-notifier' to be in PATH
+;; 1. growl         - Notifications using the `growl' program, requires `growlnotify' to be in PATH
+
+
+(global-set-key (kbd "C-c m") 'mu4e)
+
+;;;; LSP
+;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+(setq lsp-keymap-prefix "s-l")
+
+(use-package lsp-mode
+    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+            (python-mode . lsp)
+            ;; if you want which-key integration
+            (lsp-mode . lsp-enable-which-key-integration))
+    :commands lsp)
+
+;; optionally
+(use-package lsp-ui :commands lsp-ui-mode)
+;; if you are helm user
+;; (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+;; if you are ivy user
+(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+(use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+;; optionally if you want to use debugger
+(use-package dap-mode)
+;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+
+;; optional if you want which-key integration
+(use-package which-key
+    :config
+    (which-key-mode))
+
+;; Example configuration for Consult
+(use-package consult
+  ;; Replace bindings. Lazily loaded due to use-package.
+  :bind (("C-c h" . consult-history)
+         ("C-c o" . consult-outline)
+         ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("C-x 5 b" . consult-buffer-other-frame)
+         ("C-x r x" . consult-register)
+         ("C-x r b" . consult-bookmark)
+         ("M-g o" . consult-outline) ;; "M-s o" is a good alternative
+         ("M-g m" . consult-mark)    ;; "M-s m" is a good alternative
+         ("M-g l" . consult-line)    ;; "M-s l" is a good alternative
+         ("M-g i" . consult-imenu)   ;; "M-s i" is a good alternative
+         ("M-g e" . consult-error)   ;; "M-s e" is a good alternative
+         ("M-s m" . consult-multi-occur)
+         ("M-y" . consult-yank-pop)
+         ("<help> a" . consult-apropos))
+
+  ;; The :init configuration is always executed (Not lazy!)
+  :init
+
+  ;; Replace functions (consult-multi-occur is a drop-in replacement)
+  (fset 'multi-occur #'consult-multi-occur)
+
+  ;; Configure other variables and modes in the :config section, after lazily loading the package
+  :config
+
+  ;; Optionally configure narrowing and widening keys.
+  ;; Both < and C-+ work reasonably well.
+  ;; (setq consult-narrow-key "<"
+  ;;       consult-widen-key "< ")
+  ;; (setq consult-narrow-key (kbd "C-+")
+  ;;       consult-widen-key (kbd "C-+ SPC"))
+
+  ;; Optional configure a "view" library to be used by `consult-buffer`.
+  ;; The view library must provide two functions, one to open the view by name,
+  ;; and one function which must return a list of views as strings.
+  ;; Example: https://github.com/minad/bookmark-view/
+  ;; (setq consult-view-open-function #'bookmark-jump
+  ;;       consult-view-list-function #'bookmark-view-names)
+
+  ;; Optionally enable previews. Note that individual previews can be disabled
+  ;; via customization variables.
+  (consult-preview-mode))
+
+;; Enable Consult-Selectrum integration.
+;; This package should be installed if Selectrum is used.
+(use-package consult-selectrum
+  :demand t)
+
+;; Optionally add the consult-flycheck command.
+(use-package consult-flycheck
+  :bind (:map flycheck-command-map
+         ("!" . consult-flycheck)))
+
+;; Enable richer annotations using the Marginalia package
+(use-package marginalia
+  :ensure t
+  ;; The :init configuration is always executed (Not lazy!)
+  :init
+  ;; Must be in the :init section of use-package such that the mode gets
+  ;; enabled right away. Note that this forces loading the package.
+  (marginalia-mode)
+  ;; Prefer richer, more heavy, annotations over the lighter default variant.
+  ;; E.g. M-x will show the documentation string additional to the keybinding.
+  ;; By default only the keybinding is shown as annotation.
+  ;; Note that there is the command `marginalia-cycle-annotators` to
+  ;; switch between the annotators.
+  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
 
 
 (provide 'init)

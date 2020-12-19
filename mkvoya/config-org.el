@@ -45,6 +45,10 @@
         ;;                       :weight bold))
         ))
 
+;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
+;; (setq org-ellipsis "…")
+;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
+(setq org-ellipsis "⤵")
 
 ;;; Org Style
 ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
@@ -234,7 +238,7 @@
          (require 'org)
          (require 'package)
          (package-initialize)
-         (add-to-list 'load-path "~/.emacs.d/mk")
+         (add-to-list 'load-path "~/.emacs.d/mkvoya")
          (require 'config-org)
          (require 'ox-icalendar)
          (require 'org-caldav)
@@ -248,26 +252,112 @@
        (lambda (result)
          (message "Async sync to radicale sync okay: %s." result)
          ))))
-  (add-hook 'after-save-hook #'mkvoya/sync-to-radicale-async)
+  ;; This burns the CPU and drains the battery...
+  ;; (add-hook 'after-save-hook #'mkvoya/sync-to-radicale-async)
   )
 
 
-;; Two more extensions could be relavant.
-;; org-super-links
-;; org-wild-notifier.el
-(use-package org-wild-notifier
-  :ensure t
-  :config
-  (org-wild-notifier-mode t)
-  ;;; Overwrite
-  (defun org-wild-notifier--notify (event-msg)
-    "Notify about an event using `alert' library.
-EVENT-MSG is a string representation of the event."
-    (ct/send-notification event-msg org-wild-notifier-notification-title)
-    (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
-  )
+;; ;; Two more extensions could be relavant.
+;; ;; org-super-links
+;; ;; org-wild-notifier.el
+;; (use-package org-wild-notifier
+;;   :ensure t
+;;   :config
+;;   (org-wild-notifier-mode t)
+;;   ;;; Overwrite
+;;   (defun org-wild-notifier--notify (event-msg)
+;;     "Notify about an event using `alert' library.
+;; EVENT-MSG is a string representation of the event."
+;;     ;;(message "Here is the events %S" event-msg)
+;;     ;;(message "%d" "ddd")
+;;     ;;(if event-msg
+;;      ;;   (progn
+;;           (ct/send-notification org-wild-notifier-notification-title event-msg)
+;;           ;; (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
+;;           ;;)
+;;           (message "No new events"))
+;;   ;;)
+;;   )
 
+(add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((dot . t)
+   (C . t)))
+
+;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
+;; Always redisplay inline images after executing SRC block
+(eval-after-load 'org
+  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+
+;;; Org Publish
+(require 'ox-publish)
+(setq org-publish-project-alist
+      '(
+        ("org-notes"
+         :base-directory "~/Dropbox/Dreams/Org/Public"
+         :base-extension "org"
+         :publishing-directory "/Volumes/ramfs/public_html/"
+         :recursive t
+         :publishing-function org-html-publish-to-html
+         :headline-levels 4             ; Just the default for this project.
+         :auto-preamble t
+         )
+        ("org-static"
+         :base-directory "~/Dropbox/Dreams/Org/Public"
+         :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf"
+         :publishing-directory "/Volumes/ramfs/public_html/"
+         :recursive t
+         :publishing-function org-publish-attachment
+         )
+        ("org" :components ("org-notes" "org-static"))
+        ))
+
+;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+(defun org-force-open-current-window ()
+  "Open at current window."
+  (interactive)
+  (let ((org-link-frame-setup (quote
+                               ((vm . vm-visit-folder)
+                                (vm-imap . vm-visit-imap-folder)
+                                (gnus . gnus)
+                                (file . find-file)
+                                (wl . wl)))
+                              ))
+    (org-open-at-point)))
+
+;; Depending on universal argument try opening link
+(defun org-open-maybe (&optional arg)
+  "Open maybe arg."
+  (interactive "P")
+  (if arg
+      (org-open-at-point)
+    (org-force-open-current-window)))
+;; Redefine file opening without clobbering universal argument
+(define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
 
 ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
+
+(use-package org-ref
+  :ensure t
+  :config
+  (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
+  ;; see org-ref for use of these variables
+  (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
+        org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
+        org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
+  (setq bibtex-completion-bibliography "~/Dropbox/bibliography/references.bib"
+        bibtex-completion-library-path "~/Dropbox/bibliography/bibtex-pdfs"
+        bibtex-completion-notes-path "~/Dropbox/bibliography/helm-bibtex-notes")
+  ;; open pdf with system pdf viewer (works on mac)
+  (setq bibtex-completion-pdf-open-function
+        (lambda (fpath)
+          (start-process "open" "*open*" "open" fpath)))
+  ;; alternative
+  ;; (setq bibtex-completion-pdf-open-function 'org-open-file)
+  )
+
+
 (provide 'config-org)
 ;;; config-org.el ends here

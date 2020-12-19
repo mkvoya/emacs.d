@@ -1,0 +1,8 @@
+
+@misc{key,
+  title        = {GitHub - jkitchin/org-ref: org-mode modules for citations, cross-references, bibliographies in org-mode and useful bibtex tools to go with it.},
+  author       = {nil},
+  howpublished = {https://github.com/jkitchin/org-ref},
+  year         = {nil},
+  note         = {Online; accessed 17 December 2020}
+}
