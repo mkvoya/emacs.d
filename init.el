@@ -3,44 +3,37 @@
 ;;;   Emacs Startup File --- initialization for Emacs
 
 ;;; Code:
-(load "server") ; Load and start server if it's not running
-(unless (server-running-p) (server-start))
+;; (load "server") ; Load and start server if it's not running
+;; (unless (server-running-p) (server-start))
 
-(require 'package)
-(setq package-enable-at-startup nil)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-(package-initialize)
+;;; Optimized according to http://blog.lujun9972.win/emacs-document/blog/2019/03/15/降低emacs启动时间的高级技术/index.html
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+;; Make startup faster by reducing the frequency of garbage
+;; collection.  The default is 800 kilobytes.  Measured in bytes.
+(setq gc-cons-threshold (* 100 1000 1000))
+
+(eval-when-compile
+  (require 'use-package))
+
+(use-package package
+  :config
+  ;; (require 'package)
+  (setq package-enable-at-startup nil)
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+  (package-initialize)
+
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+  )
 
 ;;; Special Keys for MacOS GUI
 ;;(setq mac-command-modifier 'meta) ; Switch Cmd and Opt(Alt)
 ;;(setq mac-option-modifier 'super) ; Switch Cmd and Opt(Alt)
 
-
-(eval-when-compile
-  (require 'use-package))
 ;;; (require 'diminish); => use delight
-(require 'bind-key)
-
-
-;; ;;; Tabbar
-;; (use-package centaur-tabs
-;;   :ensure t
-;;   :demand
-;;   :config
-;;   (setq centaur-tabs-set-icons t)
-;;   (setq centaur-tabs-gray-out-icons 'buffer)
-;;   (setq centaur-tabs-set-bar 'over)
-;;   (setq centaur-tabs-modified-marker "*")
-;;   (centaur-tabs-mode t)
-;;   (centaur-tabs-group-by-projectile-project)
-;;   :bind
-;;   ("C-<prior>" . centaur-tabs-backward)
-;;   ("C-<next>" . centaur-tabs-forward))
+(use-package bind-key)
 
 (use-package diff-hl
   :ensure t
@@ -62,8 +55,6 @@
 ;(setq delete-old-versiojns -1)
 ;(setq version-control t)
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
-
-
 
 ;;; History
 (setq savehist-file "~/.emacs.d/savehist")
@@ -181,6 +172,7 @@
   (yas-global-mode 1))
 
 (use-package yasnippet-snippets
+  :after (yasnippet)
   :ensure t)
 
 ; Autocomplete
@@ -265,17 +257,18 @@
               indent-tabs-mode t)
 
 ; Whitespace[built-in], check: http://ergoemacs.org/emacs/whitespace-mode.html
-(use-package whitespace)
-(setq whitespace-style
-'(face trailing tabs newline tab-mark newline-mark))
-;; '(face trailing tabs newline tab-mark newline-mark lines-tail))
-(setq whitespace-display-mappings
-'((newline-mark 10 [8617 10])
-  (tab-mark 9 [8594 9] [92 9])))
-(set-face-background 'trailing-whitespace "#ffaf5f")
-(set-face-background 'whitespace-trailing "#ffaf5f")
-(global-whitespace-mode t)
-
+(use-package whitespace
+  :config
+  (setq whitespace-style
+        '(face trailing tabs newline tab-mark newline-mark))
+  ;; '(face trailing tabs newline tab-mark newline-mark lines-tail))
+  (setq whitespace-display-mappings
+        '((newline-mark 10 [8617 10])
+          (tab-mark 9 [8594 9] [92 9])))
+  (set-face-background 'trailing-whitespace "#ffaf5f")
+  (set-face-background 'whitespace-trailing "#ffaf5f")
+  (global-whitespace-mode t)
+  )
 
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 
@@ -297,18 +290,18 @@
 
 
 (use-package monokai-theme
-  :ensure t
+  :defer t
   :config
 ;;  (load-theme 'monokai t)
 ;;  (setq monokai-background "#080C14")
   )
 (use-package grandshell-theme
-  :ensure t
+  :defer t
   :config
 ;;  (load-theme 'grandshell t)
   )
 (use-package alect-themes
-  :ensure t
+  :defer t
   :config
 ;;  (load-theme 'alect-black t)
   )
@@ -323,11 +316,27 @@
 ;;   :config
 ;;   (load-theme 'airline-light t))
 
-
+;;; Better evil
 (use-package evil
   :ensure t
-  :after smart-mode-line
+  :after (smart-mode-line)
   :config
+  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+  (require 'evil-numbers)
+  (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
+  (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt)
+;;; Evil rebind
+  ;; :q should kill the current buffer rather than quitting emacs entirely
+  (defun mkvoya/ex-quit ()
+    "Evil ex quit."
+    (interactive)
+    (if (one-window-p "visible")
+        (kill-this-buffer)
+      (evil-window-delete)))
+  (evil-ex-define-cmd "q" #'mkvoya/ex-quit)
+  ;; (evil-ex-define-cmd "q" 'mkvoya/betterq)
+  ;; Need to type out :quit to close emacs
+  (evil-ex-define-cmd "quit" 'evil-quit)
   ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
   (setq evil-emacs-state-cursor '(hollow))
   (evil-mode 1))
@@ -370,10 +379,10 @@
  '(menu-bar-mode nil)
  '(objed-cursor-color "#e45649")
  '(org-agenda-files
-   '("~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
+   '("~/Dropbox/Dreams/org/Plans.org" "~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe counsel-projectile rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock counsel vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -422,32 +431,21 @@
 ;(set-face-foreground 'highlight nil)
 (set-face-foreground 'hl-line nil)
 
-;;;;; Use whitespace instead
-;;(use-package column-marker
-;;  :ensure t
-;;  :defer t)
-;;
-;;(add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 80)))
-;(use-package column-enforce-mode
-;  :ensure t
-;  :defer t)
-;(add-hook 'prog-mode-hook 'column-enforce-mode)
-;(setq column-enforce-comments nil)
+;;; Use whitespace (instead of column-marker, column-enforce-mode)
 
 ; ensure moues
 (xterm-mouse-mode t)
 
 (use-package modern-cpp-font-lock
-  :ensure t
-  :defer t)
-(add-hook 'c++-mode-hook #'modern-c++-font-lock-mode)
+  :defer t
+  :config
+  (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
 ;(add-hook 'prog-mode-hook
 ;         (lambda () (add-to-list 'write-file-functions
 ;                                 'delete-trailing-whitespace)))
 
 (use-package neotree
-  :ensure t
   :defer t)
 
 ; (use-package perspective
@@ -455,45 +453,24 @@
 ;   :defer t)
 ; (persp-mode)
 
-;(use-package avy
-;  :ensure t
-;  :defer t)
-
-
 (use-package flycheck
-  :ensure t
   :defer t
-  :init (global-flycheck-mode))
+  :config (global-flycheck-mode))
 
 (add-hook 'after-init-hook #'global-flycheck-mode)
 
 (setq flycheck-indication-mode 'left-fringe)
 
 (use-package flycheck-color-mode-line
-  :ensure t
-  :defer t)
-
-(eval-after-load "flycheck"
-  '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode))
+  :after (flycheck)
+  :defer t
+  :config
+  (eval-after-load "flycheck"
+    '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode)))
 
 (use-package flycheck-status-emoji
-  :ensure t
+  :after (flycheck)
   :defer t)
-
-;(use-package helm
-;  :ensure t
-;  :defer t
-;  :config
-;  (helm-mode 1))
-;;(use-package helm-config
-;;  :ensure t
-;;  :defer t)
-;(use-package helm-etags-plus
-;  :bind
-;  ("M-." . helm-etags-plus-select)
-;  :ensure t
-;  :defer t)
-
 
 ;; scroll one line at a time (less "jumpy" than defaults)
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
@@ -518,8 +495,8 @@
 ;; (setq evil-magit-state 'normal)
 ;; optional: disable additional bindings for yanking text
 ;; (setq evil-magit-use-y-for-yank nil)
-(require 'evil-magit)
-
+(use-package evil-magit
+  :after (evil magit))
 
 (global-set-key (kbd "C-c d") 'define-word-at-point)
 (global-set-key (kbd "C-c D") 'define-word)
@@ -555,39 +532,31 @@
   )
 
 ;;; Smart Tab
-(require 'smart-tab)
-(smart-tabs-insinuate 'c 'javascript)
+(use-package smart-tab
+  :config
+  (smart-tabs-insinuate 'c 'javascript))
 
 ;;; Easy motion
 ;; Options includes:
 ;; - https://github.com/abo-abo/avy
 ;; - https://github.com/PythonNut/evil-easymotion
 ;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
-(require 'evil-easymotion)
-(evilem-default-keybindings "SPC")
-;; (evilem-define (kbd "SPC c") 'avy-goto-char)
-;; (global-set-key (kbd "SPC") 'avy-goto-char)
-(define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char)
+(use-package evil-easymotion
+  :after (evil)
+  :config
+  (evilem-default-keybindings "SPC")
+  ;; (evilem-define (kbd "SPC c") 'avy-goto-char)
+  ;; (global-set-key (kbd "SPC") 'avy-goto-char)
+  (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
+
+(use-package ctrlf
+  :ensure t
+  :config
+  (ctrlf-mode +1)
+  )
 
 
-;;; Better evil
-(require 'evil)
-(define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-(require 'evil-numbers)
-(define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
-(define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt)
-;;; Evil rebind
-;; :q should kill the current buffer rather than quitting emacs entirely
-(defun mkvoya/ex-quit ()
-  "Evil ex quit."
-  (interactive)
-  (if (one-window-p "visible")
-      (kill-this-buffer)
-    (evil-window-delete)))
-(evil-ex-define-cmd "q" #'mkvoya/ex-quit)
-;; (evil-ex-define-cmd "q" 'mkvoya/betterq)
-;; Need to type out :quit to close emacs
-(evil-ex-define-cmd "quit" 'evil-quit)
+
 
 
 (use-package markdown-mode
@@ -747,16 +716,8 @@
 (when (memq window-system '(mac ns x))
   (exec-path-from-shell-initialize))
 
-;; ;;; Disable Helm and use ivy.
-;; (ivy-mode 1)
-;; (setq ivy-use-virtual-buffers t)
-;; (setq enable-recursive-minibuffers t)
-;; ;; enable this if you want `swiper' to use it
-;; ;; (setq search-default-mode #'char-fold-to-regexp)
-;; (global-set-key "\C-s" 'swiper)
-;; (global-set-key (kbd "C-c C-r") 'ivy-resume)
-;; (global-set-key (kbd "<f6>") 'ivy-resume)
-
+;;; Disable Helm and use ivy.
+;;; Disable ivy, swiper, counsel, use selectrum and consult (and ctrlf?)
 (use-package selectrum
   :ensure t
   :config
@@ -772,28 +733,80 @@
   ;; intelligent over time
   (prescient-persist-mode +1)
   )
-
-(use-package counsel
-  :delight
-  :after (projectile)
+;; Example configuration for Consult
+(use-package consult
+  ;; Replace bindings. Lazily loaded due to use-package.
+  :bind (("C-c h" . consult-history)
+         ("C-c o" . consult-outline)
+         ("C-x b" . consult-buffer)
+         ("C-x 4 b" . consult-buffer-other-window)
+         ("C-x 5 b" . consult-buffer-other-frame)
+         ("C-x r x" . consult-register)
+         ("C-x r b" . consult-bookmark)
+         ("M-g o" . consult-outline) ;; "M-s o" is a good alternative
+         ("M-g m" . consult-mark)    ;; "M-s m" is a good alternative
+         ("M-g l" . consult-line)    ;; "M-s l" is a good alternative
+         ("M-g i" . consult-imenu)   ;; "M-s i" is a good alternative
+         ("M-g e" . consult-error)   ;; "M-s e" is a good alternative
+         ("M-s m" . consult-multi-occur)
+         ("M-y" . consult-yank-pop)
+         ("<help> a" . consult-apropos))
+  ;; The :init configuration is always executed (Not lazy!)
+  :init
+  ;; Replace functions (consult-multi-occur is a drop-in replacement)
+  (fset 'multi-occur #'consult-multi-occur)
+  ;; Configure other variables and modes in the :config section, after lazily loading the package
   :config
-  (counsel-mode 1) ; parts of the following are duplicated with this mode.
-  (global-set-key (kbd "M-x") 'counsel-M-x)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file)
-  (global-set-key (kbd "<f1> f") 'counsel-describe-function)
-  (global-set-key (kbd "<f1> v") 'counsel-describe-variable)
-  (global-set-key (kbd "<f1> o") 'counsel-describe-symbol)
-  (global-set-key (kbd "<f1> l") 'counsel-find-library)
-  (global-set-key (kbd "<f2> i") 'counsel-info-lookup-symbol)
-  (global-set-key (kbd "<f2> u") 'counsel-unicode-char)
-  (global-set-key (kbd "C-c g") 'counsel-git)
-  (global-set-key (kbd "C-c p p") 'counsel-projectile-switch-project)
-  (global-set-key (kbd "C-c j") 'counsel-git-grep)
-  (global-set-key (kbd "C-c k") 'counsel-ag)
-  (global-set-key (kbd "C-x l") 'counsel-locate)
-  (global-set-key (kbd "C-S-o") 'counsel-rhythmbox)
-  (define-key minibuffer-local-map (kbd "C-r") 'counsel-minibuffer-history)
-  )
+  ;; Optionally configure narrowing and widening keys.
+  ;; Both < and C-+ work reasonably well.
+  ;; (setq consult-narrow-key "<"
+  ;;       consult-widen-key "< ")
+  ;; (setq consult-narrow-key (kbd "C-+")
+  ;;       consult-widen-key (kbd "C-+ SPC"))
+  ;; Optional configure a "view" library to be used by `consult-buffer`.
+  ;; The view library must provide two functions, one to open the view by name,
+  ;; and one function which must return a list of views as strings.
+  ;; Example: https://github.com/minad/bookmark-view/
+  ;; (setq consult-view-open-function #'bookmark-jump
+  ;;       consult-view-list-function #'bookmark-view-names)
+
+  ;; Optionally enable previews. Note that individual previews can be disabled
+  ;; via customization variables.
+  (consult-preview-mode))
+
+;; Enable Consult-Selectrum integration.
+;; This package should be installed if Selectrum is used.
+(use-package consult-selectrum
+  :demand t)
+
+;; Optionally add the consult-flycheck command.
+(use-package consult-flycheck
+  :bind (:map flycheck-command-map
+         ("!" . consult-flycheck)))
+
+;; Enable richer annotations using the Marginalia package
+(use-package marginalia
+  :ensure t
+  ;; The :init configuration is always executed (Not lazy!)
+  :init
+  ;; Must be in the :init section of use-package such that the mode gets
+  ;; enabled right away. Note that this forces loading the package.
+  (marginalia-mode)
+  ;; Prefer richer, more heavy, annotations over the lighter default variant.
+  ;; E.g. M-x will show the documentation string additional to the keybinding.
+  ;; By default only the keybinding is shown as annotation.
+  ;; Note that there is the command `marginalia-cycle-annotators` to
+  ;; switch between the annotators.
+  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+
+(use-package embark
+  :after selectrum
+  :bind (:map minibuffer-local-map
+              ("C-o" . embark-act)
+              ("C-S-o" . embark-act-noexit)
+              :map embark-file-map
+              ("j" . dired-jump)))
+
 
 
 (when window-system (set-frame-size (selected-frame) 80 60))
@@ -876,40 +889,10 @@
 (use-package vlf
   :defer t)
 
-(use-package config-fonts
-  :load-path "~/.emacs.d/mkvoya"
-  :ensure nil) ; local package does not need ensure
-(use-package config-appearances
-  :load-path "~/.emacs.d/mkvoya"
-  :ensure nil) ; local package does not need ensure
-(use-package config-org
-  :load-path "~/.emacs.d/mkvoya"
-  :ensure nil) ; local package does not need ensure
-;; (use-package config-mail
-;;   :load-path "~/.emacs.d/mkvoya"
-;;   :ensure nil) ; local package does not need ensure
-
-;; ;; Disable for now
-;; (use-package auto-dark-emacs
-;;   :load-path "~/.emacs.d/3rd-parties/auto-dark-emacs/"
-;;   :ensure nil) ; local package does not need ensure
-
-;; (use-package iscroll
-;;   :quelpa (iscroll :repo "casouri/lunarymacs"
-;;                    :fetcher github
-;;                    :files ("site-lisp/iscroll.el")))
-
 ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
 (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
 ;; Open ibuffer upon "C-c i"
 (global-set-key (kbd "C-c i") 'ibuffer)
-
-;; (use-package nameframe)
-;; (use-package nameframe-projectile
-;;   :config
-;;   (nameframe-projectile-mode t)
-;;   (global-set-key (kbd "M-P") 'nameframe-switch-frame))
-
 
 ;; with use-package
 (use-package maple-explorer
@@ -945,9 +928,10 @@
 (defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
 (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
 
-(require 'tramp)
-(setq tramp-debug-buffer t)
-(setq tramp-verbose 10)
+(use-package tramp
+  :config
+  (setq tramp-debug-buffer t)
+  (setq tramp-verbose 10))
 
 (setq alert-default-style 'libnotify)
 
@@ -986,12 +970,10 @@
 
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
 (use-package mu4e)
-(require 'mu4e)
-
 (use-package mu4e-alert
   :ensure t
-  :after mu4e
-  :init
+  :after (mu4e)
+  :config
   (setq mu4e-alert-interesting-mail-query
         "flag:unread maildir:/Subscribe/INBOX "
         )
@@ -1005,16 +987,16 @@
   (setq exec-path (append '("/usr/local/opt/terminal-notifier/bin/") exec-path))
   (mu4e-alert-set-default-style 'notifier)
   (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
+  ;; Choose the style you prefer for desktop notifications
+  ;; On Mac OSX you can set style to
+  ;; 1. notifier      - Notifications using the `terminal-notifier' program, requires `terminal-notifier' to be in PATH
+  ;; 1. growl         - Notifications using the `growl' program, requires `growlnotify' to be in PATH
+  (global-set-key (kbd "C-c m") 'mu4e)
+  (bind-keys :map mu4e-headers-mode-map
+             ("<mouse-1>" . mu4e-headers-view-message))
   )
 
 
-;; Choose the style you prefer for desktop notifications
-;; On Mac OSX you can set style to
-;; 1. notifier      - Notifications using the `terminal-notifier' program, requires `terminal-notifier' to be in PATH
-;; 1. growl         - Notifications using the `growl' program, requires `growlnotify' to be in PATH
-
-
-(global-set-key (kbd "C-c m") 'mu4e)
 
 ;;;; LSP
 ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
@@ -1032,7 +1014,7 @@
 ;; if you are helm user
 ;; (use-package helm-lsp :commands helm-lsp-workspace-symbol)
 ;; if you are ivy user
-(use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 ;; optionally if you want to use debugger
@@ -1044,77 +1026,91 @@
     :config
     (which-key-mode))
 
-;; Example configuration for Consult
-(use-package consult
-  ;; Replace bindings. Lazily loaded due to use-package.
-  :bind (("C-c h" . consult-history)
-         ("C-c o" . consult-outline)
-         ("C-x b" . consult-buffer)
-         ("C-x 4 b" . consult-buffer-other-window)
-         ("C-x 5 b" . consult-buffer-other-frame)
-         ("C-x r x" . consult-register)
-         ("C-x r b" . consult-bookmark)
-         ("M-g o" . consult-outline) ;; "M-s o" is a good alternative
-         ("M-g m" . consult-mark)    ;; "M-s m" is a good alternative
-         ("M-g l" . consult-line)    ;; "M-s l" is a good alternative
-         ("M-g i" . consult-imenu)   ;; "M-s i" is a good alternative
-         ("M-g e" . consult-error)   ;; "M-s e" is a good alternative
-         ("M-s m" . consult-multi-occur)
-         ("M-y" . consult-yank-pop)
-         ("<help> a" . consult-apropos))
 
-  ;; The :init configuration is always executed (Not lazy!)
-  :init
-
-  ;; Replace functions (consult-multi-occur is a drop-in replacement)
-  (fset 'multi-occur #'consult-multi-occur)
-
-  ;; Configure other variables and modes in the :config section, after lazily loading the package
+(use-package beacon
   :config
+  (beacon-mode 1))
 
-  ;; Optionally configure narrowing and widening keys.
-  ;; Both < and C-+ work reasonably well.
-  ;; (setq consult-narrow-key "<"
-  ;;       consult-widen-key "< ")
-  ;; (setq consult-narrow-key (kbd "C-+")
-  ;;       consult-widen-key (kbd "C-+ SPC"))
+;; From the official doc <https://github.com/tumashu/pyim>.
+(use-package pyim
+  :ensure nil
+  :demand t
+  :config
+  ;; 激活 basedict 拼音词库，五笔用户请继续阅读 README
+  (use-package pyim-basedict
+    :ensure nil
+    :config (pyim-basedict-enable))
 
-  ;; Optional configure a "view" library to be used by `consult-buffer`.
-  ;; The view library must provide two functions, one to open the view by name,
-  ;; and one function which must return a list of views as strings.
-  ;; Example: https://github.com/minad/bookmark-view/
-  ;; (setq consult-view-open-function #'bookmark-jump
-  ;;       consult-view-list-function #'bookmark-view-names)
+  (setq default-input-method "pyim")
 
-  ;; Optionally enable previews. Note that individual previews can be disabled
-  ;; via customization variables.
-  (consult-preview-mode))
+  (setq pyim-default-scheme 'xiaohe-shuangpin)
 
-;; Enable Consult-Selectrum integration.
-;; This package should be installed if Selectrum is used.
-(use-package consult-selectrum
-  :demand t)
+  ;; 设置 pyim 探针设置，这是 pyim 高级功能设置，可以实现 *无痛* 中英文切换 :-)
+  ;; 我自己使用的中英文动态切换规则是：
+  ;; 1. 光标只有在注释里面时，才可以输入中文。
+  ;; 2. 光标前是汉字字符时，才能输入中文。
+  ;; 3. 使用 M-j 快捷键，强制将光标前的拼音字符串转换为中文。
+  ;;(setq-default pyim-english-input-switch-functions
+  ;;              '(pyim-probe-dynamic-english
+  ;;                pyim-probe-isearch-mode
+  ;;                pyim-probe-program-mode
+  ;;                pyim-probe-org-structure-template))
+  ;;(setq-default pyim-punctuation-half-width-functions
+  ;;              '(pyim-probe-punctuation-line-beginning
+  ;;                pyim-probe-punctuation-after-punctuation))
 
-;; Optionally add the consult-flycheck command.
-(use-package consult-flycheck
-  :bind (:map flycheck-command-map
-         ("!" . consult-flycheck)))
+  ;; 开启拼音搜索功能
+  (pyim-isearch-mode 1)
 
-;; Enable richer annotations using the Marginalia package
-(use-package marginalia
-  :ensure t
-  ;; The :init configuration is always executed (Not lazy!)
-  :init
-  ;; Must be in the :init section of use-package such that the mode gets
-  ;; enabled right away. Note that this forces loading the package.
-  (marginalia-mode)
-  ;; Prefer richer, more heavy, annotations over the lighter default variant.
-  ;; E.g. M-x will show the documentation string additional to the keybinding.
-  ;; By default only the keybinding is shown as annotation.
-  ;; Note that there is the command `marginalia-cycle-annotators` to
-  ;; switch between the annotators.
-  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+  ;; 使用 popup-el 来绘制选词框, 如果用 emacs26, 建议设置
+  ;; 为 'posframe, 速度很快并且菜单不会变形，不过需要用户
+  ;; 手动安装 posframe 包。
+  (setq pyim-page-tooltip 'posframe)
+  ;; (setq pyim-page-tooltip 'popup)
 
+  ;; 选词框显示5个候选词
+  (setq pyim-page-length 5)
+  (global-set-key (kbd "M-n") 'toggle-input-method))
+
+  ;; :bind
+  ;; (("M-n" . pyim-convert-string-at-point) ;与 pyim-probe-dynamic-english 配合
+  ;;  ("C-;" . pyim-delete-word-from-personal-buffer)))
+
+(add-hook 'org-mode-hook
+          (lambda () (add-to-list 'write-file-functions
+                                  'delete-trailing-whitespace)))
+
+;; (when (memq window-system '(mac ns))
+;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
+;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+;;   (setq ns-use-proxy-icon nil)
+;;   ;; (setq frame-title-format nil)
+;;   )
+(when (eq system-type 'darwin) (ns-auto-titlebar-mode))
+
+;; Use a hook so the message doesn't get clobbered by other messages.
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs ready in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+
+(use-package config-fonts
+  :load-path "~/.emacs.d/mkvoya"
+  :ensure nil) ; local package does not need ensure
+(use-package config-appearances
+  :load-path "~/.emacs.d/mkvoya"
+  :ensure nil) ; local package does not need ensure
+(use-package config-org
+  :load-path "~/.emacs.d/mkvoya"
+  :ensure nil) ; local package does not need ensure
+
+
+
+;; Make gc pauses faster by decreasing the threshold.
+(setq gc-cons-threshold (* 2 1000 1000))
 
 (provide 'init)
 ;;; init.el ends here

@@ -115,6 +115,10 @@
              '("b" "Bookmarks" entry
                (file+datetree "~/Dropbox/Dreams/Org/Collections/Bookmarks.org" "Bookmarks")
                "* %U - %^{title}\nADDED: %U\n%?"))
+(add-to-list 'org-capture-templates
+             '("p" "Plans" entry
+               (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
+               "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1))
 
 ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
 (defun org-insert-image ()
@@ -329,7 +333,7 @@
 
 ;; Depending on universal argument try opening link
 (defun org-open-maybe (&optional arg)
-  "Open maybe arg."
+  "Open maybe ARG."
   (interactive "P")
   (if arg
       (org-open-at-point)
@@ -342,22 +346,30 @@
 (use-package org-ref
   :ensure t
   :config
-  (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
-  ;; see org-ref for use of these variables
-  (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
-        org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
-        org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
-  (setq bibtex-completion-bibliography "~/Dropbox/bibliography/references.bib"
-        bibtex-completion-library-path "~/Dropbox/bibliography/bibtex-pdfs"
-        bibtex-completion-notes-path "~/Dropbox/bibliography/helm-bibtex-notes")
-  ;; open pdf with system pdf viewer (works on mac)
-  (setq bibtex-completion-pdf-open-function
-        (lambda (fpath)
-          (start-process "open" "*open*" "open" fpath)))
-  ;; alternative
-  ;; (setq bibtex-completion-pdf-open-function 'org-open-file)
-  )
+  (let* ((note-dir "~/Dropbox/Dreams/Research/Papers/Notes/")
+         (note-file (concat note-dir "Notes.org"))
+         (bib-file "~/Dropbox/Dreams/Research/Papers/Main.bib")
+         (pdf-dir "~/Dropbox/Dreams/Research/Papers"))
+    (setq reftex-default-bibliography bib-file)
+    ))
 
+(use-package org-roam
+      :ensure t
+      :hook
+      (after-init . org-roam-mode)
+      :custom
+      (org-roam-directory "~/Dropbox/Dreams/Org/")
+      :bind (:map org-roam-mode-map
+              (("C-c n l" . org-roam)
+               ("C-c n f" . org-roam-find-file)
+               ("C-c n g" . org-roam-graph))
+              :map org-mode-map
+              (("C-c n i" . org-roam-insert))
+              (("C-c n I" . org-roam-insert-immediate))))
+
+
+;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
+(setq org-image-actual-width (/ (display-pixel-width) 2))
 
 (provide 'config-org)
 ;;; config-org.el ends here
