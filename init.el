@@ -11,22 +11,57 @@
 ;; Make startup faster by reducing the frequency of garbage
 ;; collection.  The default is 800 kilobytes.  Measured in bytes.
 (setq gc-cons-threshold (* 100 1000 1000))
+;; Portion of heap used for allocation.  Defaults to 0.1.
+(setq gc-cons-percentage 0.6)
+
+(use-package benchmark-init
+  :init
+  (benchmark-init/activate)
+  :hook
+  (after-init . benchmark-init/deactivate))
+
+
 
 (eval-when-compile
   (require 'use-package))
 
-(use-package package
-  :config
-  ;; (require 'package)
-  (setq package-enable-at-startup nil)
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-  (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-  (package-initialize)
+(require 'package)
+(setq package-enable-at-startup nil)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(package-initialize)
 
-  (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package))
-  )
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+;;; Get shell env from user shell.
+(when (memq window-system '(mac ns x))
+  (use-package exec-path-from-shell
+    :ensure t
+    :config
+    (exec-path-from-shell-initialize)
+    (if (and (fboundp 'native-comp-available-p)
+             (native-comp-available-p))
+        (progn
+          (message "Native comp is available")
+          ;; Using Emacs.app/Contents/MacOS/bin since it was compiled with
+          ;; ./configure --prefix="$PWD/nextstep/Emacs.app/Contents/MacOS"
+          (add-to-list 'exec-path (concat invocation-directory "bin") t)
+          (setenv "LIBRARY_PATH" (concat (getenv "LIBRARY_PATH")
+                                         (when (getenv "LIBRARY_PATH")
+                                           ":")
+                                         ;; This is where Homebrew puts gcc libraries.
+                                         (car (file-expand-wildcards
+                                               (expand-file-name "/usr/local/opt/gcc/lib/gcc/10")))))
+          (setenv "DYLD_LIBRARY_PATH" (concat (getenv "DYLD_LIBRARY_PATH")
+                                         (when (getenv "DYLD_LIBRARY_PATH") ":")
+                                         ;; This is where Homebrew puts gcc libraries.
+                                         (car (file-expand-wildcards
+                                               (expand-file-name "/usr/local/opt/gcc/lib/gcc/10")))))
+          ;; Only set after LIBRARY_PATH can find gcc libraries.
+          (setq comp-deferred-compilation t))
+      (message "Native comp is *not* available"))))
 
 ;;; Special Keys for MacOS GUI
 ;;(setq mac-command-modifier 'meta) ; Switch Cmd and Opt(Alt)
@@ -37,6 +72,7 @@
 
 (use-package diff-hl
   :ensure t
+  :defer 5
   :config
   (global-diff-hl-mode)
   (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
@@ -66,6 +102,7 @@
       '(kill-ring search-ring regex-search-ring))
 
 ;;; Window
+
 (tool-bar-mode -1) ; close tool bar (-1 is switch)
 (menu-bar-mode -1) ; close menu bar
 (scroll-bar-mode -1) ; close the scroll bar
@@ -86,6 +123,7 @@
 ;; Instead of powerline
 (use-package smart-mode-line
   :ensure t
+  ;; :defer 5
   :config
   (setq sml/no-confirm-load-theme t)
   (setq sml/theme 'respectful)
@@ -127,8 +165,7 @@
 
 
 (use-package undo-tree
-  :ensure t
-  :defer t
+  :defer 5
   :delight
   :config
   (progn
@@ -138,8 +175,7 @@
 
 ;; which-key is a fork of guide-key
 (use-package which-key
-  :ensure t
-  :defer t
+  :defer 5
   :config
   (which-key-mode)
   (which-key-setup-minibuffer))
@@ -166,18 +202,17 @@
 (column-number-mode 1)
 
 (use-package yasnippet
-  :ensure t
-  :defer t
+  :defer 5
   :config
-  (yas-global-mode 1))
+  (use-package yasnippet-snippets
+    :defer 5
+    :after (yasnippet))
+  (yas-global-mode 1)
+  )
 
-(use-package yasnippet-snippets
-  :after (yasnippet)
-  :ensure t)
 
 ; Autocomplete
 (use-package company
-  :ensure t
   :defer t
   :config
   ;(add-hook 'prog-mode-hook 'company-mode)
@@ -215,17 +250,6 @@
                                                 (when (equal my-company-point (point)) (yas-expand))))
   )
 
-(use-package company-auctex
-  :ensure t
-  :after (company)
-  :config
-  (company-auctex-init))
-(use-package company-reftex
-  :ensure t
-  :after (company)
-  :config
-  (add-to-list 'company-backends 'company-reftex-labels)
-  (add-to-list 'company-backends 'company-reftex-citations))
 
 
 ;; Powerline, airline, smart-mode-line
@@ -321,11 +345,15 @@
   :ensure t
   :after (smart-mode-line)
   :config
+  (setq evil-want-fine-undo t)
   (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-  (require 'evil-numbers)
-  (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
-  (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt)
-;;; Evil rebind
+  (global-undo-tree-mode)
+  (evil-set-undo-system 'undo-tree)
+  (use-package evil-numbers
+    :config
+    (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
+    (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt))
+  ;; Evil rebind
   ;; :q should kill the current buffer rather than quitting emacs entirely
   (defun mkvoya/ex-quit ()
     "Evil ex quit."
@@ -341,9 +369,22 @@
   (setq evil-emacs-state-cursor '(hollow))
   (evil-mode 1))
 
- ;; '(auto-dark-emacs/dark-theme 'manoj-dark)
- ;; '(auto-dark-emacs/light-theme 'doom-one-light)
- ;; '(auto-dark-emacs/polling-interval-seconds 600)
+;;; Easy motion
+;; Options includes:
+;; - https://github.com/abo-abo/avy
+;; - https://github.com/PythonNut/evil-easymotion
+;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
+(use-package evil-easymotion
+  :after (evil)
+  :config
+  (evilem-default-keybindings "SPC")
+  ;; (evilem-define (kbd "SPC c") 'avy-goto-char)
+  ;; (global-set-key (kbd "SPC") 'avy-goto-char)
+  (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
+
+;; '(auto-dark-emacs/dark-theme 'manoj-dark)
+;; '(auto-dark-emacs/light-theme 'doom-one-light)
+;; '(auto-dark-emacs/polling-interval-seconds 600)
 
 
 (custom-set-variables
@@ -382,7 +423,7 @@
    '("~/Dropbox/Dreams/org/Plans.org" "~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -417,36 +458,23 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((t (:inherit nil :stipple nil :background "#fafafa" :foreground "#383a42" :inverse-video nil :box nil :strike-through nil :extend nil :overline nil :underline nil :slant normal :weight normal :height 140 :width normal :foundry "nil" :family "Sarasa Mono SC"))))
  '(mode-line ((t (:background "#afffff" :foreground "#005fff" :box nil :overline nil :underline nil)))))
 
-;; (set-face-attribute 'default nil :height 160)
-
-(set-face-attribute 'default nil :height 160)
-
-(add-hook 'prog-mode-hook #'hs-minor-mode)
-
-(global-hl-line-mode 1)
-;(set-face-background 'hl-line "#3e4446")
-;(set-face-foreground 'highlight nil)
-(set-face-foreground 'hl-line nil)
 
 ;;; Use whitespace (instead of column-marker, column-enforce-mode)
-
-; ensure moues
-(xterm-mouse-mode t)
 
 (use-package modern-cpp-font-lock
   :defer t
   :config
   (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 
+
 ;(add-hook 'prog-mode-hook
 ;         (lambda () (add-to-list 'write-file-functions
 ;                                 'delete-trailing-whitespace)))
 
 (use-package neotree
-  :defer t)
+  :defer 5)
 
 ; (use-package perspective
 ;   :ensure t
@@ -455,22 +483,31 @@
 
 (use-package flycheck
   :defer t
-  :config (global-flycheck-mode))
-
-(add-hook 'after-init-hook #'global-flycheck-mode)
-
-(setq flycheck-indication-mode 'left-fringe)
-
-(use-package flycheck-color-mode-line
-  :after (flycheck)
-  :defer t
   :config
-  (eval-after-load "flycheck"
-    '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode)))
+  ;; (global-flycheck-mode)
+  (add-hook 'after-init-hook #'global-flycheck-mode)
+  (setq flycheck-indication-mode 'left-fringe)
+  (use-package flycheck-color-mode-line
+    :after (flycheck)
+    :defer t
+    :config
+    (eval-after-load "flycheck"
+      '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode)))
+  (use-package flycheck-status-emoji
+    :after (flycheck)
+    :defer t)
+  ;; Flycheck + proselint
+  (flycheck-define-checker proselint
+    "A linter for prose."
+    :command ("proselint" source-inplace)
+    :error-patterns
+    ((warning line-start (file-name) ":" line ":" column ": "
+              (id (one-or-more (not (any " "))))
+              (message) line-end))
+    :modes (text-mode markdown-mode gfm-mode org-mode))
+  (add-to-list 'flycheck-checkers 'proselint)
+  )
 
-(use-package flycheck-status-emoji
-  :after (flycheck)
-  :defer t)
 
 ;; scroll one line at a time (less "jumpy" than defaults)
 (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
@@ -486,7 +523,8 @@
 ;;;; Mouse scrolling in terminal emacs
 (unless (display-graphic-p)
   ;; activate mouse-based scrolling
-  (xterm-mouse-mode 1)
+  ;; ensure mouse
+  (xterm-mouse-mode t)
   (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
   )
@@ -533,27 +571,16 @@
 
 ;;; Smart Tab
 (use-package smart-tab
+  :defer 5
   :config
   (smart-tabs-insinuate 'c 'javascript))
 
-;;; Easy motion
-;; Options includes:
-;; - https://github.com/abo-abo/avy
-;; - https://github.com/PythonNut/evil-easymotion
-;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
-(use-package evil-easymotion
-  :after (evil)
-  :config
-  (evilem-default-keybindings "SPC")
-  ;; (evilem-define (kbd "SPC c") 'avy-goto-char)
-  ;; (global-set-key (kbd "SPC") 'avy-goto-char)
-  (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
 (use-package ctrlf
   :ensure t
+  :defer 5
   :config
-  (ctrlf-mode +1)
-  )
+  (ctrlf-mode +1))
 
 
 
@@ -584,16 +611,6 @@
    :config
     (unicode-fonts-setup))
 
-;;; Flycheck + proselint
-(flycheck-define-checker proselint
-  "A linter for prose."
-  :command ("proselint" source-inplace)
-  :error-patterns
-  ((warning line-start (file-name) ":" line ":" column ": "
-    (id (one-or-more (not (any " "))))
-    (message) line-end))
-  :modes (text-mode markdown-mode gfm-mode org-mode))
-(add-to-list 'flycheck-checkers 'proselint)
 
 ;;; Dictionary, from https://github.com/manateelazycat/sdcv
 ;; brew install stardict sdcv
@@ -634,20 +651,10 @@
         ))
 
 
-;; (set-face-attribute 'default nil :height 160)
-
-
-;;; Telega --- telegram client
-(setq telega-proxies
-      (list
-       '(:server "127.0.0.1" :port 1086 :enable t
-                 :type (:@type "proxyTypeSocks5"))
-       ))
-
-
 ;;; AucTex
 (use-package tex
   :ensure auctex
+  :defer 5
   :config
   ;; make latexmk available via C-c C-c
   ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
@@ -663,7 +670,6 @@
   (add-hook 'LaTeX-mode-hook 'visual-line-mode)
   (add-hook 'LaTeX-mode-hook 'flyspell-mode)
   (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)
   (setq reftex-plug-into-AUCTeX t)
   (setq TeX-PDF-mode t)
 
@@ -689,12 +695,15 @@
 
 
   ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
-  (require 'pdf-view)
-  (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
-                                   ,(face-attribute 'default :background)))
-  (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
-  (add-hook 'pdf-view-mode-hook (lambda ()
-                                  (pdf-view-midnight-minor-mode)))
+  (use-package pdf-view
+    :defer 5
+    :config
+    (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
+                                     ,(face-attribute 'default :background)))
+    (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
+    (add-hook 'pdf-view-mode-hook (lambda ()
+                                    (pdf-view-midnight-minor-mode)))
+    )
   (setq TeX-error-overview-open-after-TeX-run t)
   ;; (setq mkvoya/tex-auto-compile nil)
   ;; (defun mkvoya/tex-try-auto-compile ()
@@ -703,18 +712,26 @@
   ;;     (TeX-command-run))
   ;;   )
   ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
-  )
-(use-package auctex-latexmk)
-(use-package reftex
-  :config
-  (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
-  (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
-  )
 
-
-;;; Get shell env from user shell.
-(when (memq window-system '(mac ns x))
-  (exec-path-from-shell-initialize))
+  (use-package company-auctex
+    :defer t
+    :after (company)
+    :config
+    (company-auctex-init))
+  (use-package reftex
+    :defer 5
+    :config
+    (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
+    (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+    )
+  (use-package company-reftex
+    :defer t
+    :after (company reftex)
+    :config
+    (add-to-list 'company-backends 'company-reftex-labels)
+    (add-to-list 'company-backends 'company-reftex-citations))
+  (use-package auctex-latexmk)
+  )
 
 ;;; Disable Helm and use ivy.
 ;;; Disable ivy, swiper, counsel, use selectrum and consult (and ctrlf?)
@@ -786,6 +803,7 @@
 
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
+  :defer 5
   :ensure t
   ;; The :init configuration is always executed (Not lazy!)
   :init
@@ -807,9 +825,6 @@
               :map embark-file-map
               ("j" . dired-jump)))
 
-
-
-(when window-system (set-frame-size (selected-frame) 80 60))
 
 (use-package projectile
   :ensure t
@@ -855,6 +870,7 @@
                         :files ("svg-tag-mode.el")))
 
 (use-package langtool
+  :defer 5
   :quelpa (langtool :repo "mhayashi1120/Emacs-langtool"
                     :fetcher github
                     :files ("langtool.el"))
@@ -876,7 +892,7 @@
   )
 
 (use-package wucuo
-  :ensure t
+  :defer 5
   :config
   (add-hook 'prog-mode-hook #'wucuo-start)
   (add-hook 'text-mode-hook #'wucuo-start)
@@ -929,15 +945,16 @@
 (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
 
 (use-package tramp
+  :defer 5
   :config
-  (setq tramp-debug-buffer t)
+  ;; (setq tramp-debug-buffer t)
   (setq tramp-verbose 10))
 
 (setq alert-default-style 'libnotify)
-
 (setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
 
 (use-package delight
+  :defer 5
   :config
   (delight '((abbrev-mode " Abv" "abbrev")
              (smart-tab-mode " \\t" "smart-tab")
@@ -1000,14 +1017,16 @@
 
 ;;;; LSP
 ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-(setq lsp-keymap-prefix "s-l")
-
 (use-package lsp-mode
-    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-            (python-mode . lsp)
-            ;; if you want which-key integration
-            (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp)
+  :defer 5
+  :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+         (python-mode . lsp)
+         ;; if you want which-key integration
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands lsp
+  :config
+  (setq lsp-keymap-prefix "s-l")
+  )
 
 ;; optionally
 (use-package lsp-ui :commands lsp-ui-mode)
@@ -1018,6 +1037,7 @@
 (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
 
 ;; optionally if you want to use debugger
+
 (use-package dap-mode)
 ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
 
@@ -1026,6 +1046,10 @@
     :config
     (which-key-mode))
 
+(use-package smooth-scrolling
+  :config
+  (smooth-scrolling-mode 1)
+  )
 
 (use-package beacon
   :config
@@ -1033,7 +1057,6 @@
 
 ;; From the official doc <https://github.com/tumashu/pyim>.
 (use-package pyim
-  :ensure nil
   :demand t
   :config
   ;; 激活 basedict 拼音词库，五笔用户请继续阅读 README
@@ -1080,13 +1103,6 @@
           (lambda () (add-to-list 'write-file-functions
                                   'delete-trailing-whitespace)))
 
-;; (when (memq window-system '(mac ns))
-;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
-;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-;;   (setq ns-use-proxy-icon nil)
-;;   ;; (setq frame-title-format nil)
-;;   )
-(when (eq system-type 'darwin) (ns-auto-titlebar-mode))
 
 ;; Use a hook so the message doesn't get clobbered by other messages.
 (add-hook 'emacs-startup-hook
@@ -1097,9 +1113,6 @@
                               (time-subtract after-init-time before-init-time)))
                      gcs-done)))
 
-(use-package config-fonts
-  :load-path "~/.emacs.d/mkvoya"
-  :ensure nil) ; local package does not need ensure
 (use-package config-appearances
   :load-path "~/.emacs.d/mkvoya"
   :ensure nil) ; local package does not need ensure
@@ -1108,9 +1121,29 @@
   :ensure nil) ; local package does not need ensure
 
 
+;; (when (memq window-system '(mac ns))
+;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
+;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+;;   (setq ns-use-proxy-icon nil)
+;;   ;; (setq frame-title-format nil)
+;;   )
+(when (eq system-type 'darwin) (ns-auto-titlebar-mode))
+(setq ns-use-proxy-icon nil)
+
+(when window-system (set-frame-size (selected-frame) 80 60))
+
+(use-package sublimity
+  :defer t
+  :config
+  (use-package sublimity-scroll)
+  ;; (use-package sublimity-map) ;; experimental
+  (use-package sublimity-attractive)
+  (sublimity-mode 1)
+  )
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+
 
 (provide 'init)
 ;;; init.el ends here
