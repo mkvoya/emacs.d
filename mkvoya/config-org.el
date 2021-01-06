@@ -53,7 +53,8 @@
   ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
   ;; (setq org-ellipsis "…")
   ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
-  (setq org-ellipsis "⤵")
+  ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
+  (setq org-ellipsis "▾")
 
   ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
   (defun org-force-open-current-window ()
@@ -77,7 +78,7 @@
   ;; Redefine file opening without clobbering universal argument
   (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
   ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
-  (setq org-image-actual-width (/ (display-pixel-width) 2))
+  (setq org-image-actual-width (/ (display-pixel-width) 3))
 
   (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
 
@@ -110,6 +111,7 @@
   ;;       '("◉" "◈" "○" "▷"))
   (setq org-superstar-headline-bullets-list
         '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
+  ;; ⎋〄
   ;; Stop cycling bullets to emphasize hierarchy of headlines.
   (setq org-superstar-cycle-headline-bullets nil)
   ;; Hide away leading stars on terminal.
@@ -254,6 +256,8 @@
       org-hide-leading-stars t)
       ;;org-odd-levels-only t)
 
+;;; =========== OrgMode and Calendar ============
+;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
 (use-package ox-icalendar
   :config
   (setq org-icalendar-alarm-time 5)
@@ -266,8 +270,6 @@
         org-icalendar-use-scheduled
         '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
   )
-
-
 (use-package org-caldav
   :ensure t
   :after (async)
@@ -281,34 +283,8 @@
                            ))
   ;; (setq org-icalendar-timezone "America/Los_Angeles")
   (setq org-icalendar-timezone "Asia/Shanghai")
-
-  (defun mkvoya/sync-to-radicale-async ()
-    "Sync org agenda to =https://dong.mk/radicale/= upon org file save."
-    (interactive)
-    (when (eq major-mode 'org-mode)
-      (async-start
-       ;; Do this asynchronously.
-       (lambda ()
-         (require 'org)
-         (require 'package)
-         (package-initialize)
-         (add-to-list 'load-path "~/.emacs.d/mkvoya")
-         (require 'config-org)
-         (require 'ox-icalendar)
-         (require 'org-caldav)
-         ;; (let (mkvoya/saved-option org-caldav-show-sync-results)
-         ;;  (setq org-caldav-show-sync-results nil)
-           (org-caldav-sync)
-         ;;  (setq org-caldav-show-sync-results mkvoya/saved-option)
-         ;;  )
-         )
-       ;; Reap the result
-       (lambda (result)
-         (message "Async sync to radicale sync okay: %s." result)
-         ))))
-  ;; This burns the CPU and drains the battery...
-  ;; (add-hook 'after-save-hook #'mkvoya/sync-to-radicale-async)
   )
+;;; ========= End of OrgMode and Calendar =============
 
 
 ;; ;; Two more extensions could be relavant.
@@ -358,7 +334,6 @@
           ("org" :components ("org-notes" "org-static"))
           )))
 
-;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
 
 (use-package org-ref
   :ensure t
@@ -385,6 +360,30 @@
               (("C-c n i" . org-roam-insert))
               (("C-c n I" . org-roam-insert-immediate))))
 
+;; ;; Allows you to edit entries directly from org-brain-visualize
+;; (use-package polymode
+;;   :config
+;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
+;;
+;; (use-package org-brain :ensure t
+;;   :after (polymode)
+;;   :init
+;;   (setq org-brain-path "~/Dropbox/Dreams/Org/Brain")
+;;   ;; For Evil users
+;;   (with-eval-after-load 'evil
+;;     (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
+;;   :config
+;;   (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
+;;   (setq org-id-track-globally t)
+;;   (setq org-id-locations-file "~/Dropbox/Dreams/Org/Brain/org-id-locations")
+;;   (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
+;;   (push '("b" "Brain" plain (function org-brain-goto-end)
+;;           "* %i%?" :empty-lines 1)
+;;         org-capture-templates)
+;;   (setq org-brain-visualize-default-choices 'all)
+;;   (setq org-brain-title-max-length 12)
+;;   (setq org-brain-include-file-entries nil
+;;         org-brain-file-entries-use-title nil))
 
 
 (provide 'config-org)

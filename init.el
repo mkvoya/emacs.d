@@ -3,8 +3,8 @@
 ;;;   Emacs Startup File --- initialization for Emacs
 
 ;;; Code:
-;; (load "server") ; Load and start server if it's not running
-;; (unless (server-running-p) (server-start))
+(load "server") ; Load and start server if it's not running
+(unless (server-running-p) (server-start))
 
 ;;; Optimized according to http://blog.lujun9972.win/emacs-document/blog/2019/03/15/降低emacs启动时间的高级技术/index.html
 
@@ -27,8 +27,13 @@
 
 (require 'package)
 (setq package-enable-at-startup nil)
-(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/")) ;;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+;; (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
+;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(setq package-archives
+      '(("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
+        ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
+        ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/")))
 (package-initialize)
 
 (unless (package-installed-p 'use-package)
@@ -180,21 +185,6 @@
   (which-key-mode)
   (which-key-setup-minibuffer))
 
-; UTF-8
-(prefer-coding-system 'utf-8)
-(when (display-graphic-p)
-  (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
-
-
-; Unicode
-(defmacro my/insert-unicode (unicode-name)
-  `(lambda () (interactive)
-     (insert-char (cdr (assoc-string, unicode-name (ucs-names))))))
-(bind-key "C-x 8 s" (my/insert-unicode "ZERO WIDTH SPACE"))
-(bind-key "C-x 8 S" (my/insert-unicode "SNOWMAN"))
-(set-language-environment "UTF-8")
-(set-default-coding-systems 'utf-8)
-
 ; Clean up spaces
 ;(bind-key "M-SPC" 'cycle-spacing)
 
@@ -291,7 +281,8 @@
           (tab-mark 9 [8594 9] [92 9])))
   (set-face-background 'trailing-whitespace "#ffaf5f")
   (set-face-background 'whitespace-trailing "#ffaf5f")
-  (global-whitespace-mode t)
+  ;; (global-whitespace-mode t)
+  (add-hook 'prog-mode-hook 'whitespace-mode)
   )
 
 (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
@@ -420,10 +411,10 @@
  '(menu-bar-mode nil)
  '(objed-cursor-color "#e45649")
  '(org-agenda-files
-   '("~/Dropbox/Dreams/org/Plans.org" "~/Dropbox/Dreams/org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/org/Inbox.org" "~/Dropbox/Dreams/org/main.org"))
+   '("~/Dropbox/Dreams/Org/Plans.org" "~/Dropbox/Dreams/Org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/Org/Inbox.org" "~/Dropbox/Dreams/Org/Main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -536,12 +527,8 @@
 (use-package evil-magit
   :after (evil magit))
 
-(global-set-key (kbd "C-c d") 'define-word-at-point)
-(global-set-key (kbd "C-c D") 'define-word)
-
-
-
-
+;; (global-set-key (kbd "C-c d") 'define-word-at-point)
+;; (global-set-key (kbd "C-c D") 'define-word)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -603,13 +590,6 @@
 (use-package flymd
   :after (markdown-mode))
 
-;; (use-package emojify
-;;   :hook (after-init . global-emojify-mode))
-
-(use-package unicode-fonts
-   :ensure t
-   :config
-    (unicode-fonts-setup))
 
 
 ;;; Dictionary, from https://github.com/manateelazycat/sdcv
@@ -750,37 +730,54 @@
   ;; intelligent over time
   (prescient-persist-mode +1)
   )
+
+;;; ========= Consult ===========
 ;; Example configuration for Consult
 (use-package consult
-  ;; Replace bindings. Lazily loaded due to use-package.
-  :bind (("C-c h" . consult-history)
-         ("C-c o" . consult-outline)
+  ;; Replace bindings. Lazily loaded due by `use-package'.
+  :bind (("C-x M-:" . consult-complex-command)
+         ("C-c h" . consult-history)
+         ("C-c m" . consult-mode-command)
          ("C-x b" . consult-buffer)
          ("C-x 4 b" . consult-buffer-other-window)
          ("C-x 5 b" . consult-buffer-other-frame)
          ("C-x r x" . consult-register)
          ("C-x r b" . consult-bookmark)
-         ("M-g o" . consult-outline) ;; "M-s o" is a good alternative
-         ("M-g m" . consult-mark)    ;; "M-s m" is a good alternative
-         ("M-g l" . consult-line)    ;; "M-s l" is a good alternative
-         ("M-g i" . consult-imenu)   ;; "M-s i" is a good alternative
-         ("M-g e" . consult-error)   ;; "M-s e" is a good alternative
+         ("M-g g" . consult-goto-line)
+         ("M-g M-g" . consult-goto-line)
+         ("M-g o" . consult-outline)       ;; "M-s o" is a good alternative.
+         ("M-g l" . consult-line)          ;; "M-s l" is a good alternative.
+         ("M-g m" . consult-mark)          ;; I recommend to bind Consult navigation
+         ("M-g k" . consult-global-mark)   ;; commands under the "M-g" prefix.
+         ("M-g r" . consult-git-grep)      ;; or consult-grep, consult-ripgrep
+         ("M-g f" . consult-find)          ;; or consult-fdfind, consult-locate
+         ("M-g i" . consult-project-imenu) ;; or consult-imenu
+         ("M-g e" . consult-error)
          ("M-s m" . consult-multi-occur)
          ("M-y" . consult-yank-pop)
          ("<help> a" . consult-apropos))
+
   ;; The :init configuration is always executed (Not lazy!)
   :init
-  ;; Replace functions (consult-multi-occur is a drop-in replacement)
+
+  ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
   (fset 'multi-occur #'consult-multi-occur)
+
   ;; Configure other variables and modes in the :config section, after lazily loading the package
   :config
-  ;; Optionally configure narrowing and widening keys.
+
+  ;; Optionally configure a function which returns the project root directory
+  (autoload 'projectile-project-root "projectile")
+  (setq consult-project-root-function #'projectile-project-root)
+
+  ;; Optionally configure narrowing key.
   ;; Both < and C-+ work reasonably well.
-  ;; (setq consult-narrow-key "<"
-  ;;       consult-widen-key "< ")
-  ;; (setq consult-narrow-key (kbd "C-+")
-  ;;       consult-widen-key (kbd "C-+ SPC"))
-  ;; Optional configure a "view" library to be used by `consult-buffer`.
+  (setq consult-narrow-key "<") ;; (kbd "C-+")
+  ;; Optionally make narrowing help available in the minibuffer.
+  ;; Probably not needed if you are using which-key.
+  ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+  ;; Optional configure a view library to be used by `consult-buffer'.
   ;; The view library must provide two functions, one to open the view by name,
   ;; and one function which must return a list of views as strings.
   ;; Example: https://github.com/minad/bookmark-view/
@@ -794,12 +791,15 @@
 ;; Enable Consult-Selectrum integration.
 ;; This package should be installed if Selectrum is used.
 (use-package consult-selectrum
+  :after selectrum
   :demand t)
 
-;; Optionally add the consult-flycheck command.
+;; Optionally add the `consult-flycheck' command.
 (use-package consult-flycheck
   :bind (:map flycheck-command-map
-         ("!" . consult-flycheck)))
+              ("!" . consult-flycheck)))
+
+;;; ========= End of Consult ===========
 
 ;; Enable richer annotations using the Marginalia package
 (use-package marginalia
@@ -984,7 +984,8 @@
 (setq compilation-scroll-output t)
 ;; (setq compilation-scroll-output 'first-error)
 
-
+;; Use the newer mu4e
+(setq load-prefer-newer t)
 (add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
 (use-package mu4e)
 (use-package mu4e-alert
@@ -1048,6 +1049,8 @@
 
 (use-package smooth-scrolling
   :config
+  ;; the number 3 is buggy here when scrolling down.
+  (setq smooth-scroll-margin 2)
   (smooth-scrolling-mode 1)
   )
 
@@ -1103,17 +1106,37 @@
           (lambda () (add-to-list 'write-file-functions
                                   'delete-trailing-whitespace)))
 
+;;; ========== Charset and Unicode and Emoji =============
+;; UTF-8
+(prefer-coding-system 'utf-8)
+(when (display-graphic-p)
+  (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
 
-;; Use a hook so the message doesn't get clobbered by other messages.
-(add-hook 'emacs-startup-hook
-          (lambda ()
-            (message "Emacs ready in %s with %d garbage collections."
-                     (format "%.2f seconds"
-                             (float-time
-                              (time-subtract after-init-time before-init-time)))
-                     gcs-done)))
+;; Unicode
+(defmacro my/insert-unicode (unicode-name)
+  `(lambda () (interactive)
+     (insert-char (cdr (assoc-string, unicode-name (ucs-names))))))
+(bind-key "C-x 8 s" (my/insert-unicode "ZERO WIDTH SPACE"))
+(bind-key "C-x 8 S" (my/insert-unicode "SNOWMAN"))
+(set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8)
+
+;; (use-package emojify
+;;   :hook (after-init . global-emojify-mode))
+
+(use-package unicode-fonts
+   :ensure t
+   :config
+   (setq unicode-fonts-skip-font-groups
+         '(chinese-simplified chinese-traditional
+           chinese-hanja chinese-kanji chinese-nom
+           multicolor decorative low-quality-glyphs))
+   ;; This breaks the Sarasa font
+   ;; (unicode-fonts-setup)
+)
 
 (use-package config-appearances
+  :after (unicode-fonts)
   :load-path "~/.emacs.d/mkvoya"
   :ensure nil) ; local package does not need ensure
 (use-package config-org
@@ -1140,6 +1163,31 @@
   (use-package sublimity-attractive)
   (sublimity-mode 1)
   )
+
+(use-package deft
+  :ensure t
+  :defer t
+  :custom
+    (deft-extensions '("org" "md" "txt"))
+    (deft-directory "~/Dropbox/Dreams/Zettels")
+    (deft-use-filename-as-title t))
+(use-package zetteldeft
+  :ensure t
+  :defer t
+  :after deft
+  :config
+  (zetteldeft-set-classic-keybindings))
+
+(use-package orderless
+  :ensure t
+  :init (icomplete-mode) ; optional but recommended!
+  :custom (completion-styles '(orderless)))
+
+
+(setq-default line-spacing 0.1)
+
+(setq enable-recursive-minibuffers t)
+(minibuffer-depth-indicate-mode 1)
 
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))

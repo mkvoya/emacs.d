@@ -8,7 +8,12 @@
 ;;; ========= section font ===========
 
 (when (member "Sarasa Mono SC" (font-family-list))
-  (set-fontset-font t 'han (font-spec :family "Sarasa Mono SC"))
+  ;; (set-fontset-font t 'han (font-spec :family "Sarasa Mono SC"))
+  (set-fontset-font t nil (font-spec :family "Sarasa Mono SC"))
+  ;; Specifying the range seems necessary to avoid line bumps.
+  ;; According to https://emacs.stackexchange.com/questions/5689/force-a-single-font-for-all-unicode-glyphs
+  ;; The following config is overwritten by someone (unicode-fonts).
+  ;; (set-fontset-font t '(#x000000 . #x3fffff) (font-spec :family "Sarasa Mono SC"))
   (set-frame-font "Sarasa Mono SC" t t)
   (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-16")))
 
