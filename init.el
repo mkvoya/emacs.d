@@ -357,7 +357,8 @@
   ;; Need to type out :quit to close emacs
   (evil-ex-define-cmd "quit" 'evil-quit)
   ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
-  (setq evil-emacs-state-cursor '(hollow))
+  ;; (setq evil-emacs-state-cursor '(hollow))
+  (setq evil-emacs-state-cursor '(bar . 3))
   (evil-mode 1))
 
 ;;; Easy motion
@@ -409,12 +410,20 @@
  '(jdee-db-spec-breakpoint-face-colors (cons "#f0f0f0" "#9ca0a4"))
  '(magit-diff-use-overlays nil)
  '(menu-bar-mode nil)
+ '(notmuch-saved-searches
+   '((:name "inbox" :query "tag:inbox" :key "i")
+     (:name "unread" :query "tag:unread" :key "u")
+     (:name "flagged" :query "tag:flagged" :key "f")
+     (:name "sent" :query "tag:sent" :key "t")
+     (:name "drafts" :query "tag:draft" :key "d")
+     (:name "all mail" :query "*" :key "a")
+     (:name "Unread" :query "is:unread")))
  '(objed-cursor-color "#e45649")
  '(org-agenda-files
    '("~/Dropbox/Dreams/Org/Plans.org" "~/Dropbox/Dreams/Org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/Org/Inbox.org" "~/Dropbox/Dreams/Org/Main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(toml-mode rust-mode rustic hide-mode-line notmuch-unread notmuch-maildir notmuch good-scroll cal-china-x orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -815,7 +824,8 @@
   ;; By default only the keybinding is shown as annotation.
   ;; Note that there is the command `marginalia-cycle-annotators` to
   ;; switch between the annotators.
-  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light)))
+  (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
+  )
 
 (use-package embark
   :after selectrum
@@ -910,6 +920,8 @@
 ;; Open ibuffer upon "C-c i"
 (global-set-key (kbd "C-c i") 'ibuffer)
 
+(global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/init.el")))
+
 ;; with use-package
 (use-package maple-explorer
   :quelpa (maple-explorer
@@ -984,37 +996,19 @@
 (setq compilation-scroll-output t)
 ;; (setq compilation-scroll-output 'first-error)
 
-;; Use the newer mu4e
+;; Load newer packages when available.
 (setq load-prefer-newer t)
-(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/mu/mu4e")
-(use-package mu4e)
-(use-package mu4e-alert
-  :ensure t
-  :after (mu4e)
+
+;; Mails
+(autoload 'notmuch "notmuch" "notmuch mail" t)
+;; (use-package notmuch)
+
+(use-package notmuch-unread
+  :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
+                          :fetcher github
+                          :files ("notmuch-unread.el"))
   :config
-  (setq mu4e-alert-interesting-mail-query
-        "flag:unread maildir:/Subscribe/INBOX "
-        )
-  (mu4e-alert-enable-mode-line-display)
-  (defun gjstein-refresh-mu4e-alert-mode-line ()
-    (interactive)
-    (mu4e~proc-kill)
-    (mu4e-alert-enable-mode-line-display)
-    )
-  (run-with-timer 0 60 'gjstein-refresh-mu4e-alert-mode-line)
-  (setq exec-path (append '("/usr/local/opt/terminal-notifier/bin/") exec-path))
-  (mu4e-alert-set-default-style 'notifier)
-  (add-hook 'after-init-hook #'mu4e-alert-enable-notifications)
-  ;; Choose the style you prefer for desktop notifications
-  ;; On Mac OSX you can set style to
-  ;; 1. notifier      - Notifications using the `terminal-notifier' program, requires `terminal-notifier' to be in PATH
-  ;; 1. growl         - Notifications using the `growl' program, requires `growlnotify' to be in PATH
-  (global-set-key (kbd "C-c m") 'mu4e)
-  (bind-keys :map mu4e-headers-mode-map
-             ("<mouse-1>" . mu4e-headers-view-message))
-  )
-
-
+  (setq notmuch-unread-update-interval 300))
 
 ;;;; LSP
 ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
@@ -1047,12 +1041,18 @@
     :config
     (which-key-mode))
 
-(use-package smooth-scrolling
+;; Do we still need this if we have good-scroll?
+;; (use-package smooth-scrolling
+;;   :config
+;;   ;; the number 3 is buggy here when scrolling down.
+;;   (setq smooth-scroll-margin 2)
+;;   (smooth-scrolling-mode 1)
+;;   )
+(use-package good-scroll
+  :ensure t
   :config
-  ;; the number 3 is buggy here when scrolling down.
-  (setq smooth-scroll-margin 2)
-  (smooth-scrolling-mode 1)
-  )
+  (good-scroll-mode 1))
+
 
 (use-package beacon
   :config
@@ -1189,8 +1189,66 @@
 (setq enable-recursive-minibuffers t)
 (minibuffer-depth-indicate-mode 1)
 
+;;; =========== Some builtin modes =============
+;;; https://emacs-china.org/t/emacs-builtin-mode/11937
+
+(use-package paren
+  :ensure nil
+  :hook (after-init . show-paren-mode)
+  :config
+  (setq show-paren-when-point-inside-paren t
+        show-paren-when-point-in-periphery t))
+(use-package so-long
+  :ensure nil
+  :config (global-so-long-mode 1))
+(use-package simple
+  :ensure nil
+  :hook (after-init . (lambda ()
+                         (line-number-mode)
+                         (column-number-mode)
+                         (size-indication-mode))))
+
+;; 分别是妇女节、植树节、劳动节、青年节、儿童节、教师节、国庆节、程序员节、双11
+(setq holiday-local-holidays `((holiday-fixed 3 8  "Women's Day")
+                               (holiday-fixed 3 12 "Arbor Day")
+                               ,@(cl-loop for i from 1 to 3
+                                          collect `(holiday-fixed 5 ,i "International Workers' Day"))
+                               (holiday-fixed 5 4  "Chinese Youth Day")
+                               (holiday-fixed 6 1  "Children's Day")
+                               (holiday-fixed 9 10 "Teachers' Day")
+                               ,@(cl-loop for i from 1 to 7
+                                          collect `(holiday-fixed 10 ,i "National Day"))
+                               (holiday-fixed 10 24 "Programmers' Day")
+                               (holiday-fixed 11 11 "Singles' Day")))
+;; 分别是世界地球日、世界读书日、俄罗斯的那个程序员节
+(setq holiday-other-holidays '((holiday-fixed 4 22 "Earth Day")
+                               (holiday-fixed 4 23 "World Book Day")
+                               (holiday-sexp '(if (or (zerop (% year 400))
+                                                      (and (% year 100) (zerop (% year 4))))
+                                                  (list 9 12 year)
+                                                (list 9 13 year))
+                                             "World Programmers' Day")))
+(setq calendar-chinese-all-holidays-flag t)
+
+(use-package cal-china-x
+  :ensure t
+  :config
+  (setq mark-holidays-in-calendar t)
+  (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
+  (setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
+  (setq calendar-holidays
+        (append cal-china-x-important-holidays
+                cal-china-x-general-holidays))
+                ;; other-holidays))
+  )
+
+
+;;; ========== End of Some builtin modes ===========
+
+
 ;; Make gc pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
+;; org column view
 
 
 (provide 'init)
