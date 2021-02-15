@@ -5,8 +5,15 @@
 ;;; Code:
 
 (setq-default
- load-prefer-newer t
+ load-prefer-newer t ; Load newer packages when available.
  package-enable-at-startup nil
+ ;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
+ compilation-scroll-output t
+ ;; (setq compilation-scroll-output 'first-error)
+ ;; Prevent Extraneous Tabs
+ indent-tabs-mode nil
+ fill-column 80
+ line-spacing 0.1 ; Line space
  package-native-compile t)
 
 (setq-default
@@ -17,6 +24,13 @@
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ;; No tool bar
+   (font . "Sarasa Mono SC-16")         ;; Set font
    (vertical-scroll-bars . nil)))       ;; No vertical scroll-bars
+
+;; It seems that we don't need the following anymore.
+;; ;;; Window
+;; (tool-bar-mode -1) ; close tool bar (-1 is switch)
+;; (menu-bar-mode -1) ; close menu bar
+;; (scroll-bar-mode -1) ; close the scroll bar
 
 ;;; early-init.el ends here

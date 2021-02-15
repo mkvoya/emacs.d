@@ -111,8 +111,8 @@
       (byte-compile-file .el))
     (load-file .el))
 
-  ;; Set the working directory to home regardless of where Emacs was started from
-  (cd "~/")
+  ;; ;; Set the working directory to home regardless of where Emacs was started from
+  ;; (cd "~/")
 
   ;; Collect garbage when all else is done
   (garbage-collect))

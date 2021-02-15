@@ -9,16 +9,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
 * Bootstrap
 
-** Bootup Opt
-   #+BEGIN_SRC emacs-lisp
-     ;;; Optimized according to http://blog.lujun9972.win/emacs-document/blog/2019/03/15/降低emacs启动时间的高级技术/index.html
-
-     ;; Make startup faster by reducing the frequency of garbage
-     ;; collection.  The default is 800 kilobytes.  Measured in bytes.
-     (setq gc-cons-threshold (* 100 1000 1000))
-     ;; Portion of heap used for allocation.  Defaults to 0.1.
-     (setq gc-cons-percentage 0.6)
-   #+END_SRC
 ** Emacs Server
    #+BEGIN_SRC emacs-lisp
      (load "server") ; Load and start server if it's not running
@@ -99,60 +89,52 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
 ** Configs
    #+BEGIN_SRC emacs-lisp
-     ;;; Backups
      (setq
+      ;; Backups
       backup-by-copying t
       backup-directory-alist '(("." . "~/.emacs.d/backups"))
       delete-old-versions t
       kept-new-versions 6
       kept-old-versions 2
       version-control t
-      vc-make-backup-files t)
-     ;;(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
-     ;;(setq delete-old-versiojns -1)
-     ;;(setq version-control t)
-     (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
-
-     ;;; History
-     (setq savehist-file "~/.emacs.d/savehist")
+      vc-make-backup-files t
+      ;;(setq backup-directory-alist '(("." . "~/.emacs.d/backups")))
+      ;;(setq delete-old-versiojns -1)
+      ;;(setq version-control t)
+      auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t))
+      ;; History
+      savehist-file "~/.emacs.d/savehist"
+      history-length t
+      history-delete-duplicates t
+      savehist-save-minibuffer-history 1
+      savehist-additional-variables '(kill-ring search-ring regex-search-ring))
      (savehist-mode 1)
-     (setq history-length t)
-     (setq history-delete-duplicates t)
-     (setq savehist-save-minibuffer-history 1)
-     (setq savehist-additional-variables
-           '(kill-ring search-ring regex-search-ring))
 
      ;;; Window
-     (tool-bar-mode -1) ; close tool bar (-1 is switch)
-     (menu-bar-mode -1) ; close menu bar
-     (scroll-bar-mode -1) ; close the scroll bar
      (global-yascroll-bar-mode 1); Yet Another scroll bar
 
-                                             ; lazy answer
+     ;; lazy answer
      (fset 'yes-or-no-p 'y-or-n-p)
 
-                                             ; Clean up spaces
-                                             ;(bind-key "M-SPC" 'cycle-spacing)
+     ;; Clean up spaces
+     ;;(bind-key "M-SPC" 'cycle-spacing)
 
-                                             ; Show column number
+     ;; Show column number
      (column-number-mode 1)
-
-
-     (setq-default line-spacing 0.1)
 
      (setq enable-recursive-minibuffers t)
      (minibuffer-depth-indicate-mode 1)
 
-      ;; (when (memq window-system '(mac ns))
-      ;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
-      ;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-      ;;   (setq ns-use-proxy-icon nil)
-      ;;   ;; (setq frame-title-format nil)
-      ;;   )
-      (when (eq system-type 'darwin) (ns-auto-titlebar-mode))
-      (setq ns-use-proxy-icon nil)
+     ;; (when (memq window-system '(mac ns))
+     ;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
+     ;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+     ;;   (setq ns-use-proxy-icon nil)
+     ;;   ;; (setq frame-title-format nil)
+     ;;   )
+     (when (eq system-type 'darwin) (ns-auto-titlebar-mode))
+     (setq ns-use-proxy-icon nil)
 
-      (when window-system (set-frame-size (selected-frame) 80 60))
+     (when window-system (set-frame-size (selected-frame) 80 60))
 
    #+END_SRC
 
@@ -591,6 +573,8 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
     #+END_SRC
 
+
+** LaTeX
     #+BEGIN_SRC emacs-lisp
       ;;; AucTex
       (use-package tex
@@ -674,121 +658,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         (use-package auctex-latexmk)
         )
 
-      ;;; Disable Helm and use ivy.
-      ;;; Disable ivy, swiper, counsel, use selectrum and consult (and ctrlf?)
-      (use-package selectrum
-        :ensure t
-        :config
-        (selectrum-mode +1)
-        )
-      (use-package selectrum-prescient
-        :ensure t
-        :after (selectrum)
-        :config
-        ;; to make sorting and filtering more intelligent
-        (selectrum-prescient-mode +1)
-        ;; to save your command history on disk, so the sorting gets more
-        ;; intelligent over time
-        (prescient-persist-mode +1)
-        )
-
-      ;;; ========= Consult ===========
-      ;; Example configuration for Consult
-      (use-package consult
-        ;; Replace bindings. Lazily loaded due by `use-package'.
-        :bind (("C-x M-:" . consult-complex-command)
-               ("C-c h" . consult-history)
-               ("C-c m" . consult-mode-command)
-               ("C-x b" . consult-buffer)
-               ("C-x 4 b" . consult-buffer-other-window)
-               ("C-x 5 b" . consult-buffer-other-frame)
-               ("C-x r x" . consult-register)
-               ("C-x r b" . consult-bookmark)
-               ("M-g g" . consult-goto-line)
-               ("M-g M-g" . consult-goto-line)
-               ("M-g o" . consult-outline)       ;; "M-s o" is a good alternative.
-               ("M-g l" . consult-line)          ;; "M-s l" is a good alternative.
-               ("M-g m" . consult-mark)          ;; I recommend to bind Consult navigation
-               ("M-g k" . consult-global-mark)   ;; commands under the "M-g" prefix.
-               ("M-g r" . consult-git-grep)      ;; or consult-grep, consult-ripgrep
-               ("M-g f" . consult-find)          ;; or consult-fdfind, consult-locate
-               ("M-g i" . consult-project-imenu) ;; or consult-imenu
-               ("M-g e" . consult-error)
-               ("M-s m" . consult-multi-occur)
-               ("M-y" . consult-yank-pop)
-               ("<help> a" . consult-apropos))
-
-        ;; The :init configuration is always executed (Not lazy!)
-        :init
-
-        ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
-        (fset 'multi-occur #'consult-multi-occur)
-
-        ;; Configure other variables and modes in the :config section, after lazily loading the package
-        :config
-
-        ;; Optionally configure a function which returns the project root directory
-        (autoload 'projectile-project-root "projectile")
-        (setq consult-project-root-function #'projectile-project-root)
-
-        ;; Optionally configure narrowing key.
-        ;; Both < and C-+ work reasonably well.
-        (setq consult-narrow-key "<") ;; (kbd "C-+")
-        ;; Optionally make narrowing help available in the minibuffer.
-        ;; Probably not needed if you are using which-key.
-        ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
-
-        ;; Optional configure a view library to be used by `consult-buffer'.
-        ;; The view library must provide two functions, one to open the view by name,
-        ;; and one function which must return a list of views as strings.
-        ;; Example: https://github.com/minad/bookmark-view/
-        ;; (setq consult-view-open-function #'bookmark-jump
-        ;;       consult-view-list-function #'bookmark-view-names)
-
-        ;; Optionally enable previews. Note that individual previews can be disabled
-        ;; via customization variables.
-        ;; (consult-preview-mode))
-        )
-
-      ;; Enable Consult-Selectrum integration.
-      ;; This package should be installed if Selectrum is used.
-      (use-package consult-selectrum
-        :after selectrum
-        :demand t)
-
-      ;; Optionally add the `consult-flycheck' command.
-      (use-package consult-flycheck
-        :bind (:map flycheck-command-map
-                    ("!" . consult-flycheck)))
-
-      ;;; ========= End of Consult ===========
-
-      ;; Enable richer annotations using the Marginalia package
-      (use-package marginalia
-        :defer 5
-        :ensure t
-        ;; The :init configuration is always executed (Not lazy!)
-        :init
-        ;; Must be in the :init section of use-package such that the mode gets
-        ;; enabled right away. Note that this forces loading the package.
-        (marginalia-mode)
-        ;; Prefer richer, more heavy, annotations over the lighter default variant.
-        ;; E.g. M-x will show the documentation string additional to the keybinding.
-        ;; By default only the keybinding is shown as annotation.
-        ;; Note that there is the command `marginalia-cycle-annotators` to
-        ;; switch between the annotators.
-        (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
-        )
-
-      (use-package embark
-        :after selectrum
-        :bind (:map minibuffer-local-map
-                    ("C-o" . embark-act)
-                    ("C-S-o" . embark-act-noexit)
-                    :map embark-file-map
-                    ("j" . dired-jump)))
-
-
       (use-package projectile
         :ensure t
         :delight '(:eval (concat " P[" (projectile-project-name) "]"))
@@ -811,10 +680,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                                   (registers . 5)))
           (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
           (dashboard-setup-startup-hook))
-
-      ;;; Prevent Extraneous Tabs
-      (setq-default indent-tabs-mode nil)
-      (setq-default fill-column 80)
 
       ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
       (defun mkvoya/tex-mode-hook ()
@@ -868,8 +733,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
       ;; Open ibuffer upon "C-c i"
       (global-set-key (kbd "C-c i") 'ibuffer)
-
-      (global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/init.el")))
+      (global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
 
       ;; with use-package
       (use-package maple-explorer
@@ -941,26 +805,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
       (modify-syntax-entry ?_ "w")
 
-      ;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
-      ;; Compilation output
-      (setq compilation-scroll-output t)
-      ;; (setq compilation-scroll-output 'first-error)
-
-      ;; Load newer packages when available.
-      (setq load-prefer-newer t)
-
-      ;; Mails
-      (autoload 'notmuch "notmuch" "notmuch mail" t)
-      ;; (use-package notmuch)
-
-      (use-package notmuch-unread
-        :after (quelpa)
-        :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
-                                :fetcher github
-                                :files ("notmuch-unread.el"))
-        :config
-        (setq notmuch-unread-update-interval 300))
-
       ;;;; LSP
       ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
       (use-package lsp-mode
@@ -996,51 +840,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (use-package beacon
         :config
         (beacon-mode 1))
-
-      ;; From the official doc <https://github.com/tumashu/pyim>.
-      (use-package pyim
-        :disable
-        :demand t
-        :config
-        ;; 激活 basedict 拼音词库，五笔用户请继续阅读 README
-        (use-package pyim-basedict
-          :ensure nil
-          :config (pyim-basedict-enable))
-
-        (setq default-input-method "pyim")
-
-        (setq pyim-default-scheme 'xiaohe-shuangpin)
-
-        ;; 设置 pyim 探针设置，这是 pyim 高级功能设置，可以实现 *无痛* 中英文切换 :-)
-        ;; 我自己使用的中英文动态切换规则是：
-        ;; 1. 光标只有在注释里面时，才可以输入中文。
-        ;; 2. 光标前是汉字字符时，才能输入中文。
-        ;; 3. 使用 M-j 快捷键，强制将光标前的拼音字符串转换为中文。
-        ;;(setq-default pyim-english-input-switch-functions
-        ;;              '(pyim-probe-dynamic-english
-        ;;                pyim-probe-isearch-mode
-        ;;                pyim-probe-program-mode
-        ;;                pyim-probe-org-structure-template))
-        ;;(setq-default pyim-punctuation-half-width-functions
-        ;;              '(pyim-probe-punctuation-line-beginning
-        ;;                pyim-probe-punctuation-after-punctuation))
-
-        ;; 开启拼音搜索功能
-        (pyim-isearch-mode 1)
-
-        ;; 使用 popup-el 来绘制选词框, 如果用 emacs26, 建议设置
-        ;; 为 'posframe, 速度很快并且菜单不会变形，不过需要用户
-        ;; 手动安装 posframe 包。
-        (setq pyim-page-tooltip 'posframe)
-        ;; (setq pyim-page-tooltip 'popup)
-
-        ;; 选词框显示5个候选词
-        (setq pyim-page-length 5)
-        (global-set-key (kbd "M-n") 'toggle-input-method))
-
-        ;; :bind
-        ;; (("M-n" . pyim-convert-string-at-point) ;与 pyim-probe-dynamic-english 配合
-        ;;  ("C-;" . pyim-delete-word-from-personal-buffer)))
 
       (add-hook 'org-mode-hook
                 (lambda () (add-to-list 'write-file-functions
@@ -1079,28 +878,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         :after (unicode-fonts)
         :load-path "~/.emacs.d/mkvoya"
         :ensure nil) ; local package does not need ensure
-      (use-package config-org
-        :load-path "~/.emacs.d/mkvoya"
-        :ensure nil) ; local package does not need ensure
-
-
-
-      ;; try notdeft?
-      (use-package deft
-        :disable
-        :ensure t
-        :defer t
-        :custom
-          (deft-extensions '("org" "md" "txt"))
-          (deft-directory "~/Dropbox/Dreams/Zettels")
-          (deft-use-filename-as-title t))
-      (use-package zetteldeft
-        :disable
-        :ensure t
-        :defer t
-        :after deft
-        :config
-        (zetteldeft-set-classic-keybindings))
 
       (use-package orderless
         :ensure t
@@ -1169,3 +946,557 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       ;; org column view
 
    #+END_SRC
+
+
+
+** Completion
+   #+BEGIN_SRC emacs-lisp
+     ;;; Disable Helm and use ivy.
+     ;;; Disable ivy, swiper, counsel, use selectrum and consult (and ctrlf?)
+     (use-package selectrum
+       :ensure t
+       :config
+       (selectrum-mode +1)
+       )
+     (use-package selectrum-prescient
+       :ensure t
+       :after (selectrum)
+       :config
+       ;; to make sorting and filtering more intelligent
+       (selectrum-prescient-mode +1)
+       ;; to save your command history on disk, so the sorting gets more
+       ;; intelligent over time
+       (prescient-persist-mode +1)
+       )
+
+     ;;; ========= Consult ===========
+     ;; Example configuration for Consult
+     (use-package consult
+       ;; Replace bindings. Lazily loaded due by `use-package'.
+       :bind (("C-x M-:" . consult-complex-command)
+              ("C-c h" . consult-history)
+              ("C-c m" . consult-mode-command)
+              ("C-x b" . consult-buffer)
+              ("C-x 4 b" . consult-buffer-other-window)
+              ("C-x 5 b" . consult-buffer-other-frame)
+              ("C-x r x" . consult-register)
+              ("C-x r b" . consult-bookmark)
+              ("M-g g" . consult-goto-line)
+              ("M-g M-g" . consult-goto-line)
+              ("M-g o" . consult-outline)       ;; "M-s o" is a good alternative.
+              ("M-g l" . consult-line)          ;; "M-s l" is a good alternative.
+              ("M-g m" . consult-mark)          ;; I recommend to bind Consult navigation
+              ("M-g k" . consult-global-mark)   ;; commands under the "M-g" prefix.
+              ("M-g r" . consult-git-grep)      ;; or consult-grep, consult-ripgrep
+              ("M-g f" . consult-find)          ;; or consult-fdfind, consult-locate
+              ("M-g i" . consult-project-imenu) ;; or consult-imenu
+              ("M-g e" . consult-error)
+              ("M-s m" . consult-multi-occur)
+              ("M-y" . consult-yank-pop)
+              ("<help> a" . consult-apropos))
+
+       ;; The :init configuration is always executed (Not lazy!)
+       :init
+
+       ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
+       (fset 'multi-occur #'consult-multi-occur)
+
+       ;; Configure other variables and modes in the :config section, after lazily loading the package
+       :config
+
+       ;; Optionally configure a function which returns the project root directory
+       (autoload 'projectile-project-root "projectile")
+       (setq consult-project-root-function #'projectile-project-root)
+
+       ;; Optionally configure narrowing key.
+       ;; Both < and C-+ work reasonably well.
+       (setq consult-narrow-key "<") ;; (kbd "C-+")
+       ;; Optionally make narrowing help available in the minibuffer.
+       ;; Probably not needed if you are using which-key.
+       ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+       ;; Optional configure a view library to be used by `consult-buffer'.
+       ;; The view library must provide two functions, one to open the view by name,
+       ;; and one function which must return a list of views as strings.
+       ;; Example: https://github.com/minad/bookmark-view/
+       ;; (setq consult-view-open-function #'bookmark-jump
+       ;;       consult-view-list-function #'bookmark-view-names)
+
+       ;; Optionally enable previews. Note that individual previews can be disabled
+       ;; via customization variables.
+       ;; (consult-preview-mode))
+       )
+
+     ;; Enable Consult-Selectrum integration.
+     ;; This package should be installed if Selectrum is used.
+     (use-package consult-selectrum
+       :after selectrum
+       :demand t)
+
+     ;; Optionally add the `consult-flycheck' command.
+     (use-package consult-flycheck
+       :bind (:map flycheck-command-map
+                   ("!" . consult-flycheck)))
+
+     ;;; ========= End of Consult ===========
+
+     ;; Enable richer annotations using the Marginalia package
+     (use-package marginalia
+       :defer 5
+       :ensure t
+       ;; The :init configuration is always executed (Not lazy!)
+       :init
+       ;; Must be in the :init section of use-package such that the mode gets
+       ;; enabled right away. Note that this forces loading the package.
+       (marginalia-mode)
+       ;; Prefer richer, more heavy, annotations over the lighter default variant.
+       ;; E.g. M-x will show the documentation string additional to the keybinding.
+       ;; By default only the keybinding is shown as annotation.
+       ;; Note that there is the command `marginalia-cycle-annotators` to
+       ;; switch between the annotators.
+       (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
+       )
+
+     (use-package embark
+       :after selectrum
+       :bind (:map minibuffer-local-map
+                   ("C-o" . embark-act)
+                   ("C-S-o" . embark-act-noexit)
+                   :map embark-file-map
+                   ("j" . dired-jump)))
+
+   #+END_SRC
+
+** 邮件
+
+   #+BEGIN_SRC emacs-lisp
+
+      ;; Mails
+      (autoload 'notmuch "notmuch" "notmuch mail" t)
+      ;; (use-package notmuch)
+
+      (use-package notmuch-unread
+        :after (quelpa)
+        :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
+                                :fetcher github
+                                :files ("notmuch-unread.el"))
+        :config
+        (setq notmuch-unread-update-interval 300))
+   #+END_SRC
+
+
+** Org-mode
+*** Org
+   #+BEGIN_SRC emacs-lisp
+
+     ;; Enable Org mode
+     (use-package org
+       :defer t
+       :config
+
+       ;; Shortcuts
+       (global-set-key (kbd "C-c a") 'org-agenda)
+       (global-set-key (kbd "C-c c") 'org-capture)
+
+       ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
+       (setq org-log-done 'time)
+
+       ;; Org mode TODO states
+       (setq org-todo-keywords
+             '((sequence
+                "TODO(t)"
+                "HAND(h)"
+                "WAIT(w)"
+                "LONG-TERM(l)"
+                "DELEGATE(e)"
+                "|"
+                "DONE(d!)"
+                "CANCELED(c@)"
+                )))
+       ;; Keyword colors
+       (setf org-todo-keyword-faces
+             '(
+               ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
+               ("TODO" . (:foreground "#ff39a3" :weight bold))
+               ("HAND"  . "orangered")
+               ;; ("WAIT" . (:foreground "orange" :weight bold))
+               ("WAIT" . "pink")
+               ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
+               ("DONE" . "#008080")
+               ("DELEGATE"  . "DeepSkyBlue")
+               ;; ("FIXME" . "IndianRed")
+               ;; ("☟ NEXT" . (:foreground "DeepSkyBlue"
+               ;;                         ;; :background "#7A586A"
+               ;;                         :weight bold))
+               ;; ("☕ BREAK" . "gray")
+               ;; ("❤ LOVE" . (:foreground "VioletRed4"
+               ;;                       ;; :background "#7A586A"
+               ;;                       :weight bold))
+               ))
+
+       ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
+       ;; (setq org-ellipsis "…")
+       ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
+       ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
+       (setq org-ellipsis "▾")
+
+       ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+       (defun org-force-open-current-window ()
+         "Open at current window."
+         (interactive)
+         (let ((org-link-frame-setup (quote
+                                      ((vm . vm-visit-folder)
+                                       (vm-imap . vm-visit-imap-folder)
+                                       (gnus . gnus)
+                                       (file . find-file)
+                                       (wl . wl)))
+                                     ))
+           (org-open-at-point)))
+
+       ;; Depending on universal argument try opening link
+       (defun org-open-maybe (&optional arg)
+         "Open maybe ARG."
+         (interactive "P")
+         (if arg (org-open-at-point)
+           (org-force-open-current-window)))
+       ;; Redefine file opening without clobbering universal argument
+       (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
+       ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
+       (setq org-image-actual-width (/ (display-pixel-width) 3))
+
+       (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
+
+       (org-babel-do-load-languages
+        'org-babel-load-languages
+        '((dot . t)
+          (C . t)))
+
+       ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
+       ;; Always redisplay inline images after executing SRC block
+       (eval-after-load 'org
+         (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+       )
+
+     ;;; Org Style
+     ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
+     ;; ;; 打开 org-indent mode
+     ;; (setq org-startup-indented t)
+     (use-package org-superstar
+       :after (org)
+       :config
+       (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
+       ;; 设置 bullet list
+       ;; (with-eval-after-load 'org-superstar
+       ;;   (set-face-attribute 'org-superstar-item nil :height 1.2)
+       ;;   (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
+       ;;   (set-face-attribute 'org-superstar-leading nil :height 1.3))
+       ;; Set different bullets, with one getting a terminal fallback.
+       ;; (setq org-superstar-headline-bullets-list
+       ;;       '("◉" "◈" "○" "▷"))
+       (setq org-superstar-headline-bullets-list
+             '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
+       ;; ⎋〄
+       ;; Stop cycling bullets to emphasize hierarchy of headlines.
+       (setq org-superstar-cycle-headline-bullets nil)
+       ;; Hide away leading stars on terminal.
+       (setq org-superstar-leading-fallback ?\s)
+       )
+
+
+     ;; agenda 里面时间块彩色显示
+     ;; From: https://emacs-china.org/t/org-agenda/8679/3
+     (defun ljg/org-agenda-time-grid-spacing ()
+       "Set different line spacing w.r.t. time duration."
+       (save-excursion
+         (let* ((background (alist-get 'background-mode (frame-parameters)))
+                (background-dark-p (string= background "dark"))
+                (colors (list "#1ABC9C" "#2ECC71" "#3498DB" "#9966ff"))
+                pos
+                duration)
+           (nconc colors colors)
+           (goto-char (point-min))
+           (while (setq pos (next-single-property-change (point) 'duration))
+             (goto-char pos)
+             (when (and (not (equal pos (point-at-eol)))
+                        (setq duration (org-get-at-bol 'duration)))
+               (let ((line-height (if (< duration 30) 1.0 (+ 0.5 (/ duration 60))))
+                     (ov (make-overlay (point-at-bol) (1+ (point-at-eol)))))
+                 (overlay-put ov 'face `(:background ,(car colors)
+                                                     :foreground
+                                                     ,(if background-dark-p "black" "white")))
+                 (setq colors (cdr colors))
+                 (overlay-put ov 'line-height line-height)
+                 (overlay-put ov 'line-spacing (1- line-height))))))))
+     (add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
+
+
+     ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
+     (defun org-insert-image ()
+       "Insert a image from clipboard."
+       (interactive)
+       (let* ((path (concat default-directory
+                            (buffer-name)
+                            ".assets/"))
+              (image-file (concat
+                           path
+                           (buffer-name)
+                           (format-time-string "_%Y%m%d_%H%M%S.png"))))
+         (if (not (file-exists-p path))
+             (mkdir path))
+         (do-applescript (concat
+                          "set the_path to \"" image-file "\" \n"
+                          "set png_data to the clipboard as «class PNGf» \n"
+                          "set the_file to open for access (POSIX file the_path as string) with write permission \n"
+                          "write png_data to the_file \n"
+                          "close access the_file"))
+         ;; (shell-command (concat "pngpaste " image-file))
+         (org-insert-link nil
+                          (concat "file:" image-file)
+                          "")
+         (message image-file))
+       (org-display-inline-images)
+       )
+
+     ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
+     (use-package appt
+       :defer 10
+       :config
+
+       (setq
+        appt-time-msg-list nil ;; clear existing appt list
+        appt-display-interval '5 ;; warn every 5 minutes from t - appt-message-warning-time
+        appt-message-warning-time '15 ;; send first warning 15 minutes before appointment
+        appt-display-mode-line nil ;; don't show in the modeline
+        appt-display-format 'window) ;; pass warnings to the designated window function
+       (setq appt-disp-window-function (function ct/appt-display-native))
+
+       (appt-activate 1) ;; activate appointment notification
+                                             ; (display-time) ;; Clock in modeline
+
+       (setq exec-path (append '("~/.emacs.d/3rd-parties/alerter/bin") exec-path))
+       (defvar alerter-command (executable-find "alerter") "The path to alerter.")
+
+       (defun ct/send-notification (title msg)
+         "Send notification (TITLE MSG)."
+         (let ((notifier-path (executable-find "alerter")))
+           (start-process
+            "Appointment Alert"
+            "*Appointment Alert*" ; use `nil` to not capture output; this captures output in background
+            notifier-path
+            "-message" msg
+            "-title" title
+            "-sender" "org.gnu.Emacs"
+            "-activate" "org.gnu.Emacs")))
+       (defun ct/appt-display-native (min-to-app new-time msg)
+         "Appt display native (MIN-TO-APP NEW-TIME MSG)."
+         (ct/send-notification
+          (format "Appointment in %s minutes" min-to-app) ; Title
+          (format "%s" msg))) ; Message/detail text
+
+       ;; Agenda-to-appointent hooks
+       (org-agenda-to-appt) ;; generate the appt list from org agenda files on emacs launch
+       (run-at-time "24:01" 3600 'org-agenda-to-appt) ;; update appt list hourly
+       (add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt) ;; update appt list on agenda view
+       )
+
+     (use-package ox-html
+       :config
+       ;; Org export code style
+       (setq org-html-htmlize-output-type 'css)
+       (setq-default org-html-doctype "html5")
+       (setq-default org-html-html5-fancy t)
+       )
+
+     (add-hook (quote org-mode-hook)
+               (lambda ()
+                 (org-shifttab 5)))
+
+     ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+     ;;; But I don't need the odd levels only
+     (setq org-adapt-indentation t
+           org-hide-leading-stars t)
+     ;;org-odd-levels-only t)
+
+     ;; ;; Two more extensions could be relavant.
+     ;; ;; org-super-links
+     ;; ;; org-wild-notifier.el
+     ;; (use-package org-wild-notifier
+     ;;   :ensure t
+     ;;   :config
+     ;;   (org-wild-notifier-mode t)
+     ;;   ;;; Overwrite
+     ;;   (defun org-wild-notifier--notify (event-msg)
+     ;;     "Notify about an event using `alert' library.
+     ;; EVENT-MSG is a string representation of the event."
+     ;;     ;;(message "Here is the events %S" event-msg)
+     ;;     ;;(message "%d" "ddd")
+     ;;     ;;(if event-msg
+     ;;      ;;   (progn
+     ;;           (ct/send-notification org-wild-notifier-notification-title event-msg)
+     ;;           ;; (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
+     ;;           ;;)
+     ;;           (message "No new events"))
+     ;;   ;;)
+     ;;   )
+
+     (use-package org-ref
+       :ensure t
+       :defer t
+       :config
+       (let* ((note-dir "~/Dropbox/Dreams/Research/Papers/Notes/")
+              (note-file (concat note-dir "Notes.org"))
+              (bib-file "~/Dropbox/Dreams/Research/Papers/Main.bib")
+              (pdf-dir "~/Dropbox/Dreams/Research/Papers"))
+         (setq reftex-default-bibliography bib-file)
+         ))
+
+   #+END_SRC
+*** Calender sync
+    #+BEGIN_SRC emacs-lisp
+      ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
+      (use-package ox-icalendar
+        :config
+        (setq org-icalendar-alarm-time 5)
+        (setq org-icalendar-combined-agenda-file "~/Dropbox/Dreams/Org/org.ics"
+              org-icalendar-include-todo 'all
+              org-icalendar-store-UID t
+              org-icalendar-timezone ""
+              org-icalendar-use-deadline
+              '(event-if-not-todo event-if-todo event-if-todo-not-done todo-due)
+              org-icalendar-use-scheduled
+              '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
+        )
+      (use-package org-caldav
+        :ensure t
+        :after (async)
+        :config
+        (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+        (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
+        (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
+        (setq org-caldav-files '("~/Dropbox/Dreams/Org/IPADS.sched.org"
+                                 "~/Dropbox/Dreams/Org/Main.org"
+                                 "~/Dropbox/Dreams/Org/Inbox.org"
+                                 ))
+        ;; (setq org-icalendar-timezone "America/Los_Angeles")
+        (setq org-icalendar-timezone "Asia/Shanghai")
+        )
+    #+END_SRC
+*** Org publish
+    #+BEGIN_SRC emacs-lisp
+      ;;; Org Publish
+      (use-package ox-publish
+        :config
+        (setq org-publish-project-alist
+              '(
+                ("org-notes"
+                 :base-directory "~/Dropbox/Dreams/Org/Public"
+                 :base-extension "org"
+                 :publishing-directory "/Volumes/ramfs/public_html/"
+                 :recursive t
+                 :publishing-function org-html-publish-to-html
+                 :headline-levels 4             ; Just the default for this project.
+                 :auto-preamble t
+                 )
+                ("org-static"
+                 :base-directory "~/Dropbox/Dreams/Org/Public"
+                 :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf"
+                 :publishing-directory "/Volumes/ramfs/public_html/"
+                 :recursive t
+                 :publishing-function org-publish-attachment
+                 )
+                ("org" :components ("org-notes" "org-static"))
+                )))
+    #+END_SRC
+*** Capture
+    #+BEGIN_SRC emacs-lisp
+      ;;; Captures
+      (use-package org-capture
+        :config
+        (setq org-capture-templates nil)
+        (add-to-list 'org-capture-templates
+                     '("j" "Journals" entry
+                       (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
+                       "* %U - %^{heading}\n  %?"))
+        ;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
+        (add-to-list 'org-capture-templates
+                     '("t" "Tasks" entry
+                       (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
+                       "* TODO %?\nADDED: %u\n%a"))
+        (add-to-list 'org-capture-templates
+                     '("b" "Bookmarks" entry
+                       (file+datetree "~/Dropbox/Dreams/Org/Collections/Bookmarks.org" "Bookmarks")
+                       "* %U - %^{title}\nADDED: %U\n%?"))
+        (add-to-list 'org-capture-templates
+                     '("p" "Plans" entry
+                       (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
+                       "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1))
+        )
+    #+END_SRC
+*** OrgRoam
+    #+BEGIN_SRC emacs-lisp
+      (use-package org-roam
+        :ensure t
+        :hook
+        (after-init . org-roam-mode)
+        :custom
+        (org-roam-directory "~/Dropbox/Dreams/Org/")
+        :bind (:map org-roam-mode-map
+                    (("C-c n l" . org-roam)
+                     ("C-c n f" . org-roam-find-file)
+                     ("C-c n g" . org-roam-graph))
+                    :map org-mode-map
+                    (("C-c n i" . org-roam-insert))
+                    (("C-c n I" . org-roam-insert-immediate))))
+    #+END_SRC
+*** OrgBrain
+    #+BEGIN_SRC emacs-lisp
+      ;; ;; Allows you to edit entries directly from org-brain-visualize
+      ;; (use-package polymode
+      ;;   :config
+      ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
+      ;;
+      (use-package org-brain :ensure t
+        :init
+        (setq org-brain-path "~/Dropbox/Dreams/Org/Brain")
+        ;; For Evil users
+        (with-eval-after-load 'evil
+          (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
+        :config
+        (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
+        (setq org-id-track-globally t)
+        (setq org-id-locations-file "~/Dropbox/Dreams/Org/Brain/org-id-locations")
+        (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
+        (push '("b" "Brain" plain (function org-brain-goto-end)
+                "* %i%?" :empty-lines 1)
+              org-capture-templates)
+        (setq org-brain-visualize-default-choices 'all)
+        (setq org-brain-title-max-length 12)
+        (setq org-brain-include-file-entries nil
+              org-brain-file-entries-use-title nil))
+    #+END_SRC
+** 目前禁用的功能
+*** 输入法
+    | pyim | https://github.com/tumashu/pyim |
+*** Zettel
+    | deft      |   |
+    | zetteldef |   |
+    | notdeft   |   |
+
+    #+BEGIN_SRC emacs-lisp
+      ;; try notdeft?
+      (use-package deft
+        :disabled
+        :ensure t
+        :defer t
+        :custom
+        (deft-extensions '("org" "md" "txt"))
+        (deft-directory "~/Dropbox/Dreams/Zettels")
+        (deft-use-filename-as-title t))
+      (use-package zetteldeft
+        :disabled
+        :ensure t
+        :defer t
+        :after deft
+        :config
+        (zetteldeft-set-classic-keybindings))
+    #+END_SRC
