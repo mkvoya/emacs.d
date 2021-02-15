@@ -14,14 +14,6 @@
 ;; Portion of heap used for allocation.  Defaults to 0.1.
 (setq gc-cons-percentage 0.6)
 
-(use-package benchmark-init
-  :init
-  (benchmark-init/activate)
-  :hook
-  (after-init . benchmark-init/deactivate))
-
-
-
 (eval-when-compile
   (require 'use-package))
 
@@ -112,6 +104,29 @@
 (menu-bar-mode -1) ; close menu bar
 (scroll-bar-mode -1) ; close the scroll bar
 (global-yascroll-bar-mode 1); Yet Another scroll bar
+
+;; Do we still need this if we have good-scroll?
+;; (use-package smooth-scrolling
+;;   :config
+;;   ;; the number 3 is buggy here when scrolling down.
+;;   (setq smooth-scroll-margin 2)
+;;   (smooth-scrolling-mode 1)
+;;   )
+;;; The effect of good-scroll is good, but slow.
+;; (use-package good-scroll
+;;   :ensure t
+;;   :config
+;;   (good-scroll-mode 1)
+;;   )
+
+(use-package sublimity
+  :defer t
+  :config
+  (use-package sublimity-scroll)
+  ;; (use-package sublimity-map) ;; experimental
+  (use-package sublimity-attractive)
+  (sublimity-mode 1)
+  )
 
 ; Winner mode
 ;(use-package winner :defer t)
@@ -423,7 +438,7 @@
    '("~/Dropbox/Dreams/Org/Plans.org" "~/Dropbox/Dreams/Org/IPADS.sched.org" "~/Dropbox/Dreams/Projects/DNA/DNA材料-持续更新/Survey.org" "~/Dropbox/Dreams/Org/Inbox.org" "~/Dropbox/Dreams/Org/Main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(toml-mode rust-mode rustic hide-mode-line notmuch-unread notmuch-maildir notmuch good-scroll cal-china-x orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity benchmark-init esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine centaur-tabs rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe smart-mode-line exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(smart-mode-line nyan-mode toml-mode rust-mode rustic hide-mode-line notmuch-unread notmuch-maildir notmuch good-scroll cal-china-x orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode org-ref mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl helm-descbinds buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -795,7 +810,8 @@
 
   ;; Optionally enable previews. Note that individual previews can be disabled
   ;; via customization variables.
-  (consult-preview-mode))
+  ;; (consult-preview-mode))
+  )
 
 ;; Enable Consult-Selectrum integration.
 ;; This package should be installed if Selectrum is used.
@@ -1041,18 +1057,6 @@
     :config
     (which-key-mode))
 
-;; Do we still need this if we have good-scroll?
-;; (use-package smooth-scrolling
-;;   :config
-;;   ;; the number 3 is buggy here when scrolling down.
-;;   (setq smooth-scroll-margin 2)
-;;   (smooth-scrolling-mode 1)
-;;   )
-(use-package good-scroll
-  :ensure t
-  :config
-  (good-scroll-mode 1))
-
 
 (use-package beacon
   :config
@@ -1155,14 +1159,6 @@
 
 (when window-system (set-frame-size (selected-frame) 80 60))
 
-(use-package sublimity
-  :defer t
-  :config
-  (use-package sublimity-scroll)
-  ;; (use-package sublimity-map) ;; experimental
-  (use-package sublimity-attractive)
-  (sublimity-mode 1)
-  )
 
 (use-package deft
   :ensure t
@@ -1250,6 +1246,8 @@
 (setq gc-cons-threshold (* 2 1000 1000))
 ;; org column view
 
+;; fringe
+(fringe-mode '(12 . 12))
 
 (provide 'init)
 ;;; init.el ends here

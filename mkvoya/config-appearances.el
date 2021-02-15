@@ -87,17 +87,13 @@
 ;;   :bind (("C-c <f6>" . heaven-and-hell-load-default-theme)
 ;;          ("<f6>" . heaven-and-hell-toggle-theme)))
 
+(global-hl-line-mode 1)
 (set-face-background 'hl-line "#d0fed0")
 (set-face-foreground 'hl-line nil)
 (set-face-foreground 'highlight nil)
 ;; (set-face-attribute 'default nil :height 160)
-;; (set-face-attribute 'default nil :height 160)
 
 (add-hook 'prog-mode-hook #'hs-minor-mode)
-
-(global-hl-line-mode 1)
-;(set-face-background 'hl-line "#3e4446")
-;(set-face-foreground 'highlight nil)
 
 (provide 'config-appearances)
 ;;; config-appearances.el ends here
