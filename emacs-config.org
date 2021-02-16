@@ -1227,7 +1227,13 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        ;; Stop cycling bullets to emphasize hierarchy of headlines.
        (setq org-superstar-cycle-headline-bullets nil)
        ;; Hide away leading stars on terminal.
+       (setq org-hide-leading-stars nil)
        (setq org-superstar-leading-fallback ?\s)
+       (setq org-indent-mode-turns-on-hiding-stars nil)
+       (setq org-superstar-item-bullet-alist
+         '((42 . 8226) ; *
+           (43 . 10149) ; +
+           (45 . 8211))) ; -
        )
 
 
@@ -1476,6 +1482,27 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                     (("C-c n i" . org-roam-insert))
                     (("C-c n I" . org-roam-insert-immediate))))
     #+END_SRC
+*** OrgRoam-Server
+    #+BEGIN_SRC emacs-lisp
+      (use-package org-roam-server
+        :ensure t
+        :config
+        (setq org-roam-server-host "127.0.0.1"
+              org-roam-server-port 8001
+              org-roam-server-authenticate nil
+              org-roam-server-export-inline-images t
+              org-roam-server-serve-files nil
+              org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
+              org-roam-server-network-poll t
+              org-roam-server-network-arrows nil
+              org-roam-server-network-label-truncate t
+              org-roam-server-network-label-truncate-length 60
+              org-roam-server-network-label-wrap-length 20))
+      ;; Since the org module lazy loads org-protocol (waits until an org URL is
+      ;; detected), we can safely chain `org-roam-protocol' to it.
+      (use-package org-roam-protocol
+        :after org-protocol)
+    #+END_SRC
 *** OrgBrain
     #+BEGIN_SRC emacs-lisp
       ;; ;; Allows you to edit entries directly from org-brain-visualize
@@ -1484,6 +1511,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
       ;;
       (use-package org-brain :ensure t
+        :disabled
         :init
         (setq org-brain-path "~/Dropbox/Dreams/Org/Brain")
         ;; For Evil users
@@ -1543,4 +1571,37 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         :after deft
         :config
         (zetteldeft-set-classic-keybindings))
+    #+END_SRC
+*** Custom
+    #+BEGIN_SRC emacs-lisp
+      ;; From https://emacs.stackexchange.com/questions/47627/identify-buffer-by-part-of-its-name
+      (defun switch-to-existing-buffer-other-window (part)
+        "Switch to buffer with PART in its name."
+        (interactive
+         (list (read-buffer-to-switch "Switch to buffer in other window: ")))
+        (let ((candidates
+               (cl-remove
+                nil
+                (mapcar (lambda (buf)
+                          (let ((pos (string-match part (buffer-name buf))))
+                            (when pos
+                              (cons pos buf))))
+                        (buffer-list)))))
+          (unless candidates
+            (user-error "There is no buffers with %S in its name." part))
+          (setq candidates (cl-sort candidates #'< :key 'car))
+          (switch-to-buffer-other-window (cdr (car candidates)))))
+
+      (defun mkvoya/open-orgroam-panel()
+        "Open the Org-roam client at [http://127.0.0.1:8001]."
+        (interactive)
+        (progn
+          ;; Ensure the server is running.
+          (unless (org-roam-server-mode)
+            (org-roam-server-mode 1))
+          ;; Ensure the session is running.
+          (xwidget-webkit-browse-url "http://127.0.0.1:8001" nil)
+          ;; Switch to the buffer
+          (switch-to-existing-buffer-other-window "Roam Server")
+          ))
     #+END_SRC
