@@ -2,7 +2,7 @@
 #+AUTHOR: Mingkai Dong
 #+DATE: 2021-02-16T01:16:18+0800
 #+EMAIL: mingkaidong@gmail.com
-#+SETUPFILE: ~/.emacs.d/org-templates/slim.org
+#+SETUPFILE: ~/.emacs.d/org-templates/level-0.org
 
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
@@ -116,10 +116,11 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       indent-tabs-mode nil
       fill-column 80
       line-spacing 0.1) ; Line space
+     (setq indent-tabs-mode nil)
      (setq enable-recursive-minibuffers t)
      (minibuffer-depth-indicate-mode 1)
 
-	 ;;; Window
+     ;;; Window
      (global-yascroll-bar-mode 1); Yet Another scroll bar
 
      ;; lazy answer
@@ -1505,6 +1506,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
     #+BEGIN_SRC emacs-lisp
       (use-package ox-slimhtml
 	:ensure t
+        :disabled
 	:config
 	(org-export-define-derived-backend 'custom-html-exporter
 	    'slimhtml                             ;; org's default exporter is 'html

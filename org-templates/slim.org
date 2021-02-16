@@ -11,17 +11,22 @@
 #+SELECT_TAGS: export
 #+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
 #+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://dong.mk/file/org-styles.css" />
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css" />
+#+HTML_HEAD: <script type="module" src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.esm.js"></script>
+#+HTML_HEAD: <script nomodule="" src="https://unpkg.com/ionicons@5.4.0/dist/ionicons/ionicons.js"></script>
 
+#+HTML_PREAMBLE: XXX
+#+HTML_POSTAMBLE: YYY
+#+HTML_CONTAINER: section
 
-#+HTML_HEAD: <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
-#+HTML_HEAD: <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+#+HTML_HEADER: <div class="container has-toc">
+#+HTML_HEADER:   <nav class=navbar-top></nav>
+#+HTML_HEADER:     <article class=js-toc-target>
+#+HTML_HEADER:       <nav class="toc js-toc"></nav>
+#+HTML_FOOTER:     </article>
+#+HTML_FOOTER: </div>
 
-#+OPTIONS: H:[headline level]
-#+HTML_CONTAINER: [default container]
-
-#+HTML_FOOTER: <script src=https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.5/tocbot.min.js></script>
-#+HTML_FOOTER: <link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.5/tocbot.css>
+#+HTML_FOOTER: <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
+#+HTML_FOOTER: <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css" />
 #+HTML_FOOTER: <script>
 #+HTML_FOOTER: var initTOC = function() {
 #+HTML_FOOTER:     var tocDomRect = document.querySelector('.js-toc').getBoundingClientRect();
@@ -29,6 +34,7 @@
 #+HTML_FOOTER:         tocSelector: '.js-toc',
 #+HTML_FOOTER:         contentSelector: '.js-toc-target',
 #+HTML_FOOTER:         headingSelector: 'h1, h2, h3',
+#+HTML_FOOTER:         hasInnerContainers: true,
 #+HTML_FOOTER:         positionFixedSelector: '.js-toc',
 #+HTML_FOOTER:         fixedSidebarOffset: tocDomRect.top - 50,
 #+HTML_FOOTER:     });

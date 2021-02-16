@@ -10,7 +10,4 @@
 #+LANGUAGE: en
 #+SELECT_TAGS: export
 #+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://dong.mk/file/org-styles.css" />
-#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css" />
-#+HTML_HEAD: <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
-#+HTML_HEAD: <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+#+HTML_HEAD: <link rel="stylesheet" href="http://dakrone.github.io/org.css" type="text/css" />
