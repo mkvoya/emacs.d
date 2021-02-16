@@ -1,0 +1,16 @@
+#+OPTIONS: ':t *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t c:nil
+#+OPTIONS: creator:comment d:(not LOGBOOK) date:t e:t email:nil f:t inline:t
+#+OPTIONS: num:t p:nil pri:nil stat:t tags:t tasks:t tex:t timestamp:t toc:t
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:auto html-preamble:t tex:t
+#+CREATOR: Emacs 28 (Org mode 9.4)
+#+DESCRIPTION:
+#+EXCLUDE_TAGS: noexport
+#+KEYWORDS:
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://dong.mk/file/org-styles.css" />
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css" />
+#+HTML_HEAD: <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
+#+HTML_HEAD: <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>

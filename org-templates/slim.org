@@ -1,0 +1,49 @@
+#+OPTIONS: ':t *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline author:t c:nil
+#+OPTIONS: creator:comment d:(not LOGBOOK) date:t e:t email:nil f:t inline:t
+#+OPTIONS: num:t p:nil pri:nil stat:t tags:t tasks:t tex:t timestamp:t toc:t
+#+OPTIONS: todo:t |:t
+#+OPTIONS: html-postamble:auto html-preamble:t tex:t
+#+CREATOR: Emacs 28 (Org mode 9.4)
+#+DESCRIPTION:
+#+EXCLUDE_TAGS: noexport
+#+KEYWORDS:
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://dong.mk/file/org-styles.css" />
+#+HTML_HEAD: <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.css" />
+
+
+#+HTML_HEAD: <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tocbot/4.11.1/tocbot.min.js"></script>
+#+HTML_HEAD: <script src="https://unpkg.com/ionicons@5.4.0/dist/ionicons.js"></script>
+
+#+OPTIONS: H:[headline level]
+#+HTML_CONTAINER: [default container]
+
+#+HTML_FOOTER: <script src=https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.5/tocbot.min.js></script>
+#+HTML_FOOTER: <link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/tocbot/3.0.5/tocbot.css>
+#+HTML_FOOTER: <script>
+#+HTML_FOOTER: var initTOC = function() {
+#+HTML_FOOTER:     var tocDomRect = document.querySelector('.js-toc').getBoundingClientRect();
+#+HTML_FOOTER:     tocbot.init({
+#+HTML_FOOTER:         tocSelector: '.js-toc',
+#+HTML_FOOTER:         contentSelector: '.js-toc-target',
+#+HTML_FOOTER:         headingSelector: 'h1, h2, h3',
+#+HTML_FOOTER:         positionFixedSelector: '.js-toc',
+#+HTML_FOOTER:         fixedSidebarOffset: tocDomRect.top - 50,
+#+HTML_FOOTER:     });
+#+HTML_FOOTER: };
+#+HTML_FOOTER: initTOC();
+#+HTML_FOOTER: window.onresize = initTOC;
+#+HTML_FOOTER: </script>
+#+HTML_FOOTER: <script>
+#+HTML_FOOTER: var post = document.querySelector('body'),
+#+HTML_FOOTER:     markers = post.querySelectorAll('sup'),
+#+HTML_FOOTER:     footnotes = post.querySelectorAll('.footnotes ol li');
+#+HTML_FOOTER: footnotes.forEach(function(footnote, i) {
+#+HTML_FOOTER:     var marker = markers[i];
+#+HTML_FOOTER:     marker.insertAdjacentHTML('afterend', '<aside class="post-sidenote" role="complementary">'
+#+HTML_FOOTER:     + footnote.innerHTML
+#+HTML_FOOTER:     + '</aside>');
+#+HTML_FOOTER: });
+#+HTML_FOOTER: </script>

@@ -7,13 +7,6 @@
 (setq-default
  load-prefer-newer t ; Load newer packages when available.
  package-enable-at-startup nil
- ;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
- compilation-scroll-output t
- ;; (setq compilation-scroll-output 'first-error)
- ;; Prevent Extraneous Tabs
- indent-tabs-mode nil
- fill-column 80
- line-spacing 0.1 ; Line space
  package-native-compile t)
 
 (setq-default
