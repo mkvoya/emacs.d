@@ -1,8 +1,9 @@
+#+SETUPFILE: ~/.emacs.d/org-templates/level-0.org
 #+TITLE: Emacs Main Configuration File
 #+AUTHOR: Mingkai Dong
 #+DATE: 2021-02-16T01:16:18+0800
 #+EMAIL: mingkaidong@gmail.com
-#+SETUPFILE: ~/.emacs.d/org-templates/level-0.org
+
 
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
@@ -15,40 +16,51 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
    #+END_SRC
 
 ** Packages
-   #+BEGIN_SRC emacs-lisp
-     (require 'package)
-     ;; (setq package-enable-at-startup nil)
-     ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-     ;; (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
-     ;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-     (setq package-archives
-           '(("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
-             ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
-             ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/")))
-     (package-initialize)
 
-     (unless (package-installed-p 'use-package)
-       (package-refresh-contents)
-       (package-install 'use-package t))
-     (require 'use-package)
-     ;; (setq-default
-     ;;  use-package-always-defer t
-     ;;  use-package-always-ensure t)
+*** Built-in Package System
+    | package | built-in |
+    #+BEGIN_SRC emacs-lisp
+      (require 'package)
+      ;; (setq package-enable-at-startup nil)
+      ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+      ;; (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
+      ;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+      (setq package-archives
+            '(("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
+              ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
+              ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/")))
+      (package-initialize)
+    #+END_SRC
 
-     (unless (package-installed-p 'quelpa)
-       (with-temp-buffer
-         (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
-         (eval-buffer)
-         (quelpa-self-upgrade)))
-     (setq quelpa-update-melpa-p nil)
-     (require 'quelpa)
-     (quelpa
-      '(quelpa-use-package
-        :fetcher git
-        :url "https://github.com/quelpa/quelpa-use-package.git"))
-     (require 'quelpa-use-package)
+*** use-package: A use-package declaration for simplifying your .emacs
+    | use-package | https://github.com/jwiegley/use-package |
+    #+BEGIN_SRC emacs-lisp
+      (unless (package-installed-p 'use-package)
+        (package-refresh-contents)
+        (package-install 'use-package t))
+      (require 'use-package)
+      ;; (setq-default
+      ;;  use-package-always-defer t
+      ;;  use-package-always-ensure t)
+    #+END_SRC
 
-   #+END_SRC
+*** Quelpa: Build and install your Emacs Lisp packages on-the-fly directly from source
+    | quelpa             | https://github.com/quelpa/quelpa             |
+    | quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
+    #+BEGIN_SRC emacs-lisp
+      (unless (package-installed-p 'quelpa)
+        (with-temp-buffer
+          (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
+          (eval-buffer)
+          (quelpa-self-upgrade)))
+      (setq quelpa-update-melpa-p nil)
+      (require 'quelpa)
+      (quelpa
+       '(quelpa-use-package
+         :fetcher git
+         :url "https://github.com/quelpa/quelpa-use-package.git"))
+      (require 'quelpa-use-package)
+    #+END_SRC
 
 ** Misc
    #+BEGIN_SRC emacs-lisp
@@ -79,10 +91,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                ;; Only set after LIBRARY_PATH can find gcc libraries.
                (setq comp-deferred-compilation t))
            (message "Native comp is *not* available"))))
-
-     ;;; Special Keys for MacOS GUI
-     ;;(setq mac-command-modifier 'meta) ; Switch Cmd and Opt(Alt)
-     ;;(setq mac-option-modifier 'super) ; Switch Cmd and Opt(Alt)
 
    #+END_SRC
 
@@ -119,9 +127,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      (setq indent-tabs-mode nil)
      (setq enable-recursive-minibuffers t)
      (minibuffer-depth-indicate-mode 1)
-
-     ;;; Window
-     (global-yascroll-bar-mode 1); Yet Another scroll bar
+     (visual-line-mode t)
 
      ;; lazy answer
      (fset 'yes-or-no-p 'y-or-n-p)
@@ -132,6 +138,21 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      ;; Show column number
      (column-number-mode 1)
 
+     ;; Sentence
+     (setq sentence-end-double-space nil) ; Use only one space to end a sentence
+
+   #+END_SRC
+
+
+
+*** Scroll bar
+   #+BEGIN_SRC emacs-lisp
+     (global-yascroll-bar-mode 1); Yet Another scroll bar
+   #+END_SRC
+
+
+*** Window System
+   #+BEGIN_SRC emacs-lisp
 
      ;; (when (memq window-system '(mac ns))
      ;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
@@ -141,17 +162,17 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      ;;   )
      (when (eq system-type 'darwin) (ns-auto-titlebar-mode))
      (setq ns-use-proxy-icon nil)
-
      (when window-system (set-frame-size (selected-frame) 80 60))
-
    #+END_SRC
 
    #+BEGIN_SRC emacs-lisp
-     (use-package bind-key)
+     (use-package bind-key :ensure t :defer t)
    #+END_SRC
 
-   #+BEGIN_SRC emacs-lisp
 
+*** diff-hl: Emacs package for highlighting uncommitted changes
+    | diff-hl | https://github.com/dgutov/diff-hl |
+   #+BEGIN_SRC emacs-lisp
      (use-package diff-hl
        :ensure t
        :defer 5
@@ -159,6 +180,9 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        (global-diff-hl-mode)
        (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
        (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
 
      ;; Winner mode
      ;;(use-package winner :defer t)
@@ -168,64 +192,63 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
            (message "Winner-mode enabled"))
        (message "No Winner-Mode, Skip"))
 
-     ;; Sentence
-     (setq sentence-end-double-space nil) ; Use only one space to end a sentence
-
      ;;minibuffer editing
      ;;(use-package miniedit
      ;;  :ensure t
      ;;  :defer t
      ;;  :commands minibuffer-edit
      ;;  :init (miniedit-install))
+   #+END_SRC
 
-     ;; Autocomplete
-     (use-package company
-       :defer t
-       :config
-                                             ;(add-hook 'prog-mode-hook 'company-mode)
-       (setq company-dabbrev-downcase nil
-             company-show-numbers t
-             company-minimum-prefix-length 2)
-       (setq company-tooltip-flip-when-above t)
-       (global-company-mode 1)
-       ;; (company-statistics-mode 1)
-       ;; (require 'company-emoji)
-       (setq company-backends
-             '((company-files
-                company-keywords
-                company-capf
-                company-yasnippet
-                company-ispell
-                company-lsp
-                )
-               (company-abbrev company-dabbrev)))
-       (with-eval-after-load 'company
-         (define-key company-active-map (kbd "\C-n") #'company-select-next)
-         (define-key company-active-map (kbd "\C-p") #'company-select-previous)
-         (define-key company-active-map (kbd "M-n") nil)
-         (define-key company-active-map (kbd "M-p") nil)
-         (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
-         (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
-         (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
-         (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
-         (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
-         (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
-         )
-       (advice-add 'company-complete-common :before (lambda ()
-                                                      (setq my-company-point (point))))
-       (advice-add 'company-complete-common :after (lambda ()
-                                                     (when (equal my-company-point (point)) (yas-expand))))
-       )
+*** Company: Modular in-buffer completion framework for Emacs
+    | company-mode | https://github.com/company-mode/company-mode |
+    #+BEGIN_SRC emacs-lisp
+      ;; Autocomplete
+      (use-package company
+        :defer t
+        :config
+        ;; (add-hook 'prog-mode-hook 'company-mode)
+        (setq company-dabbrev-downcase nil
+              company-show-numbers t
+              company-minimum-prefix-length 2)
+        (setq company-tooltip-flip-when-above t)
+        (global-company-mode 1)
+        ;; (company-statistics-mode 1)
+        ;; (require 'company-emoji)
+        (setq company-backends
+              '((company-files
+                 company-keywords
+                 company-capf
+                 company-yasnippet
+                 company-ispell
+                 company-lsp)
+                (company-abbrev company-dabbrev)))
+        (with-eval-after-load 'company
+          (define-key company-active-map (kbd "\C-n") #'company-select-next)
+          (define-key company-active-map (kbd "\C-p") #'company-select-previous)
+          (define-key company-active-map (kbd "M-n") nil)
+          (define-key company-active-map (kbd "M-p") nil)
+          (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
+          (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
+          (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
+          (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
+          (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
+          (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
+          )
+        (advice-add 'company-complete-common :before (lambda ()
+                                                       (setq my-company-point (point))))
+        (advice-add 'company-complete-common :after (lambda ()
+                                                      (when (equal my-company-point (point)) (yas-expand))))
+        )
+    #+END_SRC
 
-     ;; (setq line-number-mode 0)
+
+*** Evil
+   #+BEGIN_SRC emacs-lisp
 
      (setq linum-format "%d ")
      ;; (global-linum-mode t)
-     (add-hook 'prog-mode-hook 'linum-mode)
-     (add-hook 'ps-mode-hook 'doc-view-toggle-display)
 
-     ;; (load-theme 'manoj-dark)
-     (load-theme 'doom-one-light t)
 
      ;;(use-package spaceline-config
      ;;  :ensure t
@@ -275,30 +298,13 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        ;; (global-set-key (kbd "SPC") 'avy-goto-char)
        (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
-     ;; '(auto-dark-emacs/dark-theme 'manoj-dark)
-     ;; '(auto-dark-emacs/light-theme 'doom-one-light)
-     ;; '(auto-dark-emacs/polling-interval-seconds 600)
-
-
-     ;;; Use whitespace (instead of column-marker, column-enforce-mode)
-
-     (use-package modern-cpp-font-lock
-       :defer t
-       :config
-       (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
-
-
-                                             ;(add-hook 'prog-mode-hook
-                                             ;         (lambda () (add-to-list 'write-file-functions
-                                             ;                                 'delete-trailing-whitespace)))
-
      (use-package neotree
        :defer 5)
 
-                                             ; (use-package perspective
-                                             ;   :ensure t
-                                             ;   :defer t)
-                                             ; (persp-mode)
+     ;; (use-package perspective
+     ;;   :ensure t
+     ;;   :defer t)
+     ;; (persp-mode)
 
      (use-package flycheck
        :defer t
@@ -327,27 +333,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        (add-to-list 'flycheck-checkers 'proselint)
        )
 
-
-     ;; scroll one line at a time (less "jumpy" than defaults)
-     (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
-     (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-     (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-     (setq scroll-step 1) ;; keyboard scroll one line at a time
-
-                                             ;(use-package icicles
-                                             ;  :ensure t)
-                                             ;(use-package etags-select
-                                             ;  :ensure t)
-
-     ;;;; Mouse scrolling in terminal emacs
-     (unless (display-graphic-p)
-       ;; activate mouse-based scrolling
-       ;; ensure mouse
-       (xterm-mouse-mode t)
-       (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
-       (global-set-key (kbd "<mouse-5>") 'scroll-up-line)
-       )
-
      ;; optional: this is the evil state that evil-magit will use
      ;; (setq evil-magit-state 'normal)
      ;; optional: disable additional bindings for yanking text
@@ -355,29 +340,27 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      (use-package evil-magit
        :after (evil magit))
 
-     ;; (global-set-key (kbd "C-c d") 'define-word-at-point)
-     ;; (global-set-key (kbd "C-c D") 'define-word)
-
-
-     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
      (setq confirm-kill-emacs 'y-or-n-p)
-
-
-     ;;; Smart Tab
-     (use-package smart-tab
-       :defer 5
-       :config
-       (smart-tabs-insinuate 'c 'javascript))
-
-     (use-package ctrlf
-       :ensure t
-       :defer 5
-       :config
-       (ctrlf-mode +1))
 
     #+END_SRC
 
+*** Ctrl-f
+    #+BEGIN_SRC emacs-lisp
+      (use-package ctrlf
+        :ensure t
+        :defer 5
+        :config
+        (ctrlf-mode +1))
+    #+END_SRC
+
+*** smart-tab
+    #+BEGIN_SRC emacs-lisp
+      ;;; Smart Tab
+      (use-package smart-tab
+        :defer 5
+        :config
+        (smart-tabs-insinuate 'c 'javascript))
+    #+END_SRC
 
 *** Cheatsheet
 
@@ -408,27 +391,44 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
 *** Smooth scrolling
     #+BEGIN_SRC emacs-lisp
-     ;; Do we still need this if we have good-scroll?
-     ;; (use-package smooth-scrolling
-     ;;   :config
-     ;;   ;; the number 3 is buggy here when scrolling down.
-     ;;   (setq smooth-scroll-margin 2)
-     ;;   (smooth-scrolling-mode 1)
-     ;;   )
-     ;;; The effect of good-scroll is good, but slow.
-     ;; (use-package good-scroll
-     ;;   :ensure t
-     ;;   :config
-     ;;   (good-scroll-mode 1)
-     ;;   )
-     (use-package sublimity
-       :defer t
-       :config
-       (use-package sublimity-scroll)
-       ;; (use-package sublimity-map) ;; experimental
-       (use-package sublimity-attractive)
-       (sublimity-mode 1)
-       )
+      ;; scroll one line at a time (less "jumpy" than defaults)
+      (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
+      (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
+      (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
+      (setq scroll-step 1) ;; keyboard scroll one line at a time
+
+      ;;(use-package etags-select
+      ;;  :ensure t)
+
+      ;;;; Mouse scrolling in terminal emacs
+      (unless (display-graphic-p)
+        ;; activate mouse-based scrolling
+        ;; ensure mouse
+        (xterm-mouse-mode t)
+        (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
+        (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
+
+      ;; Do we still need this if we have good-scroll?
+      ;; (use-package smooth-scrolling
+      ;;   :config
+      ;;   ;; the number 3 is buggy here when scrolling down.
+      ;;   (setq smooth-scroll-margin 2)
+      ;;   (smooth-scrolling-mode 1)
+      ;;   )
+      ;;; The effect of good-scroll is good, but slow.
+      ;; (use-package good-scroll
+      ;;   :ensure t
+      ;;   :config
+      ;;   (good-scroll-mode 1)
+      ;;   )
+      (use-package sublimity
+        :defer t
+        :config
+        (use-package sublimity-scroll)
+        ;; (use-package sublimity-map) ;; experimental
+        (use-package sublimity-attractive)
+        (sublimity-mode 1)
+        )
     #+END_SRC
 
 
@@ -474,6 +474,13 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         )
     #+END_SRC
 
+*** Beacon - A light that follows your cursor around so you don't lose it!
+    | beacon | https://github.com/Malabarba/beacon |
+    #+BEGIN_SRC emacs-lisp
+      (use-package beacon
+        :config
+        (beacon-mode 1))
+    #+END_SRC
 
 *** Which-Key: Emacs package that displays available keybindings in popup
     | which-key | https://github.com/justbur/emacs-which-key |
@@ -508,33 +515,157 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       ;;   :ensure t
       ;;   :config
       ;;   (load-theme 'airline-light t))
+      ;; (load-theme 'manoj-dark)
+      (load-theme 'doom-one-light t)
     #+END_SRC
 
+
+*** delight: altering mode appearences on mode line
+    | delight | https://elpa.gnu.org/packages/delight.html |
+    #+BEGIN_SRC emacs-lisp
+      ;;; (require 'diminish); => use delight
+      (use-package delight
+        :defer 5
+        :config
+        (delight '((abbrev-mode " Abv" "abbrev")
+                   (smart-tab-mode " \\t" "smart-tab")
+                   (eldoc-mode nil "eldoc")
+                   (yas-mode)
+                   (which-key-mode "" "which-key")
+                   (Undo-Tree "UT" "undo-tree")
+                   (overwrite-mode " Ov" t)))
+        (delight 'rainbow-mode)
+        (delight 'visual-line-mode "↩" t)
+        (delight 'beacon-mode "" "beacon")
+        (delight 'org-roam-mode "♞" "org-roam")
+        (delight 'org-mode "♘" :major)
+        (delight 'flycheck-mode "⍻" "flycheck")
+        (delight 'yas-minor-mode "✎" "yasnippet")
+        (delight 'emacs-lisp-mode "Elisp" :major))
+      (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
+    #+END_SRC
+
+
+*** LSP
+    #+BEGIN_SRC emacs-lisp
+      ;;;; LSP
+      ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+      (use-package lsp-mode
+        :defer 5
+        :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+               (python-mode . lsp)
+               ;; if you want which-key integration
+               (lsp-mode . lsp-enable-which-key-integration))
+        :commands lsp
+        :config
+        (setq lsp-keymap-prefix "s-l")
+        )
+
+      ;; optionally
+      (use-package lsp-ui :commands lsp-ui-mode)
+      ;; if you are helm user
+      ;; (use-package helm-lsp :commands helm-lsp-workspace-symbol)
+      ;; if you are ivy user
+      ;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
+      (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+      ;; optionally if you want to use debugger
+
+      (use-package dap-mode)
+      ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+    #+END_SRC
+
+*** Async
+    #+BEGIN_SRC emacs-lisp
+     (use-package async
+       :ensure t)
+    #+END_SRC
+
+
+** Calender
+   #+BEGIN_SRC emacs-lisp
+     ;; 分别是妇女节、植树节、劳动节、青年节、儿童节、教师节、国庆节、程序员节、双11
+     (setq holiday-local-holidays `((holiday-fixed 3 8  "Women's Day")
+                                    (holiday-fixed 3 12 "Arbor Day")
+                                    ,@(cl-loop for i from 1 to 3
+                                               collect `(holiday-fixed 5 ,i "International Workers' Day"))
+                                    (holiday-fixed 5 4  "Chinese Youth Day")
+                                    (holiday-fixed 6 1  "Children's Day")
+                                    (holiday-fixed 9 10 "Teachers' Day")
+                                    ,@(cl-loop for i from 1 to 7
+                                               collect `(holiday-fixed 10 ,i "National Day"))
+                                    (holiday-fixed 10 24 "Programmers' Day")
+                                    (holiday-fixed 11 11 "Singles' Day")))
+     ;; 分别是世界地球日、世界读书日、俄罗斯的那个程序员节
+     (setq holiday-other-holidays '((holiday-fixed 4 22 "Earth Day")
+                                    (holiday-fixed 4 23 "World Book Day")
+                                    (holiday-sexp '(if (or (zerop (% year 400))
+                                                           (and (% year 100) (zerop (% year 4))))
+                                                       (list 9 12 year)
+                                                     (list 9 13 year))
+                                                  "World Programmers' Day")))
+     (setq calendar-chinese-all-holidays-flag t)
+
+     (use-package cal-china-x
+       :ensure t
+       :config
+       (setq mark-holidays-in-calendar t)
+       (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
+       (setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
+       (setq calendar-holidays
+             (append cal-china-x-important-holidays
+                     cal-china-x-general-holidays))
+       ;; other-holidays))
+       )
+   #+END_SRC
+*** Calfw - A calendar framework for Emacs
+    | Calfw | https://github.com/kiwanami/emacs-calfw |
+    #+BEGIN_SRC emacs-lisp
+      (use-package calfw
+        :ensure t)
+      (use-package calfw-org
+        :ensure t
+        :after (calfw org))
+    #+END_SRC
 *** whitespace
     | whitespace | Built-in | http://ergoemacs.org/emacs/whitespace-mode.html |
     #+BEGIN_SRC emacs-lisp
+      ;;; Use whitespace (instead of column-marker, column-enforce-mode)
       (use-package whitespace
-	:config
-	(setq whitespace-style
-	      '(face trailing tabs newline tab-mark newline-mark))
-	;; '(face trailing tabs newline tab-mark newline-mark lines-tail)
-	(setq whitespace-display-mappings
-	      '((newline-mark 10 [8617 10])
-		(tab-mark 9 [8594 9] [92 9])))
-	(set-face-background 'trailing-whitespace "#ffaf5f")
-	(set-face-background 'whitespace-trailing "#ffaf5f")
-	;; (global-whitespace-mode t)
-	(add-hook 'prog-mode-hook 'whitespace-mode)
-	)
+        :config
+        (setq whitespace-style
+              '(face trailing tabs newline tab-mark newline-mark))
+        ;; '(face trailing tabs newline tab-mark newline-mark lines-tail)
+        (setq whitespace-display-mappings
+              '((newline-mark 10 [8617 10])
+                (tab-mark 9 [8594 9] [92 9])))
+        (set-face-background 'trailing-whitespace "#ffaf5f")
+        (set-face-background 'whitespace-trailing "#ffaf5f")
+        ;; (global-whitespace-mode t)
+        (add-hook 'prog-mode-hook 'whitespace-mode)
+        )
     #+END_SRC
 ** Languages
+*** Programming mode
+    #+BEGIN_SRC emacs-lisp
+      (defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
+      (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
+      (add-hook 'prog-mode-hook 'linum-mode)
+      ;;(add-hook 'prog-mode-hook
+      ;;         (lambda () (add-to-list 'write-file-functions
+      ;;                                 'delete-trailing-whitespace)))
+    #+END_SRC
+*** PostScript/ps
+    #+BEGIN_SRC emacs-lisp
+      (add-hook 'ps-mode-hook 'doc-view-toggle-display)
+    #+END_SRC
 *** C
     #+BEGIN_SRC emacs-lisp
-      (setq c-default-style "linux"
-            c-basic-offset 8)
-      (setq-default c-basic-offset 8
-                    tab-width 8
-                    indent-tabs-mode t)
+      (add-hook 'c-mode-hook
+		(lambda() (setq tab-width 8
+				c-default-style "linux"
+				c-basic-offset 8
+				c-indent-tabs-mode t)))
     #+END_SRC
 *** C++
     #+BEGIN_SRC emacs-lisp
@@ -552,412 +683,294 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (defun my-c++-mode-hook ()
         (c-set-style "my-style"))        ; use my-style defined above
       (add-hook 'c++-mode-hook 'my-c++-mode-hook)
+      (use-package modern-cpp-font-lock
+        :defer t
+        :config
+        (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
     #+END_SRC
 
 *** Markdown
     #+BEGIN_SRC emacs-lisp
       (use-package markdown-mode
-	:ensure t
-	:mode (("README\\.md\\'" . gfm-mode)
-	       ("\\.md\\'" . markdown-mode)
-	       ("\\.markdown\\'" . markdown-mode))
-	:init (setq markdown-command "multimarkdown")
-	:config
-	;; (custom-set-variables '(markdown-command "/usr/local/bin/pandoc"))
-	(setq markdown-command "/usr/local/bin/pandoc")
+        :ensure t
+        :mode (("README\\.md\\'" . gfm-mode)
+               ("\\.md\\'" . markdown-mode)
+               ("\\.markdown\\'" . markdown-mode))
+        :init (setq markdown-command "multimarkdown")
+        :config
+        ;; (custom-set-variables '(markdown-command "/usr/local/bin/pandoc"))
+        (setq markdown-command "/usr/local/bin/pandoc")
 
-	(setq markdown-preview-stylesheets (list "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"))
-	;;"http://thomasf.github.io/solarized-css/solarized-light.min.css"
-	)
-
+        (setq markdown-preview-stylesheets (list "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"))
+        ;;"http://thomasf.github.io/solarized-css/solarized-light.min.css"
+        )
       (use-package flymd
-	:after (markdown-mode))
+        :after (markdown-mode))
     #+END_SRC
 
 ** LaTeX
-    #+BEGIN_SRC emacs-lisp
-	     ;;; AucTex
-	     (use-package tex
-	       :ensure auctex
-	       :defer 5
-	       :config
-	       ;; make latexmk available via C-c C-c
-	       ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
-	       ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
-	       (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
-	       (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "Make")))
-	       ;; (setq-default TeX-command-default "Make")
-	       ;; from https://gist.github.com/stefano-meschiari/9217695
-	       (setq TeX-auto-save t)
-	       (setq Tex-parse-self t)
-	       ;; Guess/Ask for the master file.
-	       (setq-default TeX-master nil)
-	       (add-hook 'LaTeX-mode-hook 'visual-line-mode)
-	       (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-	       (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
-	       (setq reftex-plug-into-AUCTeX t)
-	       (setq TeX-PDF-mode t)
+   #+BEGIN_SRC emacs-lisp
+     ;;; AucTex
+     (use-package tex
+       :ensure auctex
+       :defer 5
+       :config
+       ;; make latexmk available via C-c C-c
+       ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
+       ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
+       (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
+       (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "Make")))
+       ;; (setq-default TeX-command-default "Make")
+       ;; from https://gist.github.com/stefano-meschiari/9217695
+       (setq TeX-auto-save t)
+       (setq Tex-parse-self t)
+       ;; Guess/Ask for the master file.
+       (setq-default TeX-master nil)
+       (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+       (add-hook 'LaTeX-mode-hook 'flyspell-mode)
+       (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+       (setq reftex-plug-into-AUCTeX t)
+       (setq TeX-PDF-mode t)
 
-	       ;; From https://emacs.stackexchange.com/questions/19472/how-to-let-auctex-open-pdf-with-pdf-tools
-	       ;; ;; Use pdf-tools to open PDF files
-	       ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-	       ;;       TeX-source-correlate-start-server t)
-	       ;; ;; Update PDF buffers after successful LaTeX runs
-	       ;; (add-hook 'TeX-after-compilation-finished-functions
-	       ;;           #'TeX-revert-document-buffer)
+       ;; From https://emacs.stackexchange.com/questions/19472/how-to-let-auctex-open-pdf-with-pdf-tools
+       ;; ;; Use pdf-tools to open PDF files
+       ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+       ;;       TeX-source-correlate-start-server t)
+       ;; ;; Update PDF buffers after successful LaTeX runs
+       ;; (add-hook 'TeX-after-compilation-finished-functions
+       ;;           #'TeX-revert-document-buffer)
 
-	       (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
-	       (setq TeX-view-program-list
-		     '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -g %n %o %b")))
-		     ;; '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
+       (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
+       (setq TeX-view-program-list
+             '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -g %n %o %b")))
+       ;; '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
-	       ;; (add-hook 'LaTeX-mode-hook
-	       ;;           (lambda ()
-	       ;;             (push
-	       ;;              '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-	       ;;                :help "Run latexmk on file")
-	       ;;              TeX-command-list)))
-
-
-	       ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
-	       ;; (use-package pdf-view
-	       ;;   :defer 5
-	       ;;   :config
-	       ;;   (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
-	       ;;                                    ,(face-attribute 'default :background)))
-	       ;;   (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
-	       ;;   (add-hook 'pdf-view-mode-hook (lambda ()
-	       ;;                                   (pdf-view-midnight-minor-mode)))
-	       ;;   )
-	       (setq TeX-error-overview-open-after-TeX-run t)
-	       ;; (setq mkvoya/tex-auto-compile nil)
-	       ;; (defun mkvoya/tex-try-auto-compile ()
-	       ;;   (when (and (eq major-mode 'TeX-mode)
-	       ;;              (mkvoya/tex-auto-compile))
-	       ;;     (TeX-command-run))
-	       ;;   )
-	       ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
-
-	       (use-package company-auctex
-		 :defer t
-		 :after (company)
-		 :config
-		 (company-auctex-init))
-	       (use-package reftex
-		 :defer 5
-		 :config
-		 (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
-		 (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
-		 )
-	       (use-package company-reftex
-		 :defer t
-		 :after (company reftex)
-		 :config
-		 (add-to-list 'company-backends 'company-reftex-labels)
-		 (add-to-list 'company-backends 'company-reftex-citations))
-	       (use-package auctex-latexmk)
-	       )
-
-	     (use-package projectile
-	       :ensure t
-
-	       :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
-	       :config
-	       (projectile-mode +1)
-	       ;; (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-	       ;; (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-	       )
-
-	     (use-package dashboard
-		 :ensure t
-		 :diminish dashboard-mode
-		 :config
-		 (setq dashboard-banner-logo-title "What a nice day!")
-		 ;;(setq dashboard-startup-banner "/path/to/image")
-		 (setq dashboard-items '((recents  . 10)
-					 (bookmarks . 10)
-					 (projects . 5)
-					 (agenda . 5)
-					 (registers . 5)))
-		 (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
-		 (dashboard-setup-startup-hook))
-
-	     ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
-	     (defun mkvoya/tex-mode-hook ()
-	       (setq fill-column 1024))
-	     (add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
-
-	     (use-package svg-tag-mode
-	       :after (quelpa quelpa-use-package)
-	       :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
-				     :fetcher github
-				     :files ("svg-tag-mode.el")))
-
-	     (use-package langtool
-	       :defer 5
-	       :after (quelpa quelpa-use-package)
-	       :quelpa (langtool :repo "mhayashi1120/Emacs-langtool"
-				 :fetcher github
-				 :files ("langtool.el"))
-	       :init
-	       (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_2/libexec/languagetool-server.jar")
-	       ;; (setq langtool-bin "/usr/local/bin/langtool")
-	       (setq langtool-server-user-arguments '("-p" "8099"))
-
-	       ;; (defun langtool-autoshow-detail-popup (overlays)
-	       ;;   (when (require 'popup nil t)
-	       ;;     ;; Do not interrupt current popup
-	       ;;     (unless (or popup-instances
-	       ;;                 ;; suppress popup after type `C-g` .
-	       ;;                 (memq last-command '(keyboard-quit)))
-	       ;;       (let ((msg (langtool-details-error-message overlays)))
-	       ;;         (popup-tip msg)))))
-	       ;; (setq langtool-autoshow-message-function
-	       ;;       'langtool-autoshow-detail-popup)
-	       )
-
-	     (use-package wucuo
-	       :defer 5
-	       :config
-	       (add-hook 'prog-mode-hook #'wucuo-start)
-	       (add-hook 'text-mode-hook #'wucuo-start)
-	       (setq ispell-program-name "aspell")
-	       ;; You could add extra option "--camel-case" for since Aspell 0.60.8
-	       ;; @see https://github.com/redguardtoo/emacs.d/issues/796
-	       (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--run-together" "--run-together-limit=16" "--camel-case")))
-
-	     ;;; View Large Files
-	     (use-package vlf
-	       :defer t)
-
-	     ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
-	     (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
-	     ;; Open ibuffer upon "C-c i"
-	     (global-set-key (kbd "C-c i") 'ibuffer)
-	     (global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
-
-	     ;; with use-package
-	     (use-package maple-explorer
-	       :after (quelpa quelpa-use-package)
-	       :quelpa (maple-explorer
-			:fetcher github
-			:repo "honmaple/emacs-maple-explorer")
-	       :commands (maple-explorer-file maple-explorer-buffer maple-explorer-imenu maple-explorer-recentf)
-	       :config
-	       (setq maple-explorer-file-display-alist '((side . left) (slot . -1))))
+       ;; (add-hook 'LaTeX-mode-hook
+       ;;           (lambda ()
+       ;;             (push
+       ;;              '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
+       ;;                :help "Run latexmk on file")
+       ;;              TeX-command-list)))
 
 
-	     ;;preview files in dired
-	     (use-package peep-dired
-	       :ensure t
-	       :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-	       :bind (:map dired-mode-map
-			   ("P" . peep-dired)))
+       ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
+       ;; (use-package pdf-view
+       ;;   :defer 5
+       ;;   :config
+       ;;   (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
+       ;;                                    ,(face-attribute 'default :background)))
+       ;;   (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
+       ;;   (add-hook 'pdf-view-mode-hook (lambda ()
+       ;;                                   (pdf-view-midnight-minor-mode)))
+       ;;   )
+       (setq TeX-error-overview-open-after-TeX-run t)
+       ;; (setq mkvoya/tex-auto-compile nil)
+       ;; (defun mkvoya/tex-try-auto-compile ()
+       ;;   (when (and (eq major-mode 'TeX-mode)
+       ;;              (mkvoya/tex-auto-compile))
+       ;;     (TeX-command-run))
+       ;;   )
+       ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
 
-	     ;; Prevent polluting the system slipboard
-	     ;; (setq select-enable-clipboard nil)
-
-	     ;; Dired-sidebar is not good to use.
-	     ;; (use-package dired-sidebar
-	     ;;   :ensure t
-	     ;;   :commands (dired-sidebar-toggle-sidebar))
-
-	     ;; (use-package dired-subtree
-	     ;;   :config
-	     ;;   (bind-keys :map dired-mode-map
-	     ;;              ("<S-return>" . dired-subtree-toggle)))
-
-
-	     (defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
-	     (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
-
-	     (use-package tramp
-	       :defer 5
-	       :config
-	       ;; (setq tramp-debug-buffer t)
-	       (setq tramp-verbose 10))
-
-	     (setq alert-default-style 'libnotify)
-	     (setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
-
-	    ;;; (require 'diminish); => use delight
-	     (use-package delight
-	       :defer 5
-	       :config
-	       (delight '((abbrev-mode " Abv" "abbrev")
-			  (smart-tab-mode " \\t" "smart-tab")
-			  (eldoc-mode nil "eldoc")
-			  (yas-mode)
-      ;;
-			  (which-key-mode "" "which-key")
-			  (Undo-Tree "UT" "undo-tree")
-			  (overwrite-mode " Ov" t)))
-
-	       (delight 'rainbow-mode)
-	       (delight 'beacon-mode "" "beacon")
-	       (delight 'org-roam-mode "♞" "org-roam")
-	       (delight 'org-mode "♘" :major)
-	       (delight 'flycheck-mode "⍻" "flycheck")
-	       (delight 'yas-minor-mode "✎" "yasnippet")
-	       (delight 'emacs-lisp-mode "Elisp" :major))
-
-	     (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
-
-
-	     (use-package calfw
-	       :ensure t)
-	     (use-package calfw-org
-	       :ensure t
-	       :after (calfw org))
-
-	     (use-package async
-	       :ensure t)
-
-	     (modify-syntax-entry ?_ "w")
-
-	     ;;;; LSP
-	     ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-	     (use-package lsp-mode
-	       :defer 5
-	       :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-		      (python-mode . lsp)
-		      ;; if you want which-key integration
-		      (lsp-mode . lsp-enable-which-key-integration))
-	       :commands lsp
-	       :config
-	       (setq lsp-keymap-prefix "s-l")
-	       )
-
-	     ;; optionally
-	     (use-package lsp-ui :commands lsp-ui-mode)
-	     ;; if you are helm user
-	     ;; (use-package helm-lsp :commands helm-lsp-workspace-symbol)
-	     ;; if you are ivy user
-	     ;; (use-package lsp-ivy :commands lsp-ivy-workspace-symbol)
-	     (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
-
-	     ;; optionally if you want to use debugger
-
-	     (use-package dap-mode)
-	     ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
-
-	     ;; optional if you want which-key integration
-	     (use-package which-key
-		 :config
-		 (which-key-mode))
-
-
-	     (use-package beacon
-	       :config
-	       (beacon-mode 1))
-
-	     (add-hook 'org-mode-hook
-		       (lambda () (add-to-list 'write-file-functions
-					       'delete-trailing-whitespace)))
-
-	     ;;; ========== Charset and Unicode and Emoji =============
-	     ;; UTF-8
-	     (prefer-coding-system 'utf-8)
-	     (when (display-graphic-p)
-	       (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
-
-	     ;; Unicode
-	     (defmacro my/insert-unicode (unicode-name)
-	       `(lambda () (interactive)
-		  (insert-char (cdr (assoc-string, unicode-name (ucs-names))))))
-	     (bind-key "C-x 8 s" (my/insert-unicode "ZERO WIDTH SPACE"))
-	     (bind-key "C-x 8 S" (my/insert-unicode "SNOWMAN"))
-	     (set-language-environment "UTF-8")
-	     (set-default-coding-systems 'utf-8)
-
-	     ;; (use-package emojify
-	     ;;   :hook (after-init . global-emojify-mode))
-
-	     (use-package unicode-fonts
-		:ensure t
-		:config
-		(setq unicode-fonts-skip-font-groups
-		      '(chinese-simplified chinese-traditional
-			chinese-hanja chinese-kanji chinese-nom
-			multicolor decorative low-quality-glyphs))
-		;; This breaks the Sarasa font
-		;; (unicode-fonts-setup)
-	     )
-
-	     (use-package config-appearances
-	       :after (unicode-fonts)
-	       :load-path "~/.emacs.d/mkvoya"
-	       :ensure nil) ; local package does not need ensure
-
-	     (use-package orderless
-	       :ensure t
-	       :init (icomplete-mode) ; optional but recommended!
-	       :custom (completion-styles '(orderless)))
-
-	     ;;; =========== Some builtin modes =============
-	     ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
-
-	     (use-package paren
-	       :ensure nil
-	       :hook (after-init . show-paren-mode)
-	       :config
-	       (setq show-paren-when-point-inside-paren t
-		     show-paren-when-point-in-periphery t))
-	     (use-package so-long
-	       :ensure nil
-	       :config (global-so-long-mode 1))
-	     (use-package simple
-	       :ensure nil
-	       :hook (after-init . (lambda ()
-				      (line-number-mode)
-				      (column-number-mode)
-				      (size-indication-mode))))
-
-	     ;; 分别是妇女节、植树节、劳动节、青年节、儿童节、教师节、国庆节、程序员节、双11
-	     (setq holiday-local-holidays `((holiday-fixed 3 8  "Women's Day")
-					    (holiday-fixed 3 12 "Arbor Day")
-					    ,@(cl-loop for i from 1 to 3
-						       collect `(holiday-fixed 5 ,i "International Workers' Day"))
-					    (holiday-fixed 5 4  "Chinese Youth Day")
-					    (holiday-fixed 6 1  "Children's Day")
-					    (holiday-fixed 9 10 "Teachers' Day")
-					    ,@(cl-loop for i from 1 to 7
-						       collect `(holiday-fixed 10 ,i "National Day"))
-					    (holiday-fixed 10 24 "Programmers' Day")
-					    (holiday-fixed 11 11 "Singles' Day")))
-	     ;; 分别是世界地球日、世界读书日、俄罗斯的那个程序员节
-	     (setq holiday-other-holidays '((holiday-fixed 4 22 "Earth Day")
-					    (holiday-fixed 4 23 "World Book Day")
-					    (holiday-sexp '(if (or (zerop (% year 400))
-								   (and (% year 100) (zerop (% year 4))))
-							       (list 9 12 year)
-							     (list 9 13 year))
-							  "World Programmers' Day")))
-	     (setq calendar-chinese-all-holidays-flag t)
-
-	     (use-package cal-china-x
-	       :ensure t
-	       :config
-	       (setq mark-holidays-in-calendar t)
-	       (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
-	       (setq cal-china-x-general-holidays '((holiday-lunar 1 15 "元宵节")))
-	       (setq calendar-holidays
-		     (append cal-china-x-important-holidays
-			     cal-china-x-general-holidays))
-			     ;; other-holidays))
-	       )
-
-
-	     ;;; ========== End of Some builtin modes ===========
-
-
-	     ;; Make gc pauses faster by decreasing the threshold.
-	     (setq gc-cons-threshold (* 2 1000 1000))
-	     ;; org column view
-
+       (use-package company-auctex
+         :defer t
+         :after (company)
+         :config
+         (company-auctex-init))
+       (use-package reftex
+         :defer 5
+         :config
+         (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
+         (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+         )
+       (use-package company-reftex
+         :defer t
+         :after (company reftex)
+         :config
+         (add-to-list 'company-backends 'company-reftex-labels)
+         (add-to-list 'company-backends 'company-reftex-citations))
+       (use-package auctex-latexmk)
+       )
    #+END_SRC
 
+*** Projectile
+    #+BEGIN_SRC emacs-lisp
+      (use-package projectile
+        :ensure t
 
+        :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
+        :config
+        (projectile-mode +1)
+        ;; (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+        ;; (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
+        )
+    #+END_SRC
+
+*** Dashboard
+    #+BEGIN_SRC emacs-lisp
+      (use-package dashboard
+        :ensure t
+        :diminish dashboard-mode
+        :config
+        (setq dashboard-banner-logo-title "What a nice day!")
+        ;;(setq dashboard-startup-banner "/path/to/image")
+        (setq dashboard-items '((recents  . 10)
+                                (bookmarks . 10)
+                                (agenda . 5)
+                                (projects . 5)
+                                (registers . 5)))
+        (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+        (dashboard-setup-startup-hook))
+    #+END_SRC
+
+    #+BEGIN_SRC emacs-lisp
+      ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
+      (defun mkvoya/tex-mode-hook ()
+        (setq fill-column 1024))
+      (add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
+
+      (use-package svg-tag-mode
+        :after (quelpa quelpa-use-package)
+        :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
+                              :fetcher github
+                              :files ("svg-tag-mode.el")))
+    #+END_SRC
+
+*** LangTool
+    #+BEGIN_SRC emacs-lisp
+      (use-package langtool
+        :defer 5
+        :after (quelpa quelpa-use-package)
+        :quelpa (langtool :repo "mhayashi1120/Emacs-langtool"
+                          :fetcher github
+                          :files ("langtool.el"))
+        :init
+        (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_2/libexec/languagetool-server.jar")
+        ;; (setq langtool-bin "/usr/local/bin/langtool")
+        (setq langtool-server-user-arguments '("-p" "8099"))
+
+        ;; (defun langtool-autoshow-detail-popup (overlays)
+        ;;   (when (require 'popup nil t)
+        ;;     ;; Do not interrupt current popup
+        ;;     (unless (or popup-instances
+        ;;                 ;; suppress popup after type `C-g` .
+        ;;                 (memq last-command '(keyboard-quit)))
+        ;;       (let ((msg (langtool-details-error-message overlays)))
+        ;;         (popup-tip msg)))))
+        ;; (setq langtool-autoshow-message-function
+        ;;       'langtool-autoshow-detail-popup)
+        )
+    #+END_SRC
+
+
+*** Maple Explorer
+    #+BEGIN_SRC emacs-lisp
+      (use-package maple-explorer
+        :after (quelpa quelpa-use-package)
+        :quelpa (maple-explorer
+                 :fetcher github
+                 :repo "honmaple/emacs-maple-explorer")
+        :commands (maple-explorer-file maple-explorer-buffer maple-explorer-imenu maple-explorer-recentf)
+        :config
+        (setq maple-explorer-file-display-alist '((side . left) (slot . -1))))
+    #+END_SRC
+
+*** Peep-dired
+    #+BEGIN_SRC emacs-lisp
+      ;;preview files in dired
+      (use-package peep-dired
+        :ensure t
+        :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
+        :bind (:map dired-mode-map
+                    ("P" . peep-dired)))
+
+      ;; Prevent polluting the system slipboard
+      ;; (setq select-enable-clipboard nil)
+      ;; Dired-sidebar is not good to use.
+      ;; (use-package dired-sidebar
+      ;;   :ensure t
+      ;;   :commands (dired-sidebar-toggle-sidebar))
+      ;; (use-package dired-subtree
+      ;;   :config
+      ;;   (bind-keys :map dired-mode-map
+      ;;              ("<S-return>" . dired-subtree-toggle)))
+    #+END_SRC
+
+*** Tramp
+    #+BEGIN_SRC emacs-lisp
+      (use-package tramp
+        :defer 5
+        :config
+        ;; (setq tramp-debug-buffer t)
+        (setq tramp-verbose 10))
+
+      (setq alert-default-style 'libnotify)
+      (setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
+
+      (modify-syntax-entry ?_ "w")
+
+       ;;; ========== Charset and Unicode and Emoji =============
+      ;; UTF-8
+      (prefer-coding-system 'utf-8)
+      (when (display-graphic-p)
+        (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
+
+      ;; Unicode
+      (defmacro my/insert-unicode (unicode-name)
+        `(lambda () (interactive)
+           (insert-char (cdr (assoc-string, unicode-name (ucs-names))))))
+      (bind-key "C-x 8 s" (my/insert-unicode "ZERO WIDTH SPACE"))
+      (bind-key "C-x 8 S" (my/insert-unicode "SNOWMAN"))
+      (set-language-environment "UTF-8")
+      (set-default-coding-systems 'utf-8)
+
+      ;; (use-package emojify
+      ;;   :hook (after-init . global-emojify-mode))
+
+      (use-package unicode-fonts
+        :ensure t
+        :config
+        (setq unicode-fonts-skip-font-groups
+              '(chinese-simplified chinese-traditional
+                                   chinese-hanja chinese-kanji chinese-nom
+                                   multicolor decorative low-quality-glyphs))
+        ;; This breaks the Sarasa font
+        ;; (unicode-fonts-setup)
+        )
+
+      (use-package config-appearances
+        :after (unicode-fonts)
+        :load-path "~/.emacs.d/mkvoya"
+        :ensure nil) ; local package does not need ensure
+
+      (use-package orderless
+        :ensure t
+        :init (icomplete-mode) ; optional but recommended!
+        :custom (completion-styles '(orderless)))
+
+      ;;; =========== Some builtin modes =============
+      ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
+
+      (use-package paren
+        :ensure nil
+        :hook (after-init . show-paren-mode)
+        :config
+        (setq show-paren-when-point-inside-paren t
+              show-paren-when-point-in-periphery t))
+      (use-package so-long
+        :ensure nil
+        :config (global-so-long-mode 1))
+      (use-package simple
+        :ensure nil
+        :hook (after-init . (lambda ()
+                              (line-number-mode)
+                              (column-number-mode)
+                              (size-indication-mode))))
+
+              ;;; ========== End of Some builtin modes ===========
+      ;; Make gc pauses faster by decreasing the threshold.
+      (setq gc-cons-threshold (* 2 1000 1000))
+    #+END_SRC
 
 ** Completion
 *** Selectrum
@@ -993,6 +1006,15 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         (prescient-persist-mode +1)
         )
     #+END_SRC
+
+*** Very Large File
+    #+BEGIN_SRC emacs-lisp
+      ;;; View Large Files
+      (use-package vlf
+        :defer t)
+    #+END_SRC
+
+
 *** consult.el - Consulting completing-read
     | consult | https://github.com/minad/consult |
 
@@ -1063,6 +1085,20 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      ;;; ========= End of Consult ===========
      #+END_SRC
 
+
+*** 无错
+    #+BEGIN_SRC emacs-lisp
+      (use-package wucuo
+        :defer 5
+        :config
+        (add-hook 'prog-mode-hook #'wucuo-start)
+        (add-hook 'text-mode-hook #'wucuo-start)
+        (setq ispell-program-name "aspell")
+        ;; You could add extra option "--camel-case" for since Aspell 0.60.8
+        ;; @see https://github.com/redguardtoo/emacs.d/issues/796
+        (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--run-together" "--run-together-limit=16" "--camel-case")))
+    #+END_SRC
+
 *** marginalia.el -- Marginalia in the minibuffer
     | marginalia | https://github.com/minad/marginalia |
     #+BEGIN_SRC emacs-lisp
@@ -1095,21 +1131,19 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                     ("j" . dired-jump)))
     #+END_SRC
 
-** 邮件
-
+** Mail Client
    #+BEGIN_SRC emacs-lisp
+     ;; Mails
+     (autoload 'notmuch "notmuch" "notmuch mail" t)
+     ;; (use-package notmuch)
 
-      ;; Mails
-      (autoload 'notmuch "notmuch" "notmuch mail" t)
-      ;; (use-package notmuch)
-
-      (use-package notmuch-unread
-        :after (quelpa)
-        :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
-                                :fetcher github
-                                :files ("notmuch-unread.el"))
-        :config
-        (setq notmuch-unread-update-interval 300))
+     (use-package notmuch-unread
+       :after (quelpa)
+       :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
+                               :fetcher github
+                               :files ("notmuch-unread.el"))
+       :config
+       (setq notmuch-unread-update-interval 300))
    #+END_SRC
 
 
@@ -1121,7 +1155,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      (use-package org
        :defer t
        :config
-
        ;; Shortcuts
        (global-set-key (kbd "C-c a") 'org-agenda)
        (global-set-key (kbd "C-c c") 'org-capture)
@@ -1203,6 +1236,11 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        ;; Always redisplay inline images after executing SRC block
        (eval-after-load 'org
          (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+
+       (add-hook 'org-mode-hook
+                 (lambda () (add-to-list 'write-file-functions
+                                         'delete-trailing-whitespace)))
+
        )
 
      ;;; Org Style
@@ -1227,13 +1265,13 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        ;; Stop cycling bullets to emphasize hierarchy of headlines.
        (setq org-superstar-cycle-headline-bullets nil)
        ;; Hide away leading stars on terminal.
-       (setq org-hide-leading-stars nil)
        (setq org-superstar-leading-fallback ?\s)
        (setq org-indent-mode-turns-on-hiding-stars nil)
+       (setq org-hide-leading-stars t)
        (setq org-superstar-item-bullet-alist
-         '((42 . 8226) ; *
-           (43 . 10149) ; +
-           (45 . 8211))) ; -
+             '((42 . 8226) ; *
+               (43 . 10149) ; +
+               (45 . 8211))) ; -
        )
 
 
@@ -1374,7 +1412,8 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      ;;   )
 
      (use-package org-ref
-       :ensure t
+       :disabled
+       :ensure nil
        :defer t
        :config
        (let* ((note-dir "~/Dropbox/Dreams/Research/Papers/Notes/")
@@ -1572,7 +1611,24 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         :config
         (zetteldeft-set-classic-keybindings))
     #+END_SRC
-*** Custom
+
+*** Custom key-bindings
+    #+BEGIN_SRC emacs-lisp
+      ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
+      (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+      ;; Open ibuffer upon "C-c i"
+      (global-set-key (kbd "C-c i") 'ibuffer)
+      (global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
+      (global-unset-key [mouse-3])
+      (global-set-key [down-mouse-3]
+                      `(menu-item ,(purecopy "Menu Bar") ignore
+                                  :filter (lambda (_)
+                                            (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
+                                                (mouse-menu-bar-map)
+                                              (mouse-menu-major-mode-map)))))
+    #+END_SRC
+*** Custom functions
+
     #+BEGIN_SRC emacs-lisp
       ;; From https://emacs.stackexchange.com/questions/47627/identify-buffer-by-part-of-its-name
       (defun switch-to-existing-buffer-other-window (part)
