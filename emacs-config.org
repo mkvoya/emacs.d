@@ -127,7 +127,13 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      (setq indent-tabs-mode nil)
      (setq enable-recursive-minibuffers t)
      (minibuffer-depth-indicate-mode 1)
-     (visual-line-mode t)
+     (defun mkvoya/better-wrap ()
+       "Make the word wrap better."
+       (interactive)
+       (progn
+         (visual-line-mode t)
+         (setq word-wrap nil)
+         ))
 
      ;; lazy answer
      (fset 'yes-or-no-p 'y-or-n-p)
@@ -142,7 +148,6 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
      (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
    #+END_SRC
-
 
 
 *** Scroll bar
@@ -488,7 +493,16 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       ;; which-key is a fork of guide-key
       (use-package which-key
         :defer 5
+        :bind (
+               ("C-h ,m" . which-key-show-major-mode)
+               ("C-h ,t" . which-key-show-top-level)
+               ("C-h ,n" . which-key-show-next-page)
+               )
         :config
+        (setq which-key-show-remaining-keys t)
+
+        (setq which-key-idle-delay 1)
+        (setq which-key-sort-order 'which-key-prefix-then-key-order)
         (which-key-mode)
         (which-key-setup-minibuffer))
     #+END_SRC
@@ -726,7 +740,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        (setq Tex-parse-self t)
        ;; Guess/Ask for the master file.
        (setq-default TeX-master nil)
-       (add-hook 'LaTeX-mode-hook 'visual-line-mode)
+       (add-hook 'LaTeX-mode-hook #'mkvoya/better-wrap)
        (add-hook 'LaTeX-mode-hook 'flyspell-mode)
        (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
        (setq reftex-plug-into-AUCTeX t)
@@ -965,11 +979,15 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         :hook (after-init . (lambda ()
                               (line-number-mode)
                               (column-number-mode)
-                              (size-indication-mode))))
+                              (size-indication-mode)
+                              ;; better line wrapping for cjk. Try =toggle-word-wrap=
+                              (setq-default word-wrap nil)
+                              (setq word-wrap nil)
+                              )))
 
-              ;;; ========== End of Some builtin modes ===========
-      ;; Make gc pauses faster by decreasing the threshold.
-      (setq gc-cons-threshold (* 2 1000 1000))
+        ;;; ========== End of Some builtin modes ===========
+        ;; Make gc pauses faster by decreasing the threshold.
+        (setq gc-cons-threshold (* 2 1000 1000))
     #+END_SRC
 
 ** Completion
@@ -1164,7 +1182,8 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 
        ;; Org mode TODO states
        (setq org-todo-keywords
-             '((sequence
+
+       '((sequence
                 "TODO(t)"
                 "HAND(h)"
                 "WAIT(w)"
@@ -1226,6 +1245,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        (setq org-image-actual-width (/ (display-pixel-width) 3))
 
        (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
+       (add-hook 'org-mode-hook #'mkvoya/better-wrap)
 
        (org-babel-do-load-languages
         'org-babel-load-languages
@@ -1482,6 +1502,12 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
     #+END_SRC
 *** Capture
     #+BEGIN_SRC emacs-lisp
+      (defun mkvoya/create-capture-file()
+        "Create org file on-the-fly."
+        (interactive)
+        (let ((name (read-string "Filename: ")))
+          (expand-file-name (format "%s.org" name)
+                            "~/Dropbox/Dreams/Org/Collections")))
       ;;; Captures
       (use-package org-capture
         :config
@@ -1503,6 +1529,10 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                      '("p" "Plans" entry
                        (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
                        "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1))
+        (add-to-list 'org-capture-templates
+                     '("c" "Collection" entry
+                       (file mkvoya/create-capture-file)
+                       "<org"))
         )
     #+END_SRC
 *** OrgRoam
@@ -1513,13 +1543,17 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
         (after-init . org-roam-mode)
         :custom
         (org-roam-directory "~/Dropbox/Dreams/Org/")
+        (org-roam-link-file-path-type 'relative)
+        (org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
         :bind (:map org-roam-mode-map
                     (("C-c n l" . org-roam)
                      ("C-c n f" . org-roam-find-file)
                      ("C-c n g" . org-roam-graph))
                     :map org-mode-map
                     (("C-c n i" . org-roam-insert))
-                    (("C-c n I" . org-roam-insert-immediate))))
+                    (("C-c n I" . org-roam-insert-immediate)))
+        :config
+        (setq org-roam-rename-file-on-title-change nil))
     #+END_SRC
 *** OrgRoam-Server
     #+BEGIN_SRC emacs-lisp
@@ -1585,9 +1619,110 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 			(org-open-file (ox-slimhtml-export-to-html nil s v b))))))))
 	)
     #+END_SRC
-** 目前禁用的功能
-*** 输入法
+*** Org-mac-protocol
+    #+BEGIN_SRC emacs-lisp
+      (setq org-directory "~/Dropbox/Dreams/Org/")
+      ;; (use-package org-mac-protocol
+      ;;   :after (quelpa quelpa-use-package remember)
+      ;;   :quelpa (org-mac-protocol :repo "claviclaws/org-mac-protocol"
+      ;;                             :fetcher github
+      ;;                             :files ("org-mac-protocol.el"))
+      ;;   :config
+      ;;   (setq org-remember-templates
+      ;;         '(("AppleScript remember" ?y
+      ;;            "* %:shortdesc\n  %:initial\n   Source: %u, %c\n\n  %?"
+      ;;            (concat org-directory "Remember.org") "Remember")
+      ;;           ("AppleScript note" ?z
+      ;;            "* %?\n\n  Date: %u\n"
+      ;;            (concat org-directory "Remember.org") "Notes")
+      ;;           )))
+    #+END_SRC
+*** NotDeft
+    #+BEGIN_SRC emacs-lisp
+      (use-package notdeft
+        :after (quelpa quelpa-use-package)
+        :quelpa (notdeft :repo "hasu/notdeft"
+                         :fetcher github
+                         :files ("*.el" "xapian"))
+        :config
+        (setq notdeft-directories '("~/Dropbox/Dreams/Org"))
+        (setq notdeft-extension "org")
+        (setq notdeft-secondary-extensions '("md" "txt" "scrbl"))
+        )
+    #+END_SRC
+** Others
+*** Input Method
     | pyim | https://github.com/tumashu/pyim |
+    #+BEGIN_SRC emacs-lisp
+      (use-package pyim
+        :ensure nil
+        :demand t
+        :config
+        ;; 激活 basedict 拼音词库，五笔用户请继续阅读 README
+        (use-package pyim-basedict
+          :ensure nil
+          :config (pyim-basedict-enable))
+
+        (setq default-input-method "pyim")
+        ;; (setq pyim-default-scheme 'quanpin)
+        (setq pyim-default-scheme 'pyim-shuangpin)
+
+        ;; 设置 pyim 探针设置，这是 pyim 高级功能设置，可以实现 *无痛* 中英文切换 :-)
+        ;; 我自己使用的中英文动态切换规则是：
+        ;; 1. 光标只有在注释里面时，才可以输入中文。
+        ;; 2. 光标前是汉字字符时，才能输入中文。
+        ;; 3. 使用 M-m 快捷键，强制将光标前的拼音字符串转换为中文。
+        ;; (setq-default pyim-english-input-switch-functions
+        ;;               '(pyim-probe-dynamic-english
+        ;;                 pyim-probe-isearch-mode
+        ;;                 pyim-probe-program-mode
+        ;;                 pyim-probe-org-structure-template))
+
+        (setq-default pyim-punctuation-half-width-functions
+                      '(pyim-probe-punctuation-line-beginning
+                        pyim-probe-punctuation-after-punctuation))
+        ;; 开启拼音搜索功能
+        (pyim-isearch-mode 1)
+
+        ;; 使用 popup-el 来绘制选词框, 如果用 emacs26, 建议设置
+        ;; 为 'posframe, 速度很快并且菜单不会变形，不过需要用户
+        ;; 手动安装 posframe 包。
+        (setq pyim-page-tooltip 'posframe)
+        ;; (setq pyim-page-tooltip 'popup)
+        ;; 选词框显示5个候选词
+        (setq pyim-page-length 5)
+        :bind
+        (("M-m" . pyim-convert-string-at-point) ;与 pyim-probe-dynamic-english 配合
+         ;; ("C-;" . pyim-delete-word-from-personal-buffer)
+         ("C-\\" . toggle-input-method)
+         ))
+
+    #+END_SRC
+*** ActivityWatch
+    #+BEGIN_SRC emacs-lisp
+      (use-package activity-watch-mode
+        :ensure t
+        :defer t
+        :config
+        (global-activity-watch-mode))
+    #+END_SRC
+*** Jieba
+    #+BEGIN_SRC emacs-lisp
+      (use-package jsonrpc
+        :ensure t
+        :defer t)
+      ;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/jieba.el")
+      ;; (require 'jieba)
+      ;; (jieba-mode)
+
+      ;; (use-package jieba
+      ;;   :after (jsonrpc)
+      ;;   :load-path "~/.emacs.d/3rd-parties/jieba.el"
+      ;;   :ensure t
+      ;;   :commands jieba-mode
+      ;;   :init (jieba-mode))
+    #+END_SRC
+** 目前禁用的功能
 *** Zettel
     | deft      |   |
     | zetteldef |   |
@@ -1618,7 +1753,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
       ;; Open ibuffer upon "C-c i"
       (global-set-key (kbd "C-c i") 'ibuffer)
-      (global-set-key (kbd "C-c e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
+      ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
       (global-unset-key [mouse-3])
       (global-set-key [down-mouse-3]
                       `(menu-item ,(purecopy "Menu Bar") ignore
@@ -1661,3 +1796,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
           (switch-to-existing-buffer-other-window "Roam Server")
           ))
     #+END_SRC
+** EL
+   #+BEGIN_SRC emacs-lisp
+     (setq source-directory "~/Library/Caches/Homebrew/emacs-plus@28--git/")
+   #+END_SRC
