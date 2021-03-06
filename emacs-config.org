@@ -6,13 +6,49 @@
 
 
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
+Also from https://github.com/sachac/.emacs.d
+
+* Env
+
+#+BEGIN_SRC emacs-lisp
+  (setq .org "~/.emacs.d/emacs-config.org")
+  (setq .el (concat (file-name-sans-extension .org) ".el"))
+  (defun mkvoya/sync-emacs-config()
+    "Synchronize config from org to el and compile to elc."
+    (interactive)
+    ;; Avoid running hooks when tangling. From https://delta.re/emacs-config-org/
+    (let ((prog-mode-hook nil))
+      (require 'ob-tangle)
+      ;; Tangle the file. It's fast.
+      (org-babel-tangle-file .org .el "emacs-lisp")
+      (message "[CONFIG] Config is synchronized.")
+      ;; Async compile the config.
+      (async-start
+       ;; What to do in the child process
+       ;; the backquote and the set are necessary to capture vars
+       `(lambda () ; ` is necessary to capture vars.
+          (set 'el-file ,.el) ; Get the captured var.
+          (byte-compile-file el-file) ; Compile the el file.
+          el-file) ; Return the file name.
+       ;; What to do when it finishes
+       (lambda (res) (message "[CONFIG] Config %s is async-compiled." res))
+       )))
+
+  ;; Sync config when the config file is saved.
+  (add-hook 'after-save-hook
+            (lambda ()
+              (if (equal (buffer-file-name) (expand-file-name .org))
+                  (mkvoya/sync-emacs-config))))
+#+END_SRC
 
 * Bootstrap
 
-** Emacs Server
+** Custom Files
+
    #+BEGIN_SRC emacs-lisp
-     (load "server") ; Load and start server if it's not running
-     (unless (server-running-p) (server-start))
+     (setq custom-file "~/.emacs.d/customs.el")
+     ;; (setq use-package-always-ensure t)
+     (load custom-file t)
    #+END_SRC
 
 ** Packages
@@ -29,7 +65,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
             '(("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
               ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
               ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/")))
-      (package-initialize)
+      (package-initialize); done in init.el
     #+END_SRC
 
 *** use-package: A use-package declaration for simplifying your .emacs
@@ -38,10 +74,10 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (unless (package-installed-p 'use-package)
         (package-refresh-contents)
         (package-install 'use-package t))
+      (setq use-package-verbose t)
+            ;; use-package-always-defer t
+            ;; use-package-always-ensure t) ; built-in packages need :ensure nil
       (require 'use-package)
-      ;; (setq-default
-      ;;  use-package-always-defer t
-      ;;  use-package-always-ensure t)
     #+END_SRC
 
 *** Quelpa: Build and install your Emacs Lisp packages on-the-fly directly from source
@@ -61,6 +97,12 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
          :url "https://github.com/quelpa/quelpa-use-package.git"))
       (require 'quelpa-use-package)
     #+END_SRC
+** Emacs Server
+   #+BEGIN_SRC emacs-lisp
+     ;;; The server part may not be configured so early.
+     (load "server") ; Load and start server if it's not running
+     (unless (server-running-p) (server-start))
+   #+END_SRC
 
 ** Misc
    #+BEGIN_SRC emacs-lisp
@@ -91,9 +133,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                ;; Only set after LIBRARY_PATH can find gcc libraries.
                (setq comp-deferred-compilation t))
            (message "Native comp is *not* available"))))
-
    #+END_SRC
-
 ** Configs
    #+BEGIN_SRC emacs-lisp
      (setq
@@ -190,12 +230,12 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
    #+BEGIN_SRC emacs-lisp
 
      ;; Winner mode
-     ;;(use-package winner :defer t)
-     (if (fboundp 'winner-mode)
-         (progn
-           (winner-mode 1)
-           (message "Winner-mode enabled"))
-       (message "No Winner-Mode, Skip"))
+     (use-package winner :defer t :ensure t :config (winner-mode 1))
+     ;; (if (fboundp 'winner-mode)
+     ;;     (progn
+     ;;       (winner-mode 1)
+     ;;       (message "Winner-mode enabled"))
+     ;;   (message "No Winner-Mode, Skip"))
 
      ;;minibuffer editing
      ;;(use-package miniedit
@@ -429,9 +469,9 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
       (use-package sublimity
         :defer t
         :config
-        (use-package sublimity-scroll)
+        ;; (use-package sublimity-scroll)
         ;; (use-package sublimity-map) ;; experimental
-        (use-package sublimity-attractive)
+        ;; (use-package sublimity-attractive)
         (sublimity-mode 1)
         )
     #+END_SRC
@@ -1392,6 +1432,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
        )
 
      (use-package ox-html
+       :after (org)
        :config
        ;; Org export code style
        (setq org-html-htmlize-output-type 'css)
@@ -1448,6 +1489,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
     #+BEGIN_SRC emacs-lisp
       ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
       (use-package ox-icalendar
+        :after (org)
         :config
         (setq org-icalendar-alarm-time 5)
         (setq org-icalendar-combined-agenda-file "~/Dropbox/Dreams/Org/org.ics"
@@ -1478,6 +1520,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
     #+BEGIN_SRC emacs-lisp
       ;;; Org Publish
       (use-package ox-publish
+        :after (org)
         :config
         (setq org-publish-project-alist
               '(
@@ -1510,6 +1553,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
                             "~/Dropbox/Dreams/Org/Collections")))
       ;;; Captures
       (use-package org-capture
+        :after (org)
         :config
         (setq org-capture-templates nil)
         (add-to-list 'org-capture-templates
@@ -1538,6 +1582,7 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 *** OrgRoam
     #+BEGIN_SRC emacs-lisp
       (use-package org-roam
+        :after (org)
         :ensure t
         :hook
         (after-init . org-roam-mode)

@@ -1,4 +1,5 @@
 ;;; early-init.el -- Early Emacs configuration cloned from https://github.com/angrybacon/dotemacs/blob/master/early-init.el
+;;; Also many hints from <https://github.com/sachac/.emacs.d>.
 
 ;;; Commentary:
 

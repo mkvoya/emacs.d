@@ -11,6 +11,8 @@ transient/
 tutorial/
 var/
 emacs-config.el
+emacs-config.elc
+emacs-config.html
 
 .DS_Store
 .org-id-locations
@@ -26,4 +28,3 @@ org-caldav-*.org
 org-roam.db
 projectile-bookmarks.eld
 url/
-emacs-config.html
