@@ -231,11 +231,6 @@ Also from https://github.com/sachac/.emacs.d
 
      ;; Winner mode
      (use-package winner :defer t :ensure t :config (winner-mode 1))
-     ;; (if (fboundp 'winner-mode)
-     ;;     (progn
-     ;;       (winner-mode 1)
-     ;;       (message "Winner-mode enabled"))
-     ;;   (message "No Winner-Mode, Skip"))
 
      ;;minibuffer editing
      ;;(use-package miniedit
@@ -265,9 +260,11 @@ Also from https://github.com/sachac/.emacs.d
                  company-keywords
                  company-capf
                  company-yasnippet
-                 company-ispell
+                 ;; company-ispell
                  company-lsp)
                 (company-abbrev company-dabbrev)))
+        ;; (setq company-frontends '(company-pseudo-tooltip-frontend
+        ;;                           company-echo-metadata-frontend))
         (with-eval-after-load 'company
           (define-key company-active-map (kbd "\C-n") #'company-select-next)
           (define-key company-active-map (kbd "\C-p") #'company-select-previous)
@@ -284,6 +281,15 @@ Also from https://github.com/sachac/.emacs.d
                                                        (setq my-company-point (point))))
         (advice-add 'company-complete-common :after (lambda ()
                                                       (when (equal my-company-point (point)) (yas-expand))))
+        )
+
+      (use-package company-posframe
+        :after company
+        :defer t
+        :ensure t
+        :config
+        (company-posframe-mode 1)
+
         )
     #+END_SRC
 
@@ -486,8 +492,7 @@ Also from https://github.com/sachac/.emacs.d
         ;; :defer 5
         :config
         (setq sml/no-confirm-load-theme t)
-        (setq sml/theme 'respectful)
-        ;; (setq sml/theme 'light)
+        (setq sml/theme 'light)
         (setq sml/shorten-modes t)
         (setq sml/shorten-directory t)
         (sml/setup)
@@ -524,6 +529,8 @@ Also from https://github.com/sachac/.emacs.d
     #+BEGIN_SRC emacs-lisp
       (use-package beacon
         :config
+        (setq beacon-color "#00ff00")
+        ;; (setq beacon-size 40)
         (beacon-mode 1))
     #+END_SRC
 
@@ -548,32 +555,33 @@ Also from https://github.com/sachac/.emacs.d
     #+END_SRC
 
 *** Themes
+    | monokai-them     |   |
+    | grandshell-theme |   |
+    | alect-themes     |   |
+    | airline-themes   |   |
+    | manoj-light      |   |
+    | doom-one-light   |   |
+    | hemisu-light     |   |
     #+BEGIN_SRC emacs-lisp
-      (use-package monokai-theme
-        :defer t
+      (use-package hemisu-theme
+        :after (quelpa quelpa-use-package)
+        :quelpa (hemisu-theme :repo "mkvoya/hemisu-theme"
+                              :fetcher github
+                              :files ("*.el"))
         :config
-        ;;  (load-theme 'monokai t)
-        ;;  (setq monokai-background "#080C14")
+        (load-theme 'hemisu-light t)
         )
-      (use-package grandshell-theme
-        :defer t
-        :config
-        ;;  (load-theme 'grandshell t)
-        )
-      (use-package alect-themes
-        :defer t
-        :config
-        ;;  (load-theme 'alect-black t)
-        )
-      ;; (use-package airline-themes
-      ;;   :ensure t
-      ;;   :config
-      ;;   (load-theme 'airline-light t))
-      ;; (load-theme 'manoj-dark)
-      (load-theme 'doom-one-light t)
     #+END_SRC
 
 
+*** Rainbow
+    #+BEGIN_SRC emacs-lisp
+      (use-package rainbow-mode
+        :ensure t
+        :defer t
+        :config
+        (rainbow-mode t))
+    #+END_SRC
 *** delight: altering mode appearences on mode line
     | delight | https://elpa.gnu.org/packages/delight.html |
     #+BEGIN_SRC emacs-lisp
@@ -585,7 +593,7 @@ Also from https://github.com/sachac/.emacs.d
                    (smart-tab-mode " \\t" "smart-tab")
                    (eldoc-mode nil "eldoc")
                    (yas-mode)
-                   (which-key-mode "" "which-key")
+                   (which-key-mode nil "which-key")
                    (Undo-Tree "UT" "undo-tree")
                    (overwrite-mode " Ov" t)))
         (delight 'rainbow-mode)
@@ -595,7 +603,10 @@ Also from https://github.com/sachac/.emacs.d
         (delight 'org-mode "♘" :major)
         (delight 'flycheck-mode "⍻" "flycheck")
         (delight 'yas-minor-mode "✎" "yasnippet")
-        (delight 'emacs-lisp-mode "Elisp" :major))
+        (delight 'emacs-lisp-mode "Elisp" :major)
+        (delight 'company-mode "☺" "company-mode")
+        (delight 'pyim-isearch-mode nil "pyim-isearch-mode")
+        (delight 'which-key-mode "" "which-key"))
       (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
     #+END_SRC
 
@@ -764,7 +775,7 @@ Also from https://github.com/sachac/.emacs.d
 
 ** LaTeX
    #+BEGIN_SRC emacs-lisp
-     ;;; AucTex
+          ;;; AucTex
      (use-package tex
        :ensure auctex
        :defer 5
@@ -773,16 +784,19 @@ Also from https://github.com/sachac/.emacs.d
        ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
        ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
        (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
-       (add-hook 'TeX-mode-hook '(lambda () (setq TeX-command-default "Make")))
        ;; (setq-default TeX-command-default "Make")
        ;; from https://gist.github.com/stefano-meschiari/9217695
        (setq TeX-auto-save t)
        (setq Tex-parse-self t)
        ;; Guess/Ask for the master file.
        (setq-default TeX-master nil)
-       (add-hook 'LaTeX-mode-hook #'mkvoya/better-wrap)
-       (add-hook 'LaTeX-mode-hook 'flyspell-mode)
-       (add-hook 'LaTeX-mode-hook 'LaTeX-math-mode)
+
+       (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "Make")))
+       (add-hook 'LaTeX-mode-hook (lambda()
+                                    (mkvoya/better-wrap)
+                                    (flyspell-mode)
+                                    (LaTeX-math-mode)))
+       (setq reftex-refstyle "\\ref")
        (setq reftex-plug-into-AUCTeX t)
        (setq TeX-PDF-mode t)
 
@@ -796,7 +810,7 @@ Also from https://github.com/sachac/.emacs.d
 
        (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
        (setq TeX-view-program-list
-             '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -g %n %o %b")))
+             '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
        ;; '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
        ;; (add-hook 'LaTeX-mode-hook
@@ -851,8 +865,8 @@ Also from https://github.com/sachac/.emacs.d
     #+BEGIN_SRC emacs-lisp
       (use-package projectile
         :ensure t
-
-        :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
+        ;; :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
+        :delight projectile-mode
         :config
         (projectile-mode +1)
         ;; (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
@@ -997,11 +1011,6 @@ Also from https://github.com/sachac/.emacs.d
         :load-path "~/.emacs.d/mkvoya"
         :ensure nil) ; local package does not need ensure
 
-      (use-package orderless
-        :ensure t
-        :init (icomplete-mode) ; optional but recommended!
-        :custom (completion-styles '(orderless)))
-
       ;;; =========== Some builtin modes =============
       ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
@@ -1132,7 +1141,7 @@ Also from https://github.com/sachac/.emacs.d
      ;; Enable Consult-Selectrum integration.
      ;; This package should be installed if Selectrum is used.
      (use-package consult-selectrum
-       :after selectrum
+       :after (selectrum consult)
        :demand t)
 
      ;; Optionally add the `consult-flycheck' command.
@@ -1140,7 +1149,51 @@ Also from https://github.com/sachac/.emacs.d
        :bind (:map flycheck-command-map
                    ("!" . consult-flycheck)))
 
-     ;;; ========= End of Consult ===========
+     (use-package consult-lsp
+       :after (consult)
+       :defer t
+       :ensure t)
+
+     ;; Configure corfu
+     (use-package corfu
+       ;; Optionally use TAB for cycling, default is `corfu-complete'.
+       ;; :bind (:map corfu-map
+       ;;        ("TAB" . corfu-next)
+       ;;        ("S-TAB" . corfu-previous))
+       :ensure t
+       :defer t
+       ;; Enable the overlay only for certain modes.
+       ;; For example it is not a useful UI for completions at point in the
+       ;; minibuffer.
+       :hook ((prog-mode . corfu-mode)
+              (shell-mode . corfu-mode)
+              (eshell-mode . corfu-mode))
+
+       :config
+       ;; Optionally enable cycling for `corfu-next' and `corfu-previous'.
+       (setq corfu-cycle t))
+
+     ;; Use the `orderless' completion style.
+     ;; Enable `partial-completion' for files to allow path expansion.
+     ;; You may prefer to use `initials' instead of `partial-completion'.
+     (use-package orderless
+       :ensure t
+       :init (icomplete-mode) ; optional but recommended!
+       (setq completion-styles '(orderless)
+             completion-category-defaults nil
+             completion-category-overrides '((file (styles . (partial-completion))))))
+
+     ;; A few more useful configurations...
+     (use-package emacs
+       :init
+       ;; TAB cycle if there are only few candidates
+       (setq completion-cycle-threshold 3)
+
+       ;; Enable indentation+completion using the TAB key.
+       ;; Completion is often bound to M-TAB.
+       (setq tab-always-indent 'complete))
+
+                    ;;; ========= End of Consult ===========
      #+END_SRC
 
 
@@ -1188,7 +1241,25 @@ Also from https://github.com/sachac/.emacs.d
                     :map embark-file-map
                     ("j" . dired-jump)))
     #+END_SRC
+*** LSP
+    | lsp-mode |   |
+    | elgot    |   |
 
+    elgot 似乎代码更加 nice
+
+    #+BEGIN_SRC emacs-lisp
+      (use-package eglot
+        :after (company-mode)
+        :ensure t
+        :hook
+        (c-mode . eglot-ensure)
+        (python-mode . eglot-ensure)
+        :config
+        (setq eglot-ignored-server-capabilites (quote (:documentHighlightProvider)))
+        (add-to-list 'eglot-server-programs '((tex-mode context-mode texinfo-mode bibtex-mode)
+                                              . ("digestif")))
+        )
+    #+END_SRC
 ** Mail Client
    #+BEGIN_SRC emacs-lisp
      ;; Mails
@@ -1204,6 +1275,27 @@ Also from https://github.com/sachac/.emacs.d
        (setq notmuch-unread-update-interval 300))
    #+END_SRC
 
+
+
+** Feeding (RSS & Atom)
+*** Elfeed
+    | elfeed | https://github.com/skeeto/elfeed |
+    #+BEGIN_SRC emacs-lisp
+      (use-package elfeed
+        :ensure t
+        :defer t
+        :config
+        ;; Global key
+        (global-set-key (kbd "C-x w") 'elfeed)
+        ;; The feed list
+        (setq elfeed-feeds
+              '(("http://nullprogram.com/feed/" blog emacs)
+                "http://www.50ply.com/atom.xml"  ; no autotagging
+                ("http://nedroid.com/feed/" webcomic)
+                "http://planet.emacsen.org/atom.xml"))
+        ;; (setq-default elfeed-search-filter "@1-week-ago +unread ")
+        )
+    #+END_SRC
 
 ** Org-mode
 *** Org
@@ -1223,7 +1315,7 @@ Also from https://github.com/sachac/.emacs.d
        ;; Org mode TODO states
        (setq org-todo-keywords
 
-       '((sequence
+             '((sequence
                 "TODO(t)"
                 "HAND(h)"
                 "WAIT(w)"
@@ -1239,19 +1331,10 @@ Also from https://github.com/sachac/.emacs.d
                ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
                ("TODO" . (:foreground "#ff39a3" :weight bold))
                ("HAND"  . "orangered")
-               ;; ("WAIT" . (:foreground "orange" :weight bold))
                ("WAIT" . "pink")
                ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
                ("DONE" . "#008080")
                ("DELEGATE"  . "DeepSkyBlue")
-               ;; ("FIXME" . "IndianRed")
-               ;; ("☟ NEXT" . (:foreground "DeepSkyBlue"
-               ;;                         ;; :background "#7A586A"
-               ;;                         :weight bold))
-               ;; ("☕ BREAK" . "gray")
-               ;; ("❤ LOVE" . (:foreground "VioletRed4"
-               ;;                       ;; :background "#7A586A"
-               ;;                       :weight bold))
                ))
 
        ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
@@ -1303,7 +1386,7 @@ Also from https://github.com/sachac/.emacs.d
 
        )
 
-     ;;; Org Style
+        ;;; Org Style
      ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
      ;; ;; 打开 org-indent mode
      ;; (setq org-startup-indented t)
@@ -1330,7 +1413,7 @@ Also from https://github.com/sachac/.emacs.d
        (setq org-hide-leading-stars t)
        (setq org-superstar-item-bullet-alist
              '((42 . 8226) ; *
-               (43 . 10149) ; +
+               (43 . 10210) ; +
                (45 . 8211))) ; -
        )
 
@@ -1362,7 +1445,7 @@ Also from https://github.com/sachac/.emacs.d
      (add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
 
 
-     ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
+        ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
      (defun org-insert-image ()
        "Insert a image from clipboard."
        (interactive)
@@ -1389,7 +1472,7 @@ Also from https://github.com/sachac/.emacs.d
        (org-display-inline-images)
        )
 
-     ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
+        ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
      (use-package appt
        :defer 10
        :config
@@ -1444,8 +1527,8 @@ Also from https://github.com/sachac/.emacs.d
                (lambda ()
                  (org-shifttab 5)))
 
-     ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-     ;;; But I don't need the odd levels only
+        ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+        ;;; But I don't need the odd levels only
      (setq org-adapt-indentation t
            org-hide-leading-stars t)
      ;;org-odd-levels-only t)
@@ -1648,22 +1731,42 @@ Also from https://github.com/sachac/.emacs.d
         (setq org-brain-include-file-entries nil
               org-brain-file-entries-use-title nil))
     #+END_SRC
+*** Org-Mindmap
+    #+BEGIN_SRC emacs-lisp
+      ;; This is an Emacs package that creates graphviz directed graphs from
+      ;; the headings of an org file
+      (use-package org-mind-map
+        :init
+        (require 'ox-org)
+        :ensure t
+        ;; Uncomment the below if 'ensure-system-packages` is installed
+        ;;:ensure-system-package (gvgen . graphviz)
+        :config
+        (setq org-mind-map-engine "dot")       ; Default. Directed Graph
+        ;; (setq org-mind-map-engine "neato")  ; Undirected Spring Graph
+        ;; (setq org-mind-map-engine "twopi")  ; Radial Layout
+        ;; (setq org-mind-map-engine "fdp")    ; Undirected Spring Force-Directed
+        ;; (setq org-mind-map-engine "sfdp")   ; Multiscale version of fdp for the layout of large graphs
+        ;; (setq org-mind-map-engine "twopi")  ; Radial layouts
+        ;; (setq org-mind-map-engine "circo")  ; Circular Layout
+        )
+    #+END_SRC
 *** Exporter
     #+BEGIN_SRC emacs-lisp
       (use-package ox-slimhtml
-	:ensure t
+        :ensure t
         :disabled
-	:config
-	(org-export-define-derived-backend 'custom-html-exporter
-	    'slimhtml                             ;; org's default exporter is 'html
-	  :menu-entry
-	  '(?s "Export to slimhtml"
-	       ((?o "As slimhtml file and open"
-		    (lambda (a s v b)
-		      (if a (ox-slimhtml-export-to-html t s v b)
-			(org-open-file (ox-slimhtml-export-to-html nil s v b))))))))
-	)
-    #+END_SRC
+        :config
+        (org-export-define-derived-backend 'custom-html-exporter
+            'slimhtml                             ;; org's default exporter is 'html
+          :menu-entry
+          '(?s "Export to slimhtml"
+               ((?o "As slimhtml file and open"
+                    (lambda (a s v b)
+                      (if a (ox-slimhtml-export-to-html t s v b)
+                        (org-open-file (ox-slimhtml-export-to-html nil s v b))))))))
+        )
+      #+END_SRC
 *** Org-mac-protocol
     #+BEGIN_SRC emacs-lisp
       (setq org-directory "~/Dropbox/Dreams/Org/")
@@ -1736,6 +1839,15 @@ Also from https://github.com/sachac/.emacs.d
         ;; (setq pyim-page-tooltip 'popup)
         ;; 选词框显示5个候选词
         (setq pyim-page-length 5)
+        (defun mk/forward-word()
+          "mk's better forward-word."
+          (interactive)
+          (if (char-equal (char-after) (string-to-char " "))
+              (while (char-equal (char-after) (string-to-char " "))
+                (right-char 1))
+            (pyim-forward-word)))
+        (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+        (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
         :bind
         (("M-m" . pyim-convert-string-at-point) ;与 pyim-probe-dynamic-english 配合
          ;; ("C-;" . pyim-delete-word-from-personal-buffer)
@@ -1752,20 +1864,23 @@ Also from https://github.com/sachac/.emacs.d
         (global-activity-watch-mode))
     #+END_SRC
 *** Jieba
+    The pyim has already the jieba's feature built-in.
     #+BEGIN_SRC emacs-lisp
-      (use-package jsonrpc
-        :ensure t
-        :defer t)
+      ;; (use-package jsonrpc
+      ;;   :ensure t
+      ;;   :defer t)
       ;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/jieba.el")
       ;; (require 'jieba)
       ;; (jieba-mode)
 
+      ;;; pyim has something similar.
       ;; (use-package jieba
       ;;   :after (jsonrpc)
       ;;   :load-path "~/.emacs.d/3rd-parties/jieba.el"
-      ;;   :ensure t
+      ;;   :ensure nil ; Do not try to download from repo.
       ;;   :commands jieba-mode
-      ;;   :init (jieba-mode))
+      ;;   :init (jieba-mode)
+      ;;   )
     #+END_SRC
 ** 目前禁用的功能
 *** Zettel
@@ -1845,3 +1960,135 @@ Also from https://github.com/sachac/.emacs.d
    #+BEGIN_SRC emacs-lisp
      (setq source-directory "~/Library/Caches/Homebrew/emacs-plus@28--git/")
    #+END_SRC
+
+* EAF
+  #+BEGIN_SRC emacs-lisp
+  ;;  (use-package eaf
+  ;;    :quelpa (eaf :fetcher github
+  ;;                 :repo  "manateelazycat/emacs-application-framework"
+  ;;                 :files ("*"))
+  ;;    :after (quelpa quelpa-use-package)
+  ;;    ;; :ensure t
+  ;;    :init
+  ;;    (use-package epc :defer t :ensure t)
+  ;;    (use-package ctable :defer t :ensure t)
+  ;;    (use-package deferred :defer t :ensure t)
+  ;;    (use-package s :defer t :ensure t)
+  ;;    :custom
+  ;;    (eaf-browser-continue-where-left-off t)
+  ;;    :config
+  ;;    (eaf-setq eaf-browser-enable-adblocker "true")
+  ;;    (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
+  ;;    (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
+  ;;    (eaf-bind-key take_photo "p" eaf-camera-keybinding)
+  ;;    (eaf-bind-key nil "M-q" eaf-browser-keybinding)
+  ;;    ) ;; unbind, see more in the Wiki
+  #+END_SRC
+
+
+* 3rd-party
+** Word count
+   #+BEGIN_SRC emacs-lisp
+     (defvar wc-regexp-chinese-char-and-punc
+       (rx (category chinese)))
+     (defvar wc-regexp-chinese-punc
+       "[。，！？；：「」『』（）、【】《》〈〉※—]")
+     (defvar wc-regexp-english-word
+       "[a-zA-Z0-9-]+")
+
+     (defun wc ()
+       "「較精確地」統計中/日/英文字數。
+     - 文章中的註解不算在字數內。
+     - 平假名與片假名亦包含在「中日文字數」內，每個平/片假名都算單獨一個字（但片假
+       名不含連音「ー」）。
+     - 英文只計算「單字數」，不含標點。
+     - 韓文不包含在內。
+
+     ※計算標準太多種了，例如英文標點是否算入、以及可能有不太常用的標點符號沒算入等
+     。且中日文標點的計算標準要看 Emacs 如何定義特殊標點符號如ヴァランタン・アルカン
+     中間的點也被 Emacs 算為一個字而不是標點符號。"
+       (interactive)
+       (let* ((v-buffer-string
+               (progn
+                 (if (eq major-mode 'org-mode) ; 去掉 org 文件的 OPTIONS（以#+開頭）
+                     (setq v-buffer-string (replace-regexp-in-string "^#\\+.+" ""
+                                                                     (buffer-substring-no-properties (point-min) (point-max))))
+                   (setq v-buffer-string (buffer-substring-no-properties (point-min) (point-max))))
+                 (replace-regexp-in-string (format "^ *%s *.+" comment-start) "" v-buffer-string)))
+                                             ; 把註解行刪掉（不把註解算進字數）。
+              (chinese-char-and-punc 0)
+              (chinese-punc 0)
+              (english-word 0)
+              (chinese-char 0))
+         (with-temp-buffer
+           (insert v-buffer-string)
+           (goto-char (point-min))
+           ;; 中文（含標點、片假名）
+           (while (re-search-forward wc-regexp-chinese-char-and-punc nil :no-error)
+             (setq chinese-char-and-punc (1+ chinese-char-and-punc)))
+           ;; 中文標點符號
+           (goto-char (point-min))
+           (while (re-search-forward wc-regexp-chinese-punc nil :no-error)
+             (setq chinese-punc (1+ chinese-punc)))
+           ;; 英文字數（不含標點）
+           (goto-char (point-min))
+           (while (re-search-forward wc-regexp-english-word nil :no-error)
+             (setq english-word (1+ english-word))))
+         (setq chinese-char (- chinese-char-and-punc chinese-punc))
+         (message
+          (format "中日文字數（不含標點）：%s
+     中日文字數（包含標點）：%s
+     英文字數（不含標點）：%s
+     =======================
+     中英文合計（不含標點）：%s"
+                  chinese-char chinese-char-and-punc english-word
+                  (+ chinese-char english-word)))))
+#+END_SRC
+** Posts & Blogs
+   #+BEGIN_SRC emacs-lisp
+        (use-package org-static-blog
+          :ensure t
+          :defer t
+          :config
+
+     (setq org-static-blog-publish-title "Mika, Mika, Mika!")
+          (setq org-static-blog-publish-url "https://blog.dong.mk/")
+          (setq org-static-blog-publish-directory "~/Dropbox/Dreams/Org/Blog/Publish/")
+          (setq org-static-blog-posts-directory "~/Dropbox/Dreams/Org/Blog/Posts/")
+          (setq org-static-blog-drafts-directory "~/Dropbox/Dreams/Org/Blog/Drafts/")
+          (setq org-static-blog-use-preview t) ; enable preview
+
+          ;; Use “#+filetags: τ₁ τ₂ … τₙ”
+          (setq org-static-blog-enable-tags t)
+
+          ;; I'd like to have tocs and numbered headings
+          (setq org-export-with-toc t)
+          (setq org-export-with-section-numbers t)
+
+          (setq org-static-blog-page-header
+                "<meta name=\"author\" content=\"Mingkai Dong\">
+                  <meta name=\"referrer\" content=\"no-referrer\">
+                  <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
+                  <link rel=\"icon\" href=\"static/favicon.ico\">")
+
+          (setq org-static-blog-page-preamble
+                "<div class=\"header\">
+               <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
+             </div>")
+
+          (setq org-static-blog-page-postamble
+                "<div id=\"archive\">
+          <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
+        </div>
+        <center></center>")
+
+          (setq org-static-blog-index-front-matter
+                "<h1> Hey it is </h1>\n")
+
+          )
+   #+END_SRC
+* Hints
+
+  #+BEGIN_SRC emacs-lisp
+    ;; (setq resize-mini-frames t); to adjust the minibuffer high enough
+  #+END_SRC

@@ -17,8 +17,7 @@
  '(column-number-mode t)
  '(compilation-message-face 'default)
  '(custom-safe-themes
-   '("a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" default))
- '(fci-rule-color "#3C3D37")
+   '("77bd459212c0176bdf63c1904c4ba20fce015f730f0343776a1a14432de80990" "c1fb68aa00235766461c7e31ecfc759aa2dd905899ae6d95097061faeb72f9ee" "a27c00821ccfd5a78b01e4f35dc056706dd9ede09a8b90c6955ae6a390eb1c1e" "99ea831ca79a916f1bd789de366b639d09811501e8c092c85b2cb7d697777f93" default))
  '(global-yascroll-bar-mode t)
  '(highlight-changes-colors '("#FD5FF0" "#AE81FF"))
  '(highlight-tail-colors
@@ -48,7 +47,7 @@
    '("~/Dropbox/Dreams/Org/Plans.org" "~/Dropbox/Dreams/Org/IPADS.sched.org" "~/Dropbox/Dreams/Org/Inbox.org" "~/Dropbox/Dreams/Org/Main.org"))
  '(org-clock-mode-line-total 'current)
  '(package-selected-packages
-   '(sublimity-attractive sublimity-scroll org-roam-protocol org-capture ox-publish ox-icalendar ox-html appt jieba notdeft activity-watch-mode outline-toc org-ref org-roam-server ox-slimhtml pdf-view smart-mode-line nyan-mode toml-mode rust-mode rustic hide-mode-line notmuch-unread notmuch-maildir notmuch good-scroll cal-china-x orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-flycheck consult-selectrum selectrum-prescient selectrum marginalia dap-mode mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow hemisu-theme heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
+   '(corfu consult-lsp elisp-benchmarks consult hemisu-theme org-static-blog company-posframe epc eglot elfeed org-mind-map sublimity-attractive sublimity-scroll org-roam-protocol org-capture ox-publish ox-icalendar ox-html appt jieba notdeft activity-watch-mode outline-toc org-ref org-roam-server ox-slimhtml pdf-view smart-mode-line nyan-mode toml-mode rust-mode rustic hide-mode-line notmuch-unread notmuch-maildir notmuch good-scroll cal-china-x orderless polymode org-brain zetteldeft deft smooth-scrolling sublimity esup ns-auto-titlebar pyim beacon smart-cursor-color org-roam-bibtex org-noter-pdftools org-noter org-roam ctrlf consult-selectrum selectrum-prescient marginalia dap-mode mu4e-alert evil-mu4e org-caldav org-wild-notifier dired-launch calfw-org org-time-budgets org-timeline calfw git-timemachine rainbow-mode delight nameframe-perspective org-alert languagetool dired-sidebar maple-explorer company-lsp peep-dired auto-complete-auctex reveal-in-osx-finder webkit-color-picker zenity-color-picker wucuo langtool smex ebib cdlatex company-auctex company-reftex nameframe-projectile nameframe rg projectile-ripgrep org-sidebar svg-tag-mode quelpa-use-package quelpa ssh vs-light-theme color-theme-sanityinc-tomorrow heaven-and-hell ov svg-clock vlf projectile-sift projectile dashboard which-key-posframe exec-path-from-shell rainbow-delimiters rainbow-blocks all-the-icons kaolin-themes doom-themes atom-one-dark-theme telega pdf-tools org-superstar jinja2-mode csv-mode sdcv posframe unicode-fonts flymd diff-hl buttons texfrag evil-numbers smart-tabs-mode smart-tab cheatsheet org-d20 jumblr 2048-game yascroll zone-nyan markdown-toc markdown-preview-mode markdown-mode+ org-agenda-property dired-ranger ## synonymous define-word auctex evil-magit magit neotree flycheck-status-emoji flycheck-color-mode-line flycheck evil-easymotion avy modern-cpp-font-lock evil-vimish-fold vimish-fold use-package miniedit guide-key evil company color-theme-solarized))
  '(pdf-view-midnight-colors (cons "#383a42" "#fafafa"))
  '(pos-tip-background-color "#A6E22E")
  '(pos-tip-foreground-color "#272822")
@@ -85,6 +84,6 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(mode-line ((t (:background "#afffff" :foreground "#005fff" :box nil :overline nil :underline nil)))))
+ '(font-lock-function-name-face ((t (:foreground "dark violet")))))
 
 ;;; customs.el ends here

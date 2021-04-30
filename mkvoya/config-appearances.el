@@ -7,6 +7,8 @@
 
 ;;; ========= section font ===========
 
+;; Check using what-cursor-position. https://stackoverflow.com/questions/1242352/get-font-face-under-cursor-in-emacs
+
 (when (member "Sarasa Mono SC" (font-family-list))
   ;; (set-fontset-font t 'han (font-spec :family "Sarasa Mono SC"))
   (set-fontset-font t nil (font-spec :family "Sarasa Mono SC"))
