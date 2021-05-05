@@ -10,4 +10,4 @@
 #+LANGUAGE: en
 #+SELECT_TAGS: export
 #+OPTIONS: ':t toc:t author:t email:t date:t f:t tags:t pri:t tasks:t timestamp:t
-#+HTML_HEAD: <link rel="stylesheet" href="http://dakrone.github.io/org.css" type="text/css" />
+#+HTML_HEAD: <link rel="stylesheet" href="http://dong.mk/file/org.css" type="text/css" />

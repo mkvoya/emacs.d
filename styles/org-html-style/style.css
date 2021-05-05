@@ -1,0 +1,137 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat&family=Open+Sans&family=Architects+Daughter&family=Space+Mono:ital@1&family=Sanchez:ital@1&display=swap');
+
+
+#preamble {
+    /* https://www.w3.org/Style/Examples/007/units.en.html */
+    margin-top: 2rem;
+    /* background-color: blue; */
+    /* border: solid 1px blue; */
+    font-size: 4rem;
+    font-family: 'Architects Daughter', cursive;
+    color: black;
+    text-decoration: none;
+}
+
+#preamble a {
+    color: rgb(1,1,1);
+    text-decoration: none;
+}
+
+#content {
+    padding: 1rem;
+    /* border: solid 1px orange; */
+}
+
+a {
+    text-decoration: none;
+}
+
+.post-title a {
+    color: orangered;
+    font-weight: bold;
+    font-style: italic;
+}
+
+
+h1,h2,h3,h4,h5,h6 {
+    line-height:1;
+    /* font-family:Arial,sans-serif; */
+    margin:1.4em 0 0.8em;
+    color: orangered;
+}
+h1{font-size:1.8em;}
+h2{font-size:1.6em;}
+h3{font-size:1.4em;}
+h4{font-size:1.2em;}
+h5,h6{font-size:1em;}
+
+p, pre, ul, ol, dl, form, hr {
+    margin:1em 0 0.6em;
+}
+
+/* BEGIN_QUOTE ... END_QUOTE */
+blockquote {
+    font-family: 'Sanchez', serif;
+    /* border: solid 1px orange; */
+    border-left: solid 2px orangered;
+    padding: 0 1rem;
+    border-radius: 1rem;
+    font-size: 1rem;
+    font-style: italic;
+    color: #888;
+    margin: 0;
+}
+
+/* BEGIN_SRC ... END_SRC */
+pre  {
+    font-family: 'Space Mono', monospace;
+    border: solid 1px orange;
+    padding: 1rem;
+    background-color: rgba(250, 250, 250, 0.9);
+    border-radius: 0;
+    font-size: 1rem;
+    font-style: monospace;
+    color: black;
+}
+pre:hover {
+    background-color: rgba(255, 255, 240, 0.9);
+}
+
+/* Thanks https://dev.to/dcodeyt/creating-beautiful-html-tables-with-css-428l */
+table {
+    border-collapse: collapse;
+    margin: auto;
+    width: 60%;
+    font-size: 0.9rem;
+    /*font-family: sans-serif;
+    min-width: 400px; */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+thead tr {
+    background-color: #009879;
+    color: white;
+    text-align: left;
+}
+th, td {
+    padding: 0.5rem;
+}
+
+tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+
+tbody tr:hover {
+    background-color: rgba(200, 250, 200, 0.4);
+}
+
+
+#table-of-contents {
+    float: right;
+    background-color: rgba(240, 240, 240, 0.8);
+    border: solid 1px orange;
+    width: fit-content;
+    padding: 0 1rem;
+}
+#table-of-contents ul {
+    list-style-type: none;
+    padding-inline-start: 1rem;
+}
+
+#postamble {
+    background-color: pink;
+}
+
+body {
+    font-family: 'Montserrat', 'Open Sans', sans-serif;
+    width: 80%;
+    margin: auto;
+}

@@ -4,13 +4,13 @@
 #+DATE: 2021-02-16T01:16:18+0800
 #+EMAIL: mingkaidong@gmail.com
 
-
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 Also from https://github.com/sachac/.emacs.d
 
 * Env
 
 #+BEGIN_SRC emacs-lisp
+  (setq comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
   (setq .org "~/.emacs.d/emacs-config.org")
   (setq .el (concat (file-name-sans-extension .org) ".el"))
   (defun mkvoya/sync-emacs-config()
@@ -1314,17 +1314,10 @@ Also from https://github.com/sachac/.emacs.d
 
        ;; Org mode TODO states
        (setq org-todo-keywords
-
              '((sequence
-                "TODO(t)"
-                "HAND(h)"
-                "WAIT(w)"
-                "LONG-TERM(l)"
-                "DELEGATE(e)"
+                "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(e)"
                 "|"
-                "DONE(d!)"
-                "CANCELED(c@)"
-                )))
+                "DONE(d!)" "CANCELED(c@)")))
        ;; Keyword colors
        (setf org-todo-keyword-faces
              '(
@@ -1333,9 +1326,17 @@ Also from https://github.com/sachac/.emacs.d
                ("HAND"  . "orangered")
                ("WAIT" . "pink")
                ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
-               ("DONE" . "#008080")
+               ;; ("DONE" . "#008080")
+               ("DONE" . (:foreground "#808080" :strike-through "#0d0d0d"))
                ("DELEGATE"  . "DeepSkyBlue")
                ))
+
+       ;; Strike through the whole line with DONE entry
+       (font-lock-add-keywords
+        'org-mode
+        '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
+        t)
+
 
        ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
        ;; (setq org-ellipsis "…")
@@ -1383,10 +1384,22 @@ Also from https://github.com/sachac/.emacs.d
        (add-hook 'org-mode-hook
                  (lambda () (add-to-list 'write-file-functions
                                          'delete-trailing-whitespace)))
-
        )
 
-        ;;; Org Style
+     (add-hook (quote org-mode-hook)
+               (lambda ()
+                 (org-shifttab 5)))
+
+              ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+              ;;; But I don't need the odd levels only
+     (setq org-adapt-indentation t
+           org-hide-leading-stars t)
+     ;;org-odd-levels-only t)
+
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     ;;; Org Style
      ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
      ;; ;; 打开 org-indent mode
      ;; (setq org-startup-indented t)
@@ -1417,7 +1430,9 @@ Also from https://github.com/sachac/.emacs.d
                (45 . 8211))) ; -
        )
 
+   #+END_SRC
 
+   #+BEGIN_SRC emacs-lisp
      ;; agenda 里面时间块彩色显示
      ;; From: https://emacs-china.org/t/org-agenda/8679/3
      (defun ljg/org-agenda-time-grid-spacing ()
@@ -1444,8 +1459,10 @@ Also from https://github.com/sachac/.emacs.d
                  (overlay-put ov 'line-spacing (1- line-height))))))))
      (add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
 
+   #+END_SRC
 
-        ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
+   #+BEGIN_SRC emacs-lisp
+     ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
      (defun org-insert-image ()
        "Insert a image from clipboard."
        (interactive)
@@ -1472,11 +1489,13 @@ Also from https://github.com/sachac/.emacs.d
        (org-display-inline-images)
        )
 
-        ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
+     ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
      (use-package appt
        :defer 10
        :config
-
        (setq
         appt-time-msg-list nil ;; clear existing appt list
         appt-display-interval '5 ;; warn every 5 minutes from t - appt-message-warning-time
@@ -1514,6 +1533,9 @@ Also from https://github.com/sachac/.emacs.d
        (add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt) ;; update appt list on agenda view
        )
 
+   #+END_SRC
+
+   #+BEGIN_SRC emacs-lisp
      (use-package ox-html
        :after (org)
        :config
@@ -1522,17 +1544,9 @@ Also from https://github.com/sachac/.emacs.d
        (setq-default org-html-doctype "html5")
        (setq-default org-html-html5-fancy t)
        )
+   #+END_SRC
 
-     (add-hook (quote org-mode-hook)
-               (lambda ()
-                 (org-shifttab 5)))
-
-        ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-        ;;; But I don't need the odd levels only
-     (setq org-adapt-indentation t
-           org-hide-leading-stars t)
-     ;;org-odd-levels-only t)
-
+   #+BEGIN_SRC emacs-lisp
      ;; ;; Two more extensions could be relavant.
      ;; ;; org-super-links
      ;; ;; org-wild-notifier.el
@@ -1554,10 +1568,13 @@ Also from https://github.com/sachac/.emacs.d
      ;;           (message "No new events"))
      ;;   ;;)
      ;;   )
+   #+END_SRC
 
+   #+BEGIN_SRC emacs-lisp
      (use-package org-ref
        :disabled
        :ensure nil
+       :after (org)
        :defer t
        :config
        (let* ((note-dir "~/Dropbox/Dreams/Research/Papers/Notes/")
@@ -1566,8 +1583,8 @@ Also from https://github.com/sachac/.emacs.d
               (pdf-dir "~/Dropbox/Dreams/Research/Papers"))
          (setq reftex-default-bibliography bib-file)
          ))
-
    #+END_SRC
+
 *** Calender sync
     #+BEGIN_SRC emacs-lisp
       ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
