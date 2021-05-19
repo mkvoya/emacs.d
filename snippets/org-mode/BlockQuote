@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: Block Quote
+# key: #quo
+# --
+#+BEGIN_QUOTE
+$0
+#+END_QUOTE

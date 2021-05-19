@@ -2,7 +2,7 @@
 # name: Paper Skeleton
 # key: <paper
 # --
-#+TITLE: Notes on
+#+TITLE: Notes on $0
 #+AUTHOR: Mingkai Dong
 #+DATE: `(format-time-string "%FT%T%z" (current-time))`
 #+EMAIL: mingkaidong@gmail.com
