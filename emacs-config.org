@@ -191,8 +191,21 @@ Also from https://github.com/sachac/.emacs.d
 
 
 *** Scroll bar
+  This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
 #+BEGIN_SRC emacs-lisp
-  (global-yascroll-bar-mode 1); Yet Another scroll bar
+  ;; (global-yascroll-bar-mode 1); Yet Another scroll bar
+#+END_SRC
+
+Then use nyan-mode instead
+
+| nyan-mode | https://github.com/TeMPOraL/nyan-mode/ |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package nyan-mode
+    :ensure t
+    :defer t
+    :config
+    (nyan-mode t))
 #+END_SRC
 
 
@@ -245,6 +258,7 @@ Also from https://github.com/sachac/.emacs.d
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
+    :ensure t
     :defer t
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
@@ -281,6 +295,7 @@ Also from https://github.com/sachac/.emacs.d
                                                    (setq my-company-point (point))))
     (advice-add 'company-complete-common :after (lambda ()
                                                   (when (equal my-company-point (point)) (yas-expand))))
+    (add-hook 'after-init-hook 'global-company-mode)
     )
 
   (use-package company-posframe
@@ -288,18 +303,14 @@ Also from https://github.com/sachac/.emacs.d
     :defer t
     :ensure t
     :config
-    (company-posframe-mode 1)
-
-    )
+    (company-posframe-mode 1))
 #+END_SRC
-
 
 *** Evil
 #+BEGIN_SRC emacs-lisp
 
   (setq linum-format "%d ")
   ;; (global-linum-mode t)
-
 
   ;;(use-package spaceline-config
   ;;  :ensure t
@@ -462,6 +473,15 @@ Also from https://github.com/sachac/.emacs.d
     (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
     (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
 
+  ;; (use-package sublimity
+  ;;   :ensure t
+  ;;   :config
+  ;;   ;; (use-package sublimity-scroll :ensure t)
+  ;;   (use-package sublimity-map) ;; experimental
+  ;;   ;; (use-package sublimity-attractive)
+  ;;   (sublimity-mode t)
+  ;;   )
+
   ;; Do we still need this if we have good-scroll?
   ;; (use-package smooth-scrolling
   ;;   :config
@@ -473,16 +493,8 @@ Also from https://github.com/sachac/.emacs.d
   ;; (use-package good-scroll
   ;;   :ensure t
   ;;   :config
-  ;;   (good-scroll-mode 1)
-  ;;   )
-  (use-package sublimity
-    :defer t
-    :config
-    ;; (use-package sublimity-scroll)
-    ;; (use-package sublimity-map) ;; experimental
-    ;; (use-package sublimity-attractive)
-    (sublimity-mode 1)
-    )
+  ;;   (good-scroll-mode t))
+
 #+END_SRC
 
 
@@ -1015,8 +1027,8 @@ Also from https://github.com/sachac/.emacs.d
 #+END_SRC
 
 ** Completion
-*** Selectrum
-| Selectrum | https://github.com/raxod502/selectrum |
+*** Main Completion
+| vertico | https://github.com/minad/vertico |
 
 Alternatives (Check the selectrum repo README)
 | Ido       |   |
@@ -1028,25 +1040,49 @@ Alternatives (Check the selectrum repo README)
 | Snallet   |   |
 | Raven     |   |
 | Swiper    |   |
+| Selectrum | https://github.com/raxod502/selectrum |
 
 #+BEGIN_SRC emacs-lisp
-   ;;; Disable Helm and use ivy.
-   ;;; Disable ivy, swiper, counsel, use selectrum and consult (and ctrlf?)
-  (use-package selectrum
+  ;; Enable vertico
+  (use-package vertico
     :ensure t
-    :config
-    (selectrum-mode +1)
-    )
-  (use-package selectrum-prescient
-    :ensure t
-    :after (selectrum)
-    :config
-    ;; to make sorting and filtering more intelligent
-    (selectrum-prescient-mode +1)
-    ;; to save your command history on disk, so the sorting gets more
-    ;; intelligent over time
-    (prescient-persist-mode +1)
-    )
+    :defer t
+    :init
+    (vertico-mode)
+    (setq vertico-cycle t))
+
+  ;; Use the `orderless' completion style.
+  ;; Enable `partial-completion' for files to allow path expansion.
+  ;; You may prefer to use `initials' instead of `partial-completion'.
+  (use-package orderless
+    :init
+    (setq completion-styles '(orderless)
+          completion-category-defaults nil
+          completion-category-overrides '((file (styles . (partial-completion))))))
+
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :init
+    (savehist-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; Add prompt indicator to `completing-read-multiple'.
+    (defun crm-indicator (args)
+      (cons (concat "[CRM] " (car args)) (cdr args)))
+    (advice-add #'completing-read-multiple :filter-args #'crm-indicator)
+
+    ;; Grow and shrink minibuffer
+    ;;(setq resize-mini-windows t)
+
+    ;; Do not allow the cursor in the minibuffer prompt
+    (setq minibuffer-prompt-properties
+          '(read-only t cursor-intangible t face minibuffer-prompt))
+    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+
+    ;; Enable recursive minibuffers
+    (setq enable-recursive-minibuffers t))
 #+END_SRC
 
 *** Very Large File
@@ -1064,80 +1100,117 @@ Alternatives (Check the selectrum repo README)
   ;; Example configuration for Consult
   (use-package consult
     ;; Replace bindings. Lazily loaded due by `use-package'.
-    :bind (("C-x M-:" . consult-complex-command)
-           ;; ("C-c h" . consult-history)
+    :bind (;; C-c bindings (mode-specific-map)
+           ("C-c h" . consult-history)
            ("C-c m" . consult-mode-command)
-           ("C-x b" . consult-buffer)
-           ("C-x 4 b" . consult-buffer-other-window)
-           ("C-x 5 b" . consult-buffer-other-frame)
-           ("C-x r x" . consult-register)
-           ("C-x r b" . consult-bookmark)
-           ("M-g g" . consult-goto-line)
-           ("M-g M-g" . consult-goto-line)
-           ("M-g o" . consult-outline)       ;; "M-s o" is a good alternative.
-           ("M-g l" . consult-line)          ;; "M-s l" is a good alternative.
-           ("M-g m" . consult-mark)          ;; I recommend to bind Consult navigation
-           ("M-g k" . consult-global-mark)   ;; commands under the "M-g" prefix.
-           ("M-g r" . consult-git-grep)      ;; or consult-grep, consult-ripgrep
-           ("M-g f" . consult-find)          ;; or consult-fdfind, consult-locate
-           ("M-g i" . consult-project-imenu) ;; or consult-imenu
-           ("M-g e" . consult-error)
+           ("C-c b" . consult-bookmark)
+           ("C-c k" . consult-kmacro)
+           ;; C-x bindings (ctl-x-map)
+           ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+           ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+           ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+           ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+           ;; Custom M-# bindings for fast register access
+           ("M-#" . consult-register-load)
+           ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+           ("C-M-#" . consult-register)
+           ;; Other custom bindings
+           ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+           ("<help> a" . consult-apropos)            ;; orig. apropos-command
+           ;; M-g bindings (goto-map)
+           ("M-g e" . consult-compile-error)
+           ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+           ("M-g g" . consult-goto-line)             ;; orig. goto-line
+           ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+           ("M-g o" . consult-outline)
+           ("M-g m" . consult-mark)
+           ("M-g k" . consult-global-mark)
+           ("M-g i" . consult-imenu)
+           ("M-g I" . consult-project-imenu)
+           ;; M-s bindings (search-map)
+           ("M-s f" . consult-find)
+           ("M-s L" . consult-locate)
+           ("M-s g" . consult-grep)
+           ("M-s G" . consult-git-grep)
+           ("M-s r" . consult-ripgrep)
+           ("M-s l" . consult-line)
            ("M-s m" . consult-multi-occur)
-           ("M-y" . consult-yank-pop)
-           ("<help> a" . consult-apropos))
-    ;; The :init configuration is always executed (Not lazy!)
+           ("M-s k" . consult-keep-lines)
+           ("M-s u" . consult-focus-lines)
+           ;; Isearch integration
+           ("M-s e" . consult-isearch)
+           :map isearch-mode-map
+           ("M-e" . consult-isearch)                 ;; orig. isearch-edit-string
+           ("M-s e" . consult-isearch)               ;; orig. isearch-edit-string
+           ("M-s l" . consult-line))                 ;; required by consult-line to detect isearch
+
+    ;; Enable automatic preview at point in the *Completions* buffer.
+    ;; This is relevant when you use the default completion UI,
+    ;; and not necessary for Selectrum, Vertico etc.
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+
+    ;; The :init configuration is always executed (Not lazy)
     :init
-    ;; Replace `multi-occur' with `consult-multi-occur', which is a drop-in replacement.
-    (fset 'multi-occur #'consult-multi-occur)
-    ;; Configure other variables and modes in the :config section, after lazily loading the package
+
+    ;; Optionally configure the register formatting. This improves the register
+    ;; preview for `consult-register', `consult-register-load',
+    ;; `consult-register-store' and the Emacs built-ins.
+    (setq register-preview-delay 0
+          register-preview-function #'consult-register-format)
+
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref
+          xref-show-definitions-function #'consult-xref)
+
+    ;; Configure other variables and modes in the :config section,
+    ;; after lazily loading the package.
     :config
-    ;; Optionally configure a function which returns the project root directory
-    (autoload 'projectile-project-root "projectile")
-    (setq consult-project-root-function #'projectile-project-root)
-    ;; Optionally configure narrowing key.
+
+    ;; Optionally configure preview. The default value
+    ;; is 'any, such that any key triggers the preview.
+    ;; (setq consult-preview-key 'any)
+    ;; (setq consult-preview-key (kbd "M-."))
+    ;; (setq consult-preview-key (list (kbd "<S-down>") (kbd "<S-up>")))
+    ;; For some commands and buffer sources it is useful to configure the
+    ;; :preview-key on a per-command basis using the `consult-customize' macro.
+    (consult-customize
+     consult-ripgrep consult-git-grep consult-grep
+     consult-bookmark consult-recent-file consult-xref
+     consult--source-file consult--source-project-file consult--source-bookmark
+     :preview-key (kbd "M-."))
+
+    ;; Optionally configure the narrowing key.
     ;; Both < and C-+ work reasonably well.
     (setq consult-narrow-key "<") ;; (kbd "C-+")
+
     ;; Optionally make narrowing help available in the minibuffer.
-    ;; Probably not needed if you are using which-key.
+    ;; You may want to use `embark-prefix-help-command' or which-key instead.
     ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
 
-    ;; Optional configure a view library to be used by `consult-buffer'.
-    ;; The view library must provide two functions, one to open the view by name,
-    ;; and one function which must return a list of views as strings.
-    ;; Example: https://github.com/minad/bookmark-view/
-    ;; (setq consult-view-open-function #'bookmark-jump
-    ;;       consult-view-list-function #'bookmark-view-names)
-
-    ;; Optionally enable previews. Note that individual previews can be disabled
-    ;; via customization variables.
-    ;; (consult-preview-mode))
+    ;; Optionally configure a function which returns the project root directory.
+    ;; There are multiple reasonable alternatives to chose from.
+    ;;;; 1. project.el (project-roots)
+    (setq consult-project-root-function
+          (lambda ()
+            (when-let (project (project-current))
+              (car (project-roots project)))))
+    ;;;; 2. projectile.el (projectile-project-root)
+    ;; (autoload 'projectile-project-root "projectile")
+    ;; (setq consult-project-root-function #'projectile-project-root)
+    ;;;; 3. vc.el (vc-root-dir)
+    ;; (setq consult-project-root-function #'vc-root-dir)
+    ;;;; 4. locate-dominating-file
+    ;; (setq consult-project-root-function (lambda () (locate-dominating-file "." ".git")))
     )
-
-  ;; Enable Consult-Selectrum integration.
-  ;; This package should be installed if Selectrum is used.
-  (use-package consult-selectrum
-    :after (selectrum consult)
-    :demand t)
 
   ;; Optionally add the `consult-flycheck' command.
   (use-package consult-flycheck
     :bind (:map flycheck-command-map
                 ("!" . consult-flycheck)))
-
-  ;; (use-package consult-lsp
-  ;;   :after (consult)
-  ;;   :defer t
-  ;;   :ensure t)
-
-  ;; Use the `orderless' completion style.
-  ;; Enable `partial-completion' for files to allow path expansion.
-  ;; You may prefer to use `initials' instead of `partial-completion'.
-  (use-package orderless
-    :ensure t
-    :init (icomplete-mode) ; optional but recommended!
-    (setq completion-styles '(orderless)
-          completion-category-defaults nil
-          completion-category-overrides '((file (styles . (partial-completion))))))
 
   ;; A few more useful configurations...
   (use-package emacs
@@ -1148,7 +1221,7 @@ Alternatives (Check the selectrum repo README)
     ;; Completion is often bound to M-TAB.
     (setq tab-always-indent 'complete))
 
-   ;;; ========= End of Consult ===========
+  ;; ========= End of Consult ===========
 #+END_SRC
 
 
@@ -1189,7 +1262,6 @@ Alternatives (Check the selectrum repo README)
 | Embark | https://github.com/oantolin/embark/ |
 #+BEGIN_SRC emacs-lisp
   (use-package embark
-    :after selectrum
     :bind (:map minibuffer-local-map
                 ("C-o" . embark-act)
                 ("C-S-o" . embark-act-noexit)
