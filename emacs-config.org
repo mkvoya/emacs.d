@@ -47,7 +47,7 @@ Also from https://github.com/sachac/.emacs.d
 
 #+BEGIN_SRC emacs-lisp
   (setq custom-file "~/.emacs.d/customs.el")
-  ;; (setq use-package-always-ensure t)
+  (setq use-package-always-ensure t)
   (load custom-file t)
 #+END_SRC
 
@@ -109,7 +109,6 @@ Also from https://github.com/sachac/.emacs.d
   ;;; Get shell env from user shell.
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
-      :ensure t
       :config
       (exec-path-from-shell-initialize)
       (if (and (fboundp 'native-comp-available-p)
@@ -202,7 +201,6 @@ Then use nyan-mode instead
 
 #+BEGIN_SRC emacs-lisp
   (use-package nyan-mode
-    :ensure t
     :defer t
     :config
     (nyan-mode t))
@@ -224,7 +222,7 @@ Then use nyan-mode instead
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package bind-key :ensure t :defer t)
+  (use-package bind-key :defer t)
 #+END_SRC
 
 
@@ -232,7 +230,6 @@ Then use nyan-mode instead
 | diff-hl | https://github.com/dgutov/diff-hl |
 #+BEGIN_SRC emacs-lisp
   (use-package diff-hl
-    :ensure t
     :defer 5
     :config
     (global-diff-hl-mode)
@@ -243,7 +240,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
 
   ;; Winner mode
-  (use-package winner :defer t :ensure t :config (winner-mode 1))
+  (use-package winner :defer t :config (winner-mode 1))
 
   ;;minibuffer editing
   ;;(use-package miniedit
@@ -258,7 +255,6 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
-    :ensure t
     :defer t
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
@@ -301,7 +297,6 @@ Then use nyan-mode instead
   (use-package company-posframe
     :after company
     :defer t
-    :ensure t
     :config
     (company-posframe-mode 1))
 #+END_SRC
@@ -313,13 +308,11 @@ Then use nyan-mode instead
   ;; (global-linum-mode t)
 
   ;;(use-package spaceline-config
-  ;;  :ensure t
   ;;  :config
   ;;  (spaceline-spacemacs-theme))
 
   ;;; Better evil
   (use-package evil
-    :ensure t
     :after (smart-mode-line)
     :config
     (setq evil-want-fine-undo t)
@@ -327,6 +320,7 @@ Then use nyan-mode instead
     (global-undo-tree-mode)
     (evil-set-undo-system 'undo-tree)
     (use-package evil-numbers
+      :ensure nil
       :demand t
       :config
       (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
@@ -354,6 +348,7 @@ Then use nyan-mode instead
   ;; - https://github.com/PythonNut/evil-easymotion
   ;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
   (use-package evil-easymotion
+    :ensure nil
     :after (evil)
     :demand t
     :config
@@ -363,14 +358,15 @@ Then use nyan-mode instead
     (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
   (use-package neotree
+    :ensure nil
     :defer 5)
 
   ;; (use-package perspective
-  ;;   :ensure t
   ;;   :defer t)
   ;; (persp-mode)
 
   (use-package flycheck
+    :ensure nil
     :defer t
     :config
     ;; (global-flycheck-mode)
@@ -378,11 +374,13 @@ Then use nyan-mode instead
     (setq flycheck-indication-mode 'left-fringe)
     (use-package flycheck-color-mode-line
       :after (flycheck)
+      :ensure nil
       :defer t
       :config
       (eval-after-load "flycheck"
         '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode)))
     (use-package flycheck-status-emoji
+      :ensure nil
       :after (flycheck)
       :defer t)
     ;; Flycheck + proselint
@@ -402,6 +400,7 @@ Then use nyan-mode instead
   ;; optional: disable additional bindings for yanking text
   ;; (setq evil-magit-use-y-for-yank nil)
   (use-package evil-magit
+    :ensure nil
     :after (evil magit)
     :defer t)
 
@@ -412,7 +411,6 @@ Then use nyan-mode instead
 *** Ctrl-f
 #+BEGIN_SRC emacs-lisp
   (use-package ctrlf
-    :ensure t
     :defer 5
     :config
     (ctrlf-mode +1))
@@ -422,6 +420,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;;; Smart Tab
   (use-package smart-tab
+    :ensure nil
     :defer 5
     :config
     (smart-tabs-insinuate 'c 'javascript))
@@ -432,7 +431,6 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;;; MK's cheatsheet
   (use-package cheatsheet
-    :ensure t
     :config
     (cheatsheet-add :group 'Emacs
                     :key "C-x u"
@@ -462,8 +460,7 @@ Then use nyan-mode instead
   (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
   (setq scroll-step 1) ;; keyboard scroll one line at a time
 
-  ;;(use-package etags-select
-  ;;  :ensure t)
+  ;;(use-package etags-select)
 
   ;;;; Mouse scrolling in terminal emacs
   (unless (display-graphic-p)
@@ -474,11 +471,10 @@ Then use nyan-mode instead
     (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
 
   ;; (use-package sublimity
-  ;;   :ensure t
   ;;   :config
   ;;   ;; (use-package sublimity-scroll :ensure t)
-  ;;   (use-package sublimity-map) ;; experimental
-  ;;   ;; (use-package sublimity-attractive)
+  ;;   (use-package sublimity-map :ensure nil) ;; experimental
+  ;;   ;; (use-package sublimity-attractive :ensure nil)
   ;;   (sublimity-mode t)
   ;;   )
 
@@ -491,7 +487,6 @@ Then use nyan-mode instead
   ;;   )
   ;;; The effect of good-scroll is good, but slow.
   (use-package good-scroll
-    :ensure t
     :config
     (good-scroll-mode t))
 
@@ -503,7 +498,6 @@ Then use nyan-mode instead
   ;; Mode line format
   ;; Instead of powerline, airline, smart-mode-line
   (use-package smart-mode-line
-    :ensure t
     ;; :defer 5
     :config
     (setq sml/no-confirm-load-theme t)
@@ -518,6 +512,7 @@ Then use nyan-mode instead
 | undo-tree | built-in |
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
+    :ensure nil
     :defer 5
     :delight
     :config
@@ -530,6 +525,7 @@ Then use nyan-mode instead
 | yasnippet | https://github.com/joaotavora/yasnippet |
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
+    :ensure nil
     :defer 5
     :config
     (use-package yasnippet-snippets
@@ -592,7 +588,6 @@ Then use nyan-mode instead
 *** Rainbow
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
-    :ensure t
     :defer t
     :config
     (rainbow-mode t))
@@ -630,8 +625,7 @@ Then use nyan-mode instead
 
 *** Async
 #+BEGIN_SRC emacs-lisp
-  (use-package async
-    :ensure t)
+  (use-package async)
 #+END_SRC
 
 
@@ -660,7 +654,6 @@ Then use nyan-mode instead
   (setq calendar-chinese-all-holidays-flag t)
 
   (use-package cal-china-x
-    :ensure t
     :defer t
     :config
     (setq mark-holidays-in-calendar t)
@@ -676,9 +669,9 @@ Then use nyan-mode instead
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
   (use-package calfw
-    :ensure t :defer t)
+    :defer t)
   (use-package calfw-org
-    :ensure t :defer t
+    :defer t
     :after (calfw org))
 #+END_SRC
 *** whitespace
@@ -686,6 +679,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;;; Use whitespace (instead of column-marker, column-enforce-mode)
   (use-package whitespace
+    :ensure nil
     :config
     (setq whitespace-style
           '(face trailing tabs newline tab-mark newline-mark))
@@ -738,6 +732,7 @@ Then use nyan-mode instead
     (c-set-style "my-style"))        ; use my-style defined above
   (add-hook 'c++-mode-hook 'my-c++-mode-hook)
   (use-package modern-cpp-font-lock
+    :ensure nil
     :defer t
     :config
     (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
@@ -746,7 +741,7 @@ Then use nyan-mode instead
 *** Markdown
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
-    :ensure t :defer t
+    :defer t
     :mode (("README\\.md\\'" . gfm-mode)
            ("\\.md\\'" . markdown-mode)
            ("\\.markdown\\'" . markdown-mode))
@@ -853,7 +848,6 @@ Then use nyan-mode instead
 *** Projectile
 #+BEGIN_SRC emacs-lisp
   (use-package projectile
-    :ensure t
     ;; :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
     :delight projectile-mode
     :config
@@ -866,7 +860,6 @@ Then use nyan-mode instead
 *** Dashboard
 #+BEGIN_SRC emacs-lisp
   (use-package dashboard
-    :ensure t
     :diminish dashboard-mode
     :config
     (setq dashboard-banner-logo-title "What a nice day!")
@@ -936,7 +929,6 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;;preview files in dired
   (use-package peep-dired
-    :ensure t
     :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
     :bind (:map dired-mode-map
                 ("P" . peep-dired)))
@@ -945,7 +937,6 @@ Then use nyan-mode instead
   ;; (setq select-enable-clipboard nil)
   ;; Dired-sidebar is not good to use.
   ;; (use-package dired-sidebar
-  ;;   :ensure t
   ;;   :commands (dired-sidebar-toggle-sidebar))
   ;; (use-package dired-subtree
   ;;   :config
@@ -956,6 +947,7 @@ Then use nyan-mode instead
 *** Tramp
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
+    :ensure nil
     :defer 5
     :config
     ;; (setq tramp-debug-buffer t)
@@ -985,7 +977,6 @@ Then use nyan-mode instead
   ;;   :hook (after-init . global-emojify-mode))
 
   (use-package unicode-fonts
-    :ensure t
     :config
     (setq unicode-fonts-skip-font-groups
           '(chinese-simplified chinese-traditional
@@ -996,6 +987,7 @@ Then use nyan-mode instead
     )
 
   (use-package config-appearances
+    :ensure nil
     :after (unicode-fonts)
     :load-path "~/.emacs.d/mkvoya"
     :ensure nil) ; local package does not need ensure
@@ -1047,7 +1039,6 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;; Enable vertico
   (use-package vertico
-    :ensure t
     :defer t
     :init
     (vertico-mode)
@@ -1064,11 +1055,13 @@ Alternatives (Check the selectrum repo README)
 
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
   (use-package savehist
+    :ensure nil
     :init
     (savehist-mode))
 
   ;; A few more useful configurations...
   (use-package emacs
+    :ensure nil
     :init
     ;; Add prompt indicator to `completing-read-multiple'.
     (defun crm-indicator (args)
@@ -1216,6 +1209,7 @@ Alternatives (Check the selectrum repo README)
 
   ;; A few more useful configurations...
   (use-package emacs
+    :ensure nil
     :init
     ;; TAB cycle if there are only few candidates
     (setq completion-cycle-threshold 3)
@@ -1246,7 +1240,6 @@ Alternatives (Check the selectrum repo README)
   ;; Enable richer annotations using the Marginalia package
   (use-package marginalia
     :defer 5
-    :ensure t
     ;; The :init configuration is always executed (Not lazy!)
     :init
     ;; Must be in the :init section of use-package such that the mode gets
@@ -1278,7 +1271,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
-    :ensure t
     :init (setq lsp-keymap-prefix "C-c l")
     :hook ((python-mode . lsp-deferred)
            (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
@@ -1287,10 +1279,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
   ;; optionally
   (use-package lsp-ui
-    :ensure t
     :commands lsp-ui-mode)
   (use-package lsp-treemacs
-    :ensure t
     :commands lsp-treemacs-errors-list)
 
   ;; (use-package dap-mode) ; optionally if you want to use debugger
@@ -1319,7 +1309,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 | elfeed | https://github.com/skeeto/elfeed |
 #+BEGIN_SRC emacs-lisp
   (use-package elfeed
-    :ensure t
     :defer t
     :config
     ;; Global key
@@ -1549,6 +1538,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
   (use-package appt
+    :ensure nil
     :defer 10
     :config
     (setq
@@ -1592,6 +1582,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package ox-html
+    :ensure nil
     :after (org)
     :config
     ;; Org export code style
@@ -1644,6 +1635,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
+    :ensure nil
     :after (org)
     :config
     (setq org-icalendar-alarm-time 5)
@@ -1657,7 +1649,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
           '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
     )
   (use-package org-caldav
-    :ensure t
     :after (async)
     :config
     (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
@@ -1675,6 +1666,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;;; Org Publish
   (use-package ox-publish
+    :ensure nil
     :after (org)
     :config
     (setq org-publish-project-alist
@@ -1708,6 +1700,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                         "~/Dropbox/Dreams/Org/Collections")))
   ;;; Captures
   (use-package org-capture
+    :ensure nil
     :after (org)
     :config
     (setq org-capture-templates nil)
@@ -1738,7 +1731,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
     :after (org)
-    :ensure t :defer t
+    :defer t
     :hook
     (after-init . org-roam-mode)
     :custom
@@ -1758,7 +1751,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** OrgRoam-Server
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-server
-    :ensure t
     :config
     (setq org-roam-server-host "127.0.0.1"
           org-roam-server-port 8001
@@ -1774,6 +1766,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   ;; Since the org module lazy loads org-protocol (waits until an org URL is
   ;; detected), we can safely chain `org-roam-protocol' to it.
   (use-package org-roam-protocol
+    :ensure nil
     :after org-protocol)
 #+END_SRC
 *** OrgBrain
@@ -1783,7 +1776,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   ;;   :config
   ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
   ;;
-  (use-package org-brain :ensure t
+  (use-package org-brain
     :disabled
     :init
     (setq org-brain-path "~/Dropbox/Dreams/Org/Brain")
@@ -1808,9 +1801,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   ;; This is an Emacs package that creates graphviz directed graphs from
   ;; the headings of an org file
   (use-package org-mind-map
-    :init
-    (require 'ox-org)
-    :ensure t
+    :init (require 'ox-org)
     ;; Uncomment the below if 'ensure-system-packages` is installed
     ;;:ensure-system-package (gvgen . graphviz)
     :config
@@ -1826,7 +1817,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** Exporter
 #+BEGIN_SRC emacs-lisp
   (use-package ox-slimhtml
-    :ensure t
     :disabled
     :config
     (org-export-define-derived-backend 'custom-html-exporter
@@ -1931,7 +1921,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** Sis
 #+BEGIN_SRC emacs-lisp
   (use-package sis
-    :ensure t
     :disabled t
     :defer t
     ;; :hook
@@ -1960,7 +1949,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** ActivityWatch
 #+BEGIN_SRC emacs-lisp
   (use-package activity-watch-mode
-    :ensure t
     :defer t
     :config
     (global-activity-watch-mode))
@@ -1969,7 +1957,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 The pyim has already the jieba's feature built-in.
 #+BEGIN_SRC emacs-lisp
   ;; (use-package jsonrpc
-  ;;   :ensure t
   ;;   :defer t)
   ;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/jieba.el")
   ;; (require 'jieba)
@@ -1994,7 +1981,6 @@ The pyim has already the jieba's feature built-in.
   ;; try notdeft?
   (use-package deft
     :disabled
-    :ensure t
     :defer t
     :custom
     (deft-extensions '("org" "md" "txt"))
@@ -2002,7 +1988,6 @@ The pyim has already the jieba's feature built-in.
     (deft-use-filename-as-title t))
   (use-package zetteldeft
     :disabled
-    :ensure t
     :defer t
     :after deft
     :config
@@ -2072,10 +2057,10 @@ The pyim has already the jieba's feature built-in.
   ;;    :after (quelpa quelpa-use-package)
   ;;    ;; :ensure t
   ;;    :init
-  ;;    (use-package epc :defer t :ensure t)
-  ;;    (use-package ctable :defer t :ensure t)
-  ;;    (use-package deferred :defer t :ensure t)
-  ;;    (use-package s :defer t :ensure t)
+  ;;    (use-package epc :defer t)
+  ;;    (use-package ctable :defer t)
+  ;;    (use-package deferred :defer t)
+  ;;    (use-package s :defer t)
   ;;    :custom
   ;;    (eaf-browser-continue-where-left-off t)
   ;;    :config
@@ -2149,7 +2134,6 @@ The pyim has already the jieba's feature built-in.
 ** Posts & Blogs
 #+BEGIN_SRC emacs-lisp
   (use-package org-static-blog
-    :ensure t
     :defer t
     :config
 
