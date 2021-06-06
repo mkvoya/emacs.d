@@ -17,7 +17,7 @@
   ;; The following config is overwritten by someone (unicode-fonts).
   ;; (set-fontset-font t '(#x000000 . #x3fffff) (font-spec :family "Sarasa Mono SC"))
   (set-frame-font "Sarasa Mono SC" t t)
-  (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-16")))
+  (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-13")))
 
 ;;;; from https://emacs-china.org/t/inconsolata/7997
 ;; (when (member "Inconsolata" (font-family-list))

@@ -1271,24 +1271,10 @@ Alternatives (Check the selectrum repo README)
                 ("j" . dired-jump)))
 #+END_SRC
 ** LSP
-| lsp-mode |   |
+| lsp-mode | https://github.com/emacs-lsp/lsp-mode |
 | elgot    |   |
 
 elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package eglot
-  ;;   :after (company-mode)
-  ;;   :ensure t
-  ;;   :hook
-  ;;   (c-mode . eglot-ensure)
-  ;;   (python-mode . eglot-ensure)
-  ;;   :config
-  ;;   (setq eglot-ignored-server-capabilites (quote (:documentHighlightProvider)))
-  ;;   (add-to-list 'eglot-server-programs '((tex-mode context-mode texinfo-mode bibtex-mode)
-  ;;                                         . ("digestif")))
-  ;;   )
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package lsp-mode
@@ -1300,11 +1286,15 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :commands (lsp lsp-deferred))
 
   ;; optionally
-  (use-package lsp-ui :commands lsp-ui-mode)
-  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+  (use-package lsp-ui
+    :ensure t
+    :commands lsp-ui-mode)
+  (use-package lsp-treemacs
+    :ensure t
+    :commands lsp-treemacs-errors-list)
 
-  (use-package dap-mode) ; optionally if you want to use debugger
-  ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+  ;; (use-package dap-mode) ; optionally if you want to use debugger
+  ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
 
 #+END_SRC
 ** Mail Client
