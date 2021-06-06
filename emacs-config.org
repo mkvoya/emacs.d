@@ -490,10 +490,10 @@ Then use nyan-mode instead
   ;;   (smooth-scrolling-mode 1)
   ;;   )
   ;;; The effect of good-scroll is good, but slow.
-  ;; (use-package good-scroll
-  ;;   :ensure t
-  ;;   :config
-  ;;   (good-scroll-mode t))
+  (use-package good-scroll
+    :ensure t
+    :config
+    (good-scroll-mode t))
 
 #+END_SRC
 
@@ -616,12 +616,14 @@ Then use nyan-mode instead
     (delight 'beacon-mode "" "beacon")
     (delight 'org-roam-mode "♞" "org-roam")
     (delight 'org-mode "♘" :major)
+    (delight 'org-indent-mode  "")
     (delight 'flycheck-mode "⍻" "flycheck")
     (delight 'yas-minor-mode "✎" "yasnippet")
     (delight 'emacs-lisp-mode "Elisp" :major)
     (delight 'company-mode "☺" "company-mode")
     (delight 'pyim-isearch-mode nil "pyim-isearch-mode")
-    (delight 'which-key-mode "" "which-key"))
+    ;; (delight 'which-key-mode "" "which-key"))
+   )
   (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
 #+END_SRC
 
@@ -1268,24 +1270,42 @@ Alternatives (Check the selectrum repo README)
                 :map embark-file-map
                 ("j" . dired-jump)))
 #+END_SRC
-*** LSP
+** LSP
 | lsp-mode |   |
 | elgot    |   |
 
-elgot 似乎代码更加 nice
+elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
-  (use-package eglot
-    :after (company-mode)
+  ;; (use-package eglot
+  ;;   :after (company-mode)
+  ;;   :ensure t
+  ;;   :hook
+  ;;   (c-mode . eglot-ensure)
+  ;;   (python-mode . eglot-ensure)
+  ;;   :config
+  ;;   (setq eglot-ignored-server-capabilites (quote (:documentHighlightProvider)))
+  ;;   (add-to-list 'eglot-server-programs '((tex-mode context-mode texinfo-mode bibtex-mode)
+  ;;                                         . ("digestif")))
+  ;;   )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lsp-mode
     :ensure t
-    :hook
-    (c-mode . eglot-ensure)
-    (python-mode . eglot-ensure)
-    :config
-    (setq eglot-ignored-server-capabilites (quote (:documentHighlightProvider)))
-    (add-to-list 'eglot-server-programs '((tex-mode context-mode texinfo-mode bibtex-mode)
-                                          . ("digestif")))
-    )
+    :init (setq lsp-keymap-prefix "C-c l")
+    :hook ((python-mode . lsp-deferred)
+           (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
+           )
+    :commands (lsp lsp-deferred))
+
+  ;; optionally
+  (use-package lsp-ui :commands lsp-ui-mode)
+  (use-package lsp-treemacs :commands lsp-treemacs-errors-list)
+
+  (use-package dap-mode) ; optionally if you want to use debugger
+  ;; (use-package dap-LANGUAGE) to load the dap adapter for your language
+
 #+END_SRC
 ** Mail Client
 #+BEGIN_SRC emacs-lisp
@@ -1361,8 +1381,8 @@ elgot 似乎代码更加 nice
     ;; Strike through the whole line with DONE entry
     (font-lock-add-keywords
      'org-mode
-     ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
-     '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
+     '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
      t)
     (font-lock-add-keywords
      'org-mode
