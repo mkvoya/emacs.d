@@ -18,7 +18,7 @@
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ;; No tool bar
-   (font . "Sarasa Mono SC-16")         ;; Set font
+   (font . "Sarasa Mono SC-13")         ;; Set font
    (vertical-scroll-bars . nil)))       ;; No vertical scroll-bars
 
 ;; It seems that we don't need the following anymore.
@@ -26,5 +26,11 @@
 ;; (tool-bar-mode -1) ; close tool bar (-1 is switch)
 ;; (menu-bar-mode -1) ; close menu bar
 ;; (scroll-bar-mode -1) ; close the scroll bar
+
+;; refs: https://emacs-china.org/t/inconsolata/7997
+(when (member "Sarasa Mono SC" (font-family-list))
+  (set-fontset-font t nil (font-spec :family "Sarasa Mono SC"))
+  (set-frame-font "Sarasa Mono SC" t t)
+  (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-13")))
 
 ;;; early-init.el ends here

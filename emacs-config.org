@@ -41,6 +41,16 @@ Also from https://github.com/sachac/.emacs.d
                   (mkvoya/sync-emacs-config))))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (global-hl-line-mode 1)
+  (set-face-background 'hl-line "#d0fed0")
+  (set-face-foreground 'hl-line nil)
+  (set-face-foreground 'highlight nil)
+  ;; (set-face-attribute 'default nil :height 160)
+
+  (add-hook 'prog-mode-hook #'hs-minor-mode)
+#+END_SRC
+
 * Bootstrap
 
 ** Custom Files
@@ -985,12 +995,6 @@ Then use nyan-mode instead
     ;; This breaks the Sarasa font
     ;; (unicode-fonts-setup)
     )
-
-  (use-package config-appearances
-    :ensure nil
-    :after (unicode-fonts)
-    :load-path "~/.emacs.d/mkvoya"
-    :ensure nil) ; local package does not need ensure
 
   ;;; =========== Some builtin modes =============
   ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
