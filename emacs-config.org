@@ -1274,18 +1274,37 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :init (setq lsp-keymap-prefix "C-c l")
     :hook ((python-mode . lsp-deferred)
            (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
+           ;; (org-mode . lsp-deferred)
            )
-    :commands (lsp lsp-deferred))
+    :commands (lsp lsp-deferred)
+    :config
+    (setq lsp-intelephense-multi-root nil)
+    ;; optionally
+    (use-package lsp-ui
+      :commands lsp-ui-mode)
+    (use-package lsp-treemacs
+      :commands lsp-treemacs-errors-list)
+    ;; (use-package dap-mode) ; optionally if you want to use debugger
+    ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
+    (use-package company-lsp
+      :config
+      (push 'company-lsp company-backends))
+    (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
+    )
 
-  ;; optionally
-  (use-package lsp-ui
-    :commands lsp-ui-mode)
-  (use-package lsp-treemacs
-    :commands lsp-treemacs-errors-list)
+#+END_SRC
+*** LTex
+#+BEGIN_SRC emacs-lisp
+    (use-package lsp-ltex
+      :after (lsp-mode)
+      :hook (text-mode . (lambda ()
+                           (require 'lsp-ltex)
+                           (lsp-deferred)
+                           ))
+      :config
 
-  ;; (use-package dap-mode) ; optionally if you want to use debugger
-  ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
-
+  (setq lsp-ltex-language "zh-CN")
+  )
 #+END_SRC
 ** Mail Client
 #+BEGIN_SRC emacs-lisp
@@ -1593,30 +1612,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;; ;; Two more extensions could be relavant.
-  ;; ;; org-super-links
-  ;; ;; org-wild-notifier.el
-  ;; (use-package org-wild-notifier
-  ;;   :ensure t
-  ;;   :config
-  ;;   (org-wild-notifier-mode t)
-  ;;   ;;; Overwrite
-  ;;   (defun org-wild-notifier--notify (event-msg)
-  ;;     "Notify about an event using `alert' library.
-  ;; EVENT-MSG is a string representation of the event."
-  ;;     ;;(message "Here is the events %S" event-msg)
-  ;;     ;;(message "%d" "ddd")
-  ;;     ;;(if event-msg
-  ;;      ;;   (progn
-  ;;           (ct/send-notification org-wild-notifier-notification-title event-msg)
-  ;;           ;; (alert event-msg :title org-wild-notifier-notification-title :severity org-wild-notifier--alert-severity))
-  ;;           ;;)
-  ;;           (message "No new events"))
-  ;;   ;;)
-  ;;   )
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (use-package org-ref
     :disabled
     :ensure nil
@@ -1769,33 +1764,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :ensure nil
     :after org-protocol)
 #+END_SRC
-*** OrgBrain
-#+BEGIN_SRC emacs-lisp
-  ;; ;; Allows you to edit entries directly from org-brain-visualize
-  ;; (use-package polymode
-  ;;   :config
-  ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
-  ;;
-  (use-package org-brain
-    :disabled
-    :init
-    (setq org-brain-path "~/Dropbox/Dreams/Org/Brain")
-    ;; For Evil users
-    (with-eval-after-load 'evil
-      (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
-    :config
-    (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
-    (setq org-id-track-globally t)
-    (setq org-id-locations-file "~/Dropbox/Dreams/Org/Brain/org-id-locations")
-    (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
-    (push '("b" "Brain" plain (function org-brain-goto-end)
-            "* %i%?" :empty-lines 1)
-          org-capture-templates)
-    (setq org-brain-visualize-default-choices 'all)
-    (setq org-brain-title-max-length 12)
-    (setq org-brain-include-file-entries nil
-          org-brain-file-entries-use-title nil))
-#+END_SRC
 *** Org-Mindmap
 #+BEGIN_SRC emacs-lisp
   ;; This is an Emacs package that creates graphviz directed graphs from
@@ -1813,39 +1781,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; (setq org-mind-map-engine "twopi")  ; Radial layouts
     ;; (setq org-mind-map-engine "circo")  ; Circular Layout
     )
-#+END_SRC
-*** Exporter
-#+BEGIN_SRC emacs-lisp
-  (use-package ox-slimhtml
-    :disabled
-    :config
-    (org-export-define-derived-backend 'custom-html-exporter
-        'slimhtml                             ;; org's default exporter is 'html
-      :menu-entry
-      '(?s "Export to slimhtml"
-           ((?o "As slimhtml file and open"
-                (lambda (a s v b)
-                  (if a (ox-slimhtml-export-to-html t s v b)
-                    (org-open-file (ox-slimhtml-export-to-html nil s v b))))))))
-    )
-#+END_SRC
-*** Org-mac-protocol
-#+BEGIN_SRC emacs-lisp
-  (setq org-directory "~/Dropbox/Dreams/Org/")
-  ;; (use-package org-mac-protocol
-  ;;   :after (quelpa quelpa-use-package remember)
-  ;;   :quelpa (org-mac-protocol :repo "claviclaws/org-mac-protocol"
-  ;;                             :fetcher github
-  ;;                             :files ("org-mac-protocol.el"))
-  ;;   :config
-  ;;   (setq org-remember-templates
-  ;;         '(("AppleScript remember" ?y
-  ;;            "* %:shortdesc\n  %:initial\n   Source: %u, %c\n\n  %?"
-  ;;            (concat org-directory "Remember.org") "Remember")
-  ;;           ("AppleScript note" ?z
-  ;;            "* %?\n\n  Date: %u\n"
-  ;;            (concat org-directory "Remember.org") "Notes")
-  ;;           )))
 #+END_SRC
 *** NotDeft
 #+BEGIN_SRC emacs-lisp
@@ -1953,46 +1888,10 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :config
     (global-activity-watch-mode))
 #+END_SRC
-*** Jieba
-The pyim has already the jieba's feature built-in.
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package jsonrpc
-  ;;   :defer t)
-  ;; (add-to-list 'load-path "~/.emacs.d/3rd-parties/jieba.el")
-  ;; (require 'jieba)
-  ;; (jieba-mode)
-
-  ;;; pyim has something similar.
-  ;; (use-package jieba
-  ;;   :after (jsonrpc)
-  ;;   :load-path "~/.emacs.d/3rd-parties/jieba.el"
-  ;;   :ensure nil ; Do not try to download from repo.
-  ;;   :commands jieba-mode
-  ;;   :init (jieba-mode)
-  ;;   )
-#+END_SRC
 ** 目前禁用的功能
-*** Zettel
-| deft      |   |
-| zetteldef |   |
-| notdeft   |   |
-
-#+BEGIN_SRC emacs-lisp
-  ;; try notdeft?
-  (use-package deft
-    :disabled
-    :defer t
-    :custom
-    (deft-extensions '("org" "md" "txt"))
-    (deft-directory "~/Dropbox/Dreams/Zettels")
-    (deft-use-filename-as-title t))
-  (use-package zetteldeft
-    :disabled
-    :defer t
-    :after deft
-    :config
-    (zetteldeft-set-classic-keybindings))
-#+END_SRC
+| org-brain  |   |
+| deft       |   |
+| zetteldeft |   |
 
 *** Custom key-bindings
 #+BEGIN_SRC emacs-lisp
@@ -2001,13 +1900,13 @@ The pyim has already the jieba's feature built-in.
   ;; Open ibuffer upon "C-c i"
   (global-set-key (kbd "C-c i") 'ibuffer)
   ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
-  (global-unset-key [mouse-3])
-  (global-set-key [down-mouse-3]
-                  `(menu-item ,(purecopy "Menu Bar") ignore
-                              :filter (lambda (_)
-                                        (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
-                                            (mouse-menu-bar-map)
-                                          (mouse-menu-major-mode-map)))))
+  ;; (global-unset-key [mouse-3])
+  ;; (global-set-key [down-mouse-3]
+  ;;                 `(menu-item ,(purecopy "Menu Bar") ignore
+  ;;                             :filter (lambda (_)
+  ;;                                       (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
+  ;;                                           (mouse-menu-bar-map)
+  ;;                                         (mouse-menu-major-mode-map)))))
 #+END_SRC
 *** Custom functions
 
