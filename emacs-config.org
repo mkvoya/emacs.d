@@ -72,9 +72,12 @@ Also from https://github.com/sachac/.emacs.d
   ;; (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
   ;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
   (setq package-archives
-        '(("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
+        '(
+          ("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
+          ;; ("melpa" . "https://melpa.org/packages/")
           ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
-          ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/")))
+          ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/"))
+        )
   (package-initialize); done in init.el
 #+END_SRC
 
@@ -1278,6 +1281,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :init (setq lsp-keymap-prefix "C-c l")
     :hook ((python-mode . lsp-deferred)
            (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
+           (tex-mode . lsp-deferred)
+           (TeX-mode . lsp-deferred)
            ;; (org-mode . lsp-deferred)
            )
     :commands (lsp lsp-deferred)
@@ -1292,7 +1297,9 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
     (use-package company-lsp
       :config
-      (push 'company-lsp company-backends))
+      (push 'company-lsp company-backends)
+      (add-to-list 'company-lsp-filter-candidates '(digestif . nil)) ; digestif
+      )
     (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
     )
 
@@ -1311,6 +1318,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   )
 #+END_SRC
 ** Mail Client
+| notmuch    |   |
+| WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
   (autoload 'notmuch "notmuch" "notmuch mail" t)
@@ -1325,6 +1334,21 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (setq notmuch-unread-update-interval 300))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package wanderlust
+  ;;   :defer t
+  ;;   :config
+  ;;   (if (boundp 'mail-user-agent)
+  ;;       (setq mail-user-agent 'wl-user-agent))
+  ;;   (if (fboundp 'define-mail-user-agent)
+  ;;       (define-mail-user-agent
+  ;;         'wl-user-agent
+  ;;         'wl-user-agent-compose
+  ;;         'wl-draft-send
+  ;;         'wl-draft-kill
+  ;;         'mail-send-hook))
+  ;;   )
+#+END_SRC
 
 
 ** Feeding (RSS & Atom)
@@ -1383,12 +1407,14 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; Strike through the whole line with DONE entry
     (font-lock-add-keywords
      'org-mode
-     '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
+     ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
      ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
      t)
     (font-lock-add-keywords
      'org-mode
-     '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
      t)
 
     ;; define a useless face
@@ -1440,7 +1466,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (org-babel-do-load-languages
      'org-babel-load-languages
      '((dot . t)
-       (C . t)))
+       (C . t)
+       (python . t)))
 
     ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
     ;; Always redisplay inline images after executing SRC block
@@ -1559,7 +1586,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
+    ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
   (use-package appt
     :ensure nil
     :defer 10
@@ -1589,9 +1616,12 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
          "-title" title
          "-sender" "org.gnu.Emacs"
          "-activate" "org.gnu.Emacs")))
+    (defun mkvoya/marquee-message-display (title message)
+      (marquee-header-notify (concat "!NOTICE! " title ": " message)))
     (defun ct/appt-display-native (min-to-app new-time msg)
       "Appt display native (MIN-TO-APP NEW-TIME MSG)."
-      (ct/send-notification
+      ;; (ct/send-notification)
+      (mkvoya/marquee-message-display
        (format "Appointment in %s minutes" min-to-app) ; Title
        (format "%s" msg))) ; Message/detail text
 
@@ -1794,7 +1824,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                      :fetcher github
                      :files ("*.el" "xapian"))
     :config
-    (setq notdeft-directories '("~/Dropbox/Dreams/Org"))
+    (setq notdeft-directories '("~/Dropbox/Dreams" "~/Dropbox/IPADS"))
     (setq notdeft-extension "org")
     (setq notdeft-secondary-extensions '("md" "txt" "scrbl"))
     )
@@ -1953,26 +1983,26 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 * EAF
 #+BEGIN_SRC emacs-lisp
-  ;;  (use-package eaf
-  ;;    :quelpa (eaf :fetcher github
-  ;;                 :repo  "manateelazycat/emacs-application-framework"
-  ;;                 :files ("*"))
-  ;;    :after (quelpa quelpa-use-package)
-  ;;    ;; :ensure t
-  ;;    :init
-  ;;    (use-package epc :defer t)
-  ;;    (use-package ctable :defer t)
-  ;;    (use-package deferred :defer t)
-  ;;    (use-package s :defer t)
-  ;;    :custom
-  ;;    (eaf-browser-continue-where-left-off t)
-  ;;    :config
-  ;;    (eaf-setq eaf-browser-enable-adblocker "true")
-  ;;    (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
-  ;;    (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
-  ;;    (eaf-bind-key take_photo "p" eaf-camera-keybinding)
-  ;;    (eaf-bind-key nil "M-q" eaf-browser-keybinding)
-  ;;    ) ;; unbind, see more in the Wiki
+  (use-package eaf
+    :quelpa (eaf :fetcher github
+                 :repo  "manateelazycat/emacs-application-framework"
+                 :files ("*"))
+    :after (quelpa quelpa-use-package)
+    :ensure nil
+    :init
+    (use-package epc :defer t)
+    (use-package ctable :defer t)
+    (use-package deferred :defer t)
+    (use-package s :defer t)
+    :custom
+    (eaf-browser-continue-where-left-off t)
+    :config
+    (eaf-setq eaf-browser-enable-adblocker "true")
+    (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
+    (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
+    (eaf-bind-key take_photo "p" eaf-camera-keybinding)
+    (eaf-bind-key nil "M-q" eaf-browser-keybinding)
+    ) ;; unbind, see more in the Wiki
 #+END_SRC
 
 
@@ -2080,4 +2110,9 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   ;; (setq resize-mini-frames t); to adjust the minibuffer high enough
+#+END_SRC
+
+* MISC
+#+BEGIN_SRC emacs-lisp
+  (use-package marquee-header :ensure t :defer 10) ;; This is really an interesting package.
 #+END_SRC
