@@ -2,10 +2,15 @@
 # name: Paper Skeleton
 # key: <paper
 # --
-#+TITLE: Notes on $0
+#+TITLE: Notes on /$0/
 #+AUTHOR: Mingkai Dong
 #+DATE: `(format-time-string "%FT%T%z" (current-time))`
 #+EMAIL: mingkaidong@gmail.com
+
+| Conference   | '21 |
+| Keywords     |     |
+| Authors      |     |
+| Affiliations |     |
 
 * Prologue
 
