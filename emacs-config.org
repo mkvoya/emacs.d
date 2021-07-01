@@ -110,6 +110,16 @@ Also from https://github.com/sachac/.emacs.d
      :url "https://github.com/quelpa/quelpa-use-package.git"))
   (require 'quelpa-use-package)
 #+END_SRC
+
+*** Paradox: Mordern Package Menu
+#+BEGIN_SRC emacs-lisp
+  (use-package paradox
+    :defer t
+    :config
+    (paradox-enable)
+    )
+#+END_SRC
+
 ** Emacs Server
 #+BEGIN_SRC emacs-lisp
   ;;; The server part may not be configured so early.
@@ -509,7 +519,7 @@ Then use nyan-mode instead
 *** Smart-mode-line
 #+BEGIN_SRC emacs-lisp
   ;; Mode line format
-  ;; Instead of powerline, airline, smart-mode-line
+  ;; Instead of powerline, airline, smart-mode-line, doom-modeline
   (use-package smart-mode-line
     ;; :defer 5
     :config
@@ -517,6 +527,13 @@ Then use nyan-mode instead
     (setq sml/theme 'light)
     (setq sml/shorten-modes t)
     (setq sml/shorten-directory t)
+    (add-hook 'sml/after-setup-hook
+              (lambda ()
+                (setq-default mode-line-format
+                              (cons (propertize " " 'display
+                                                '((height 1.5)))
+                                                ;; '((raise -0.5) (height 2))
+                                    mode-line-format))))
     (sml/setup)
     )
 #+END_SRC
@@ -629,7 +646,8 @@ Then use nyan-mode instead
     (delight 'yas-minor-mode "✎" "yasnippet")
     (delight 'emacs-lisp-mode "Elisp" :major)
     (delight 'company-mode "☺" "company-mode")
-    (delight 'pyim-isearch-mode nil "pyim-isearch-mode")
+    (delight 'pyim-isearch-mode)
+    (delight 'explain-pause-mode)
     ;; (delight 'which-key-mode "" "which-key"))
    )
   (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
@@ -1374,120 +1392,122 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** Org
 #+BEGIN_SRC emacs-lisp
 
-  ;; Enable Org mode
-  (use-package org
-    :defer t
-    :config
-    ;; Shortcuts
-    (global-set-key (kbd "C-c a") 'org-agenda)
-    (global-set-key (kbd "C-c c") 'org-capture)
+    ;; Enable Org mode
+    (use-package org
+      :defer t
+      :config
+      ;; Shortcuts
+      (global-set-key (kbd "C-c a") 'org-agenda)
+      (g
+  lobal-set-key (kbd "C-c c") 'org-capture)
 
-    ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
-    (setq org-log-done 'time)
+      ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
+      (setq org-log-done 'time)
 
-    ;; Org mode TODO states
-    (setq org-todo-keywords
-          '((sequence
-             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(e)" "IDEA(i)"
-             "|"
-             "DONE(d!)" "CANCELED(c@)")))
-    ;; Keyword colors
-    (setf org-todo-keyword-faces
-          '(
-            ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
-            ("TODO" . (:foreground "#ff39a3" :weight bold))
-            ("HAND"  . "orangered")
-            ("WAIT" . "pink")
-            ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
-            ;; ("DONE" . "#008080")
-            ("DONE" . (:foreground "#808080" :strike-through "#0d0d0d"))
-            ("DELEGATE"  . "DeepSkyBlue")
-            ))
+      ;; Org mode TODO states
+      (setq org-todo-keywords
+            '((sequence
+               "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(e)" "IDEA(i)"
+               "|"
+               "DONE(d!)" "CANCELED(c@)")))
+      ;; Keyword colors
+      (setf org-todo-keyword-faces
+            '(
+              ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
+              ("TODO" . (:foreground "#ff39a3" :weight bold))
+              ("HAND"  . "orangered")
+              ("WAIT" . "pink")
+              ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
+              ;; ("DONE" . "#008080")
+              ("DONE" . (:foreground "#808080" :strike-through "#0d0d0d"))
+              ("DELEGATE"  . "DeepSkyBlue")
+              ))
 
-    ;; Strike through the whole line with DONE entry
-    (font-lock-add-keywords
-     'org-mode
-     '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
-     ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
-     ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
-     t)
-    (font-lock-add-keywords
-     'org-mode
-     ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
-     '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
-     t)
+      ;; Strike through the whole line with DONE entry
+      (font-lock-add-keywords
+       'org-mode
+       '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
+       ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
+       ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
+       t)
+      (font-lock-add-keywords
+       'org-mode
+       ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
+       '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
+       t)
 
-    ;; define a useless face
-    (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
-    ;; shrink the size of PROPERTY list
-    (font-lock-add-keywords
-     'org-mode
-     '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 120) append))
-     t)
-    ;; Does not work well when font-lock is used
-    ;; (add-text-properties 179 252 '(line-height 1))
-    ;; (set-text-properties 179 252 '(face tiny-font))
-    ;; (add-face-text-property 179 252 '(:height 120) t)
+      ;; define a useless face
+      (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
+      ;; shrink the size of PROPERTY list
+      (font-lock-add-keywords
+       'org-mode
+       '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 120) append))
+       t)
+      ;; Does not work well when font-lock is used
+      ;; (add-text-properties 179 252 '(line-height 1))
+      ;; (set-text-properties 179 252 '(face tiny-font))
+      ;; (add-face-text-property 179 252 '(:height 120) t)
 
 
-    ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
-    ;; (setq org-ellipsis "…")
-    ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
-    ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
-    (setq org-ellipsis "▾")
+      ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
+      ;; (setq org-ellipsis "…")
+      ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
+      ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
+      (setq org-ellipsis "▾")
 
-    ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
-    (defun org-force-open-current-window ()
-      "Open at current window."
-      (interactive)
-      (let ((org-link-frame-setup (quote
-                                   ((vm . vm-visit-folder)
-                                    (vm-imap . vm-visit-imap-folder)
-                                    (gnus . gnus)
-                                    (file . find-file)
-                                    (wl . wl)))
-                                  ))
-        (org-open-at-point)))
+      ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+      (defun org-force-open-current-window ()
+        "Open at current window."
+        (interactive)
+        (let ((org-link-frame-setup (quote
+                                     ((vm . vm-visit-folder)
+                                      (vm-imap . vm-visit-imap-folder)
+                                      (gnus . gnus)
+                                      (file . find-file)
+                                      (wl . wl)))
+                                    ))
+          (org-open-at-point)))
 
-    ;; Depending on universal argument try opening link
-    (defun org-open-maybe (&optional arg)
-      "Open maybe ARG."
-      (interactive "P")
-      (if arg (org-open-at-point)
-        (org-force-open-current-window)))
-    ;; Redefine file opening without clobbering universal argument
-    (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
-    ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
-    (setq org-image-actual-width (/ (display-pixel-width) 3))
+      ;; Depending on universal argument try opening link
+      (defun org-open-maybe (&optional arg)
+        "Open maybe ARG."
+        (interactive "P")
+        (if arg (org-open-at-point)
+          (org-force-open-current-window)))
+      ;; Redefine file opening without clobbering universal argument
+      (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
+      ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
+      ;; (setq org-image-actual-width (/ (display-pixel-width) 3))
+      (setq org-image-actual-width 200)
 
-    (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
-    (add-hook 'org-mode-hook #'mkvoya/better-wrap)
+      (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
+      (add-hook 'org-mode-hook #'mkvoya/better-wrap)
 
-    (org-babel-do-load-languages
-     'org-babel-load-languages
-     '((dot . t)
-       (C . t)
-       (python . t)))
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((dot . t)
+         (C . t)
+         (python . t)))
 
-    ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
-    ;; Always redisplay inline images after executing SRC block
-    (eval-after-load 'org
-      (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
+      ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
+      ;; Always redisplay inline images after executing SRC block
+      (eval-after-load 'org
+        (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
 
-    (add-hook 'org-mode-hook
-              (lambda () (add-to-list 'write-file-functions
-                                      'delete-trailing-whitespace)))
-    )
+      (add-hook 'org-mode-hook
+                (lambda () (add-to-list 'write-file-functions
+                                        'delete-trailing-whitespace)))
+      )
 
-  (add-hook (quote org-mode-hook)
-            (lambda ()
-              (org-shifttab 5)))
+    (add-hook (quote org-mode-hook)
+              (lambda ()
+                (org-shifttab 5)))
 
-             ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-             ;;; But I don't need the odd levels only
-  (setq org-adapt-indentation t
-        org-hide-leading-stars t)
-  ;;org-odd-levels-only t)
+               ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+               ;;; But I don't need the odd levels only
+    (setq org-adapt-indentation t
+          org-hide-leading-stars t)
+    ;;org-odd-levels-only t)
 
 #+END_SRC
 
@@ -1931,6 +1951,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
   ;; Open ibuffer upon "C-c i"
   (global-set-key (kbd "C-c i") 'ibuffer)
   ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
@@ -2116,3 +2137,50 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   (use-package marquee-header :ensure t :defer 10) ;; This is really an interesting package.
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package explain-pause-mode
+    :ensure nil
+    :after (quelpa quelpa-use-package)
+    :quelpa (explain-pause-mode :fetcher github
+                                :repo  "lastquestion/explain-pause-mode"
+                                :files ("*"))
+    :config
+    (explain-pause-mode))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package image-click-mode
+    :ensure nil
+    :after (quelpa quelpa-use-package)
+    :quelpa (image-click-mode :fetcher github
+                              :repo  "mkvoya/image-click-mode"
+                              :files ("*.el"))
+    :config
+    (add-hook 'org-mode-hook (lambda () (image-click-mode))))
+    ;;(image-click-mode))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "✎")
+                                         ("#+END_SRC" . "□")
+                                         ("#+begin_src" . "✎")
+                                         ("#+end_src" . "□")
+                                         ("#+begin_quote" . ?»)
+                                         ("#+end_quote" . ?«)))))
+  (add-hook 'org-mode-hook 'prettify-symbols-mode)
+  (require 'color)
+  (set-face-attribute 'org-block nil :background
+                      (color-darken-name
+                       (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-begin-line nil :background
+                      (color-darken-name
+                       (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-end-line nil :background
+                      (color-darken-name
+                       (face-attribute 'default :background) 3))
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+#+end_src
