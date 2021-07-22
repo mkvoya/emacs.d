@@ -2,8 +2,7 @@
 # name: Org Skeleton
 # key: <org
 # --
-#+SETUPFILE: ~/.emacs.d/org-templates/level-0.org
 #+TITLE:
 #+AUTHOR: Mingkai Dong
 #+DATE: `(format-time-string "%FT%T%z" (current-time))`
-#+EMAIL: mingkaidong@gmail.com
+#+EMAIL: mk@dong.mk

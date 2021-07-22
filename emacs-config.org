@@ -1,4 +1,3 @@
-#+SETUPFILE: ~/.emacs.d/org-templates/level-0.org
 #+TITLE: Emacs Main Configuration File
 #+AUTHOR: Mingkai Dong
 #+DATE: 2021-02-16T01:16:18+0800
@@ -279,6 +278,7 @@ Then use nyan-mode instead
   ;; Autocomplete
   (use-package company
     :defer t
+    :after (company-emoji)
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
     (setq company-dabbrev-downcase nil
@@ -293,6 +293,7 @@ Then use nyan-mode instead
              company-keywords
              company-capf
              company-yasnippet
+             company-emoji
              ;; company-ispell
              company-lsp)
             (company-abbrev company-dabbrev)))
@@ -633,16 +634,22 @@ Then use nyan-mode instead
                (smart-tab-mode " \\t" "smart-tab")
                (eldoc-mode nil "eldoc")
                (yas-mode)
+               (pyim-isearch-mode)
+               (company-mode)
+               (image-click-mode)
                (which-key-mode nil "which-key")
                (Undo-Tree "UT" "undo-tree")
                (overwrite-mode " Ov" t)))
     (delight 'rainbow-mode)
     (delight 'visual-line-mode "↩" t)
     (delight 'beacon-mode "" "beacon")
-    (delight 'org-roam-mode "♞" "org-roam")
+    ;; (delight 'org-roam-mode "♞" "org-roam")
+    (delight 'org-roam-mode "" "org-roam")
     (delight 'org-mode "♘" :major)
     (delight 'org-indent-mode  "")
+    (delight 'flycheck-mode "" "flycheck")
     (delight 'flycheck-mode "⍻" "flycheck")
+    (delight 'yas-minor-mode "" "yasnippet")
     (delight 'yas-minor-mode "✎" "yasnippet")
     (delight 'emacs-lisp-mode "Elisp" :major)
     (delight 'company-mode "☺" "company-mode")
@@ -989,11 +996,23 @@ Then use nyan-mode instead
 
   (modify-syntax-entry ?_ "w")
 
-   ;;; ========== Charset and Unicode and Emoji =============
+     ;;; ========== Charset and Unicode and Emoji =============
   ;; UTF-8
   (prefer-coding-system 'utf-8)
   (when (display-graphic-p)
     (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
+
+  ;; Emoji
+  ;; Useful for https://github.com/dunn/company-emoji
+  ;; https://www.reddit.com/r/emacs/comments/8ph0hq/i_have_converted_from_the_mac_port_to_the_ns_port/
+  ;; not tested with emacs26 (requires a patched Emacs version for multi-color font support)
+  (if (version< "27.0" emacs-version)
+      (set-fontset-font
+       "fontset-default" 'unicode "Apple Color Emoji" nil 'prepend)
+    (set-fontset-font
+     t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend))
+  (use-package company-emoji)
+
 
   ;; Unicode
   (defmacro my/insert-unicode (unicode-name)
@@ -1017,8 +1036,8 @@ Then use nyan-mode instead
     ;; (unicode-fonts-setup)
     )
 
-  ;;; =========== Some builtin modes =============
-  ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
+    ;;; =========== Some builtin modes =============
+    ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package paren
     :ensure nil
@@ -1040,7 +1059,7 @@ Then use nyan-mode instead
                           (setq word-wrap nil)
                           )))
 
-    ;;; ========== End of Some builtin modes ===========
+      ;;; ========== End of Some builtin modes ===========
   ;; Make gc pauses faster by decreasing the threshold.
   (setq gc-cons-threshold (* 2 1000 1000))
 #+END_SRC
@@ -1305,10 +1324,20 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
            )
     :commands (lsp lsp-deferred)
     :config
+    (setq lsp-headerline-breadcrumb-enable nil) ; The header line is not necessary.
     (setq lsp-intelephense-multi-root nil)
     ;; optionally
     (use-package lsp-ui
-      :commands lsp-ui-mode)
+      :commands lsp-ui-mode
+      :init
+      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+      :config
+      (setq lsp-ui-peek-enable t)
+      (setq lsp-ui-doc-enable nil)
+      (setq lsp-ui-imenu-enable t)
+      (setq lsp-ui-flycheck-enable t)
+      (setq lsp-ui-sideline-enable nil)
+      (setq lsp-ui-sideline-ignore-duplicate t))
     (use-package lsp-treemacs
       :commands lsp-treemacs-errors-list)
     ;; (use-package dap-mode) ; optionally if you want to use debugger
@@ -1320,20 +1349,18 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
       )
     (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
     )
-
 #+END_SRC
 *** LTex
 #+BEGIN_SRC emacs-lisp
-    (use-package lsp-ltex
-      :after (lsp-mode)
-      :hook (text-mode . (lambda ()
-                           (require 'lsp-ltex)
-                           (lsp-deferred)
-                           ))
-      :config
-
-  (setq lsp-ltex-language "zh-CN")
-  )
+  (use-package lsp-ltex
+    :after (lsp-mode)
+    :hook (text-mode . (lambda ()
+                         (require 'lsp-ltex)
+                         (lsp-deferred)
+                         ))
+    :config
+    (setq lsp-ltex-language "zh-CN")
+    )
 #+END_SRC
 ** Mail Client
 | notmuch    |   |
@@ -1392,123 +1419,141 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** Org
 #+BEGIN_SRC emacs-lisp
 
-    ;; Enable Org mode
-    (use-package org
-      :defer t
-      :config
-      ;; Shortcuts
-      (global-set-key (kbd "C-c a") 'org-agenda)
-      (g
-  lobal-set-key (kbd "C-c c") 'org-capture)
+  ;; Enable Org mode
+  (use-package org
+    :defer t
+    :config
+    ;; Shortcuts
+    (global-set-key (kbd "C-c a") 'org-agenda)
+    (global-set-key (kbd "C-c c") 'org-capture)
 
-      ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
-      (setq org-log-done 'time)
+    ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
+    (setq org-log-done 'time)
 
-      ;; Org mode TODO states
-      (setq org-todo-keywords
-            '((sequence
-               "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(e)" "IDEA(i)"
-               "|"
-               "DONE(d!)" "CANCELED(c@)")))
-      ;; Keyword colors
-      (setf org-todo-keyword-faces
-            '(
-              ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
-              ("TODO" . (:foreground "#ff39a3" :weight bold))
-              ("HAND"  . "orangered")
-              ("WAIT" . "pink")
-              ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
-              ;; ("DONE" . "#008080")
-              ("DONE" . (:foreground "#808080" :strike-through "#0d0d0d"))
-              ("DELEGATE"  . "DeepSkyBlue")
-              ))
+    ;; Org mode TODO states
+    (setq org-todo-keywords
+          '((sequence
+             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)"
+             "|"
+             "DONE(d!)" "CANCELED(c@)")))
+    ;; Keyword colors
+    (setf org-todo-keyword-faces
+          '(
+            ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
+            ("TODO" . (:foreground "#ff39a3" :weight bold))
+            ("HAND"  . "orangered")
+            ("WAIT" . "pink")
+            ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold))
+            ;; ("DONE" . "#008080")
+            ("DONE" . (:foreground "#808080" :strike-through "#0d0d0d"))
+            ("DELEGATE"  . "DeepSkyBlue")
+            ))
 
-      ;; Strike through the whole line with DONE entry
-      (font-lock-add-keywords
-       'org-mode
-       '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
-       ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
-       ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
-       t)
-      (font-lock-add-keywords
-       'org-mode
-       ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
-       '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
-       t)
+    ;; Strike through the whole line with DONE entry
+    (font-lock-add-keywords
+     'org-mode
+     '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
+     ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
+     t)
+    (font-lock-add-keywords
+     'org-mode
+     ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
+     '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
+     t)
 
-      ;; define a useless face
-      (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
-      ;; shrink the size of PROPERTY list
-      (font-lock-add-keywords
-       'org-mode
-       '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 120) append))
-       t)
-      ;; Does not work well when font-lock is used
-      ;; (add-text-properties 179 252 '(line-height 1))
-      ;; (set-text-properties 179 252 '(face tiny-font))
-      ;; (add-face-text-property 179 252 '(:height 120) t)
+    ;; define a useless face
+    (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
+    ;; shrink the size of PROPERTY list
+    (font-lock-add-keywords
+     'org-mode
+     '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 120) append))
+     t)
+    ;; Does not work well when font-lock is used
+    ;; (add-text-properties 179 252 '(line-height 1))
+    ;; (set-text-properties 179 252 '(face tiny-font))
+    ;; (add-face-text-property 179 252 '(:height 120) t)
 
 
-      ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
-      ;; (setq org-ellipsis "…")
-      ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
-      ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
-      (setq org-ellipsis "▾")
+    ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
+    ;; (setq org-ellipsis "…")
+    ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
+    ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
+    (setq org-ellipsis "▾")
 
-      ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
-      (defun org-force-open-current-window ()
-        "Open at current window."
-        (interactive)
-        (let ((org-link-frame-setup (quote
-                                     ((vm . vm-visit-folder)
-                                      (vm-imap . vm-visit-imap-folder)
-                                      (gnus . gnus)
-                                      (file . find-file)
-                                      (wl . wl)))
-                                    ))
-          (org-open-at-point)))
+    ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+    (defun org-force-open-current-window ()
+      "Open at current window."
+      (interactive)
+      (let ((org-link-frame-setup (quote
+                                   ((vm . vm-visit-folder)
+                                    (vm-imap . vm-visit-imap-folder)
+                                    (gnus . gnus)
+                                    (file . find-file)
+                                    (wl . wl)))
+                                  ))
+        (org-open-at-point)))
 
-      ;; Depending on universal argument try opening link
-      (defun org-open-maybe (&optional arg)
-        "Open maybe ARG."
-        (interactive "P")
-        (if arg (org-open-at-point)
-          (org-force-open-current-window)))
-      ;; Redefine file opening without clobbering universal argument
-      (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
-      ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
-      ;; (setq org-image-actual-width (/ (display-pixel-width) 3))
-      (setq org-image-actual-width 200)
+    ;; Depending on universal argument try opening link
+    (defun org-open-maybe (&optional arg)
+      "Open maybe ARG."
+      (interactive "P")
+      (if arg (org-open-at-point)
+        (org-force-open-current-window)))
+    ;; Redefine file opening without clobbering universal argument
+    (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
+    ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
+    ;; (setq org-image-actual-width (/ (display-pixel-width) 3))
+    (setq org-image-actual-width 200)
 
-      (add-hook 'org-mode-hook (lambda () (electric-indent-local-mode -1)))
-      (add-hook 'org-mode-hook #'mkvoya/better-wrap)
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((dot . t)
+       (C . t)
+       (python . t)))
 
-      (org-babel-do-load-languages
-       'org-babel-load-languages
-       '((dot . t)
-         (C . t)
-         (python . t)))
+    ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
+    ;; Always redisplay inline images after executing SRC block
+    (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
-      ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
-      ;; Always redisplay inline images after executing SRC block
-      (eval-after-load 'org
-        (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images))
-
-      (add-hook 'org-mode-hook
-                (lambda () (add-to-list 'write-file-functions
-                                        'delete-trailing-whitespace)))
-      )
-
-    (add-hook (quote org-mode-hook)
+    ;; Better blocks
+    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "✎")
+                                           ("#+END_SRC" . "□")
+                                           ("#+begin_src" . "λ")
+                                           ("#+end_src" . "□")
+                                           ("#+begin_quote" . ?»)
+                                           ("#+end_quote" . ?«)
+                                           ("#+BEGIN_QUOTE" . ?»)
+                                           ("#+END_QUOTE" . ?«)
+                                           ("[ ]" . "☐")
+                                           ("[X]" . "☑")
+                                           ("[-]" . "❍")
+                                           ("PROPERTIES" . "⚙")
+                                           ))
+    (require 'color)
+    (set-face-attribute 'org-block nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-block-begin-line nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 4))
+    (set-face-attribute 'org-block-end-line nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 4))
+    (add-hook 'org-mode-hook
               (lambda ()
-                (org-shifttab 5)))
-
-               ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-               ;;; But I don't need the odd levels only
+                (org-shifttab 5)
+                (add-to-list 'write-file-functions 'delete-trailing-whitespace)
+                (electric-indent-local-mode -1)
+                (mkvoya/better-wrap)
+                (prettify-symbols-mode)
+                ))
+      ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+      ;;; But I don't need the odd levels only
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
-    ;;org-odd-levels-only t)
-
+    ;;org-odd-levels-only t
+    )
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1528,8 +1573,9 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; Set different bullets, with one getting a terminal fallback.
     ;; (setq org-superstar-headline-bullets-list
     ;;       '("◉" "◈" "○" "▷"))
-    (setq org-superstar-headline-bullets-list
-          '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
+    ;; (setq org-superstar-headline-bullets-list
+    ;;       '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
+
     ;; ⎋〄
     ;; Stop cycling bullets to emphasize hierarchy of headlines.
     (setq org-superstar-cycle-headline-bullets nil)
@@ -2161,26 +2207,48 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;;(image-click-mode))
 #+END_SRC
 
-
 #+BEGIN_SRC emacs-lisp
-  (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "✎")
-                                         ("#+END_SRC" . "□")
-                                         ("#+begin_src" . "✎")
-                                         ("#+end_src" . "□")
-                                         ("#+begin_quote" . ?»)
-                                         ("#+end_quote" . ?«)))))
-  (add-hook 'org-mode-hook 'prettify-symbols-mode)
-  (require 'color)
-  (set-face-attribute 'org-block nil :background
-                      (color-darken-name
-                       (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-begin-line nil :background
-                      (color-darken-name
-                       (face-attribute 'default :background) 3))
-  (set-face-attribute 'org-block-end-line nil :background
-                      (color-darken-name
-                       (face-attribute 'default :background) 3))
+  (use-package citre
+    :defer t
+    :init
+    ;; This is needed in `:init' block for lazy load to work.
+    (require 'citre-config)
+    ;; Bind your frequently used commands.
+    (global-set-key (kbd "C-x c j") 'citre-jump)
+    (global-set-key (kbd "C-x c J") 'citre-jump-back)
+    (global-set-key (kbd "C-x c p") 'citre-ace-peek)
+    (global-set-key (kbd "C-]") 'citre-jump)
+    (global-set-key (kbd "C-t") 'citre-jump-back)
+    :config
+    (setq
+     ;; Set this if readtags is not in your path.
+     ;; citre-readtags-program "/path/to/readtags"
+     ;; Set this if you use project management plugin like projectile.  It's
+     ;; only used to display paths relatively, and doesn't affect actual use.
+     citre-project-root-function #'projectile-project-root))
+
 #+END_SRC
 
-#+begin_src emacs-lisp :tangle yes
-#+end_src
+#+BEGIN_SRC emacs-lisp
+  (use-package ranger
+    :defer t)
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+
+  ;;  (set-fontset-font t 'unicode (font-spec :family "Cascadia Code PL" :size 14))
+  ;;  (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
+    (defun set-fonts ()
+      (interactive)
+      (set-face-attribute 'default nil :font (font-spec :family "Cascadia Code PL" :size 14))
+      (set-fontset-font t 'unicode (font-spec :family "Apple Color Emoji" :size 14))
+      (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
+      )
+    ;; (add-hook window-setup-hook 'set-fonts)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package chronos :ensure t)
+#+END_SRC
