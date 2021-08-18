@@ -5,7 +5,7 @@
 #+TITLE: Notes on /$0/
 #+AUTHOR: Mingkai Dong
 #+DATE: `(format-time-string "%FT%T%z" (current-time))`
-#+EMAIL: mingkaidong@gmail.com
+#+EMAIL: mk@dong.mk
 
 | Conference   | '21 |
 | Keywords     |     |

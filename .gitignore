@@ -28,3 +28,7 @@ org-caldav-*.org
 org-roam.db
 projectile-bookmarks.eld
 url/
+
+.cache
+.dap-breakpoints
+.lsp-session-v1

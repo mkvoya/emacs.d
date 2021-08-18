@@ -337,7 +337,7 @@ Then use nyan-mode instead
 
   ;;; Better evil
   (use-package evil
-    :after (smart-mode-line)
+    ;; :after (smart-mode-line)
     :config
     (setq evil-want-fine-undo t)
     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
@@ -519,24 +519,83 @@ Then use nyan-mode instead
 
 *** Smart-mode-line
 #+BEGIN_SRC emacs-lisp
-  ;; Mode line format
-  ;; Instead of powerline, airline, smart-mode-line, doom-modeline
-  (use-package smart-mode-line
-    ;; :defer 5
-    :config
-    (setq sml/no-confirm-load-theme t)
-    (setq sml/theme 'light)
-    (setq sml/shorten-modes t)
-    (setq sml/shorten-directory t)
-    (add-hook 'sml/after-setup-hook
-              (lambda ()
-                (setq-default mode-line-format
-                              (cons (propertize " " 'display
-                                                '((height 1.5)))
-                                                ;; '((raise -0.5) (height 2))
-                                    mode-line-format))))
-    (sml/setup)
+;;  ;; Mode line format
+;;  ;; Instead of powerline, airline, smart-mode-line, doom-modeline
+;;  (use-package smart-mode-line
+;;    ;; :defer 5
+;;    :config
+;;    (setq sml/no-confirm-load-theme t)
+;;    (setq sml/theme 'light)
+;;    (setq sml/shorten-modes t)
+;;    (setq sml/shorten-directory t)
+;;    (add-hook 'sml/after-setup-hook
+;;              (lambda ()
+;;                (setq-default mode-line-format
+;;                              (cons (propertize " " 'display
+;;                                                '((height 1.5)))
+;;                                                ;; '((raise -0.5) (height 2))
+;;                                    mode-line-format))))
+;;    (sml/setup)
+;;    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package doom-modeline
+    :ensure t
+    :after (hemisu-theme)
+    :init (doom-modeline-mode 1)
     )
+  ;; (autoload 'notmuch "notmuch" "notmuch mail" t)
+
+  ;; `notmuch' notifications in doom-modeline
+  (use-package emacs
+    :defer 5
+    :after (doom-modeline notmuch-unread)
+    :config
+
+    (require 'doom-modeline-segments)
+    (require 'notmuch-unread)
+
+    (defun notmuch-open-unread-view()
+      "Open notmuch panel for unread mails."
+      (interactive)
+      (notmuch-search "tag:unread"))
+
+    ;; Add notmuch notifications in doom-modeline.
+    (doom-modeline-def-segment
+      notmuch
+      "Show notifications of any unread emails in `notmuch'."
+      (when (and (doom-modeline--active)
+                 (not doom-modeline--limited-width-p)
+                 ;; don't display if the unread mails count is zero
+                 (> notmuch-unread-emails 0))
+        (concat
+         (doom-modeline-spc)
+         (propertize
+          (concat
+           (doom-modeline-icon 'material "email" "📧" "#"
+                               :face 'doom-modeline-notification
+                               :height 1.1 :v-adjust -0.2)
+           (doom-modeline-vspc)
+           (propertize
+            (if (> notmuch-unread-emails doom-modeline-number-limit)
+                (format "%d+" doom-modeline-number-limit)
+              (number-to-string notmuch-unread-emails))
+            'face '(:inherit
+                    (doom-modeline-unread-number doom-modeline-notification))))
+          'mouse-face 'mode-line-highlight
+          'keymap '(mode-line keymap
+                              (mouse-1 . notmuch-open-unread-view)
+                              (mouse-2 . notmuch-open-unread-view)
+                              (mouse-3 . notmuch-open-unread-view))
+          'help-echo (concat (if (= notmuch-unread-emails 1)
+                                 "You have an unread email"
+                               (format "You have %s unread emails" notmuch-unread-emails))
+                             "\nClick here to view "
+                             (if (= notmuch-unread-emails 1) "it" "them")))
+         (doom-modeline-spc))
+        )))
+
 #+END_SRC
 
 *** Undo-tree
@@ -612,6 +671,10 @@ Then use nyan-mode instead
                           :files ("*.el"))
     :config
     (load-theme 'hemisu-light t)
+    (custom-theme-set-faces
+     'user
+     `(mode-line ((t (:background "#281a0f"))))
+     `(mode-line-inactive ((t (:background "#99aaff")))))
     )
 #+END_SRC
 
@@ -643,18 +706,15 @@ Then use nyan-mode instead
     (delight 'rainbow-mode)
     (delight 'visual-line-mode "↩" t)
     (delight 'beacon-mode "" "beacon")
-    ;; (delight 'org-roam-mode "♞" "org-roam")
     (delight 'org-roam-mode "" "org-roam")
     (delight 'org-mode "♘" :major)
     (delight 'org-indent-mode  "")
     (delight 'flycheck-mode "" "flycheck")
-    (delight 'flycheck-mode "⍻" "flycheck")
     (delight 'yas-minor-mode "" "yasnippet")
-    (delight 'yas-minor-mode "✎" "yasnippet")
     (delight 'emacs-lisp-mode "Elisp" :major)
     (delight 'company-mode "☺" "company-mode")
     (delight 'pyim-isearch-mode)
-    (delight 'explain-pause-mode)
+    ;; (delight 'explain-pause-mode)
     ;; (delight 'which-key-mode "" "which-key"))
    )
   (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
@@ -872,6 +932,7 @@ Then use nyan-mode instead
       :config
       (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
       (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
+      (setq reftex-default-bibliography '("./references.bib"))
       )
     (use-package company-reftex
       :defer t
@@ -887,6 +948,11 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   (use-package projectile
     ;; :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
+    :after (quelpa quelpa-use-package)
+    :ensure nil
+    :quelpa (projectile  :repo "bbatsov/projectile"
+                          :fetcher github
+                          :files ("projectile.el"))
     :delight projectile-mode
     :config
     (projectile-mode +1)
@@ -922,32 +988,6 @@ Then use nyan-mode instead
     :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
                           :fetcher github
                           :files ("svg-tag-mode.el")))
-#+END_SRC
-
-*** LangTool
-#+BEGIN_SRC emacs-lisp
-  (use-package langtool
-    :defer 5
-    :after (quelpa quelpa-use-package)
-    :quelpa (langtool :repo "mhayashi1120/Emacs-langtool"
-                      :fetcher github
-                      :files ("langtool.el"))
-    :init
-    (setq langtool-language-tool-server-jar "/usr/local/Cellar/languagetool/5.1.3_2/libexec/languagetool-server.jar")
-    ;; (setq langtool-bin "/usr/local/bin/langtool")
-    (setq langtool-server-user-arguments '("-p" "8099"))
-
-    ;; (defun langtool-autoshow-detail-popup (overlays)
-    ;;   (when (require 'popup nil t)
-    ;;     ;; Do not interrupt current popup
-    ;;     (unless (or popup-instances
-    ;;                 ;; suppress popup after type `C-g` .
-    ;;                 (memq last-command '(keyboard-quit)))
-    ;;       (let ((msg (langtool-details-error-message overlays)))
-    ;;         (popup-tip msg)))))
-    ;; (setq langtool-autoshow-message-function
-    ;;       'langtool-autoshow-detail-popup)
-    )
 #+END_SRC
 
 
@@ -1314,69 +1354,129 @@ Alternatives (Check the selectrum repo README)
 elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-mode
-    :init (setq lsp-keymap-prefix "C-c l")
-    :hook ((python-mode . lsp-deferred)
-           (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
-           (tex-mode . lsp-deferred)
-           (TeX-mode . lsp-deferred)
-           ;; (org-mode . lsp-deferred)
-           )
-    :commands (lsp lsp-deferred)
+   ;; (use-package eglot
+   ;;   :ensure t)
+   ;; (use-package eglot-ltex
+   ;;   :after (eglot quelpa)
+   ;;   :ensure nil
+   ;;   :quelpa (eglot-ltex :repo "emacs-languagetool/eglot-ltex"
+   ;;                       :fetcher github
+   ;;                       :files ("*.el"))
+   ;;   :hook (text-mode . (lambda ()
+   ;;                        (require 'eglot-ltex)
+   ;;                        (call-interactively #'eglot)))
+   ;;   :init
+   ;;   (setq eglot-languagetool-server-path "~/.emacs.d/lsp-servers/ltex-ls-12.3.0/"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package nox
+    :after (quelpa company posframe)
+    :ensure nil
+    :quelpa (nox :repo "manateelazycat/nox"
+                 :fetcher github
+                 :files ("*.el"))
     :config
-    (setq lsp-headerline-breadcrumb-enable nil) ; The header line is not necessary.
-    (setq lsp-intelephense-multi-root nil)
-    ;; optionally
-    (use-package lsp-ui
-      :commands lsp-ui-mode
-      :init
-      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
-      :config
-      (setq lsp-ui-peek-enable t)
-      (setq lsp-ui-doc-enable nil)
-      (setq lsp-ui-imenu-enable t)
-      (setq lsp-ui-flycheck-enable t)
-      (setq lsp-ui-sideline-enable nil)
-      (setq lsp-ui-sideline-ignore-duplicate t))
-    (use-package lsp-treemacs
-      :commands lsp-treemacs-errors-list)
-    ;; (use-package dap-mode) ; optionally if you want to use debugger
-    ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
-    (use-package company-lsp
-      :config
-      (push 'company-lsp company-backends)
-      (add-to-list 'company-lsp-filter-candidates '(digestif . nil)) ; digestif
-      )
-    (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
+    (dolist (hook (list
+                   'js-mode-hook
+                   'rust-mode-hook
+                   'python-mode-hook
+                   'ruby-mode-hook
+                   'java-mode-hook
+                   'sh-mode-hook
+                   'php-mode-hook
+                   'c-mode-common-hook
+                   'c-mode-hook
+                   'csharp-mode-hook
+                   'c++-mode-hook
+                   'haskell-mode-hook
+                   ))
+      (add-hook hook '(lambda () (nox-ensure))))
     )
+
+  (use-package languagetool
+    :config
+    (setq languagetool-language-tool-jar
+          "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-commandline.jar")
+    (setq languagetool-java-arguments '("-Dfile.encoding=UTF-8"))
+    (setq languagetool-default-language "en-US")
+    (global-set-key (kbd "C-c l c") 'languagetool-check)
+    (global-set-key (kbd "C-c l d") 'languagetool-clear-buffer)
+    (global-set-key (kbd "C-c l p") 'languagetool-correct-at-point)
+    (global-set-key (kbd "C-c l b") 'languagetool-correct-buffer)
+    (global-set-key (kbd "C-c l l") 'languagetool-set-language)
+    )
+
+
+#+End_src
+
+#+BEGIN_SRC emacs-lisp
+;;  (use-package lsp-mode
+;;    :init (setq lsp-keymap-prefix "C-c l")
+;;    :hook ((python-mode . lsp-deferred)
+;;           (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
+;;           (tex-mode . lsp-deferred)
+;;           (TeX-mode . lsp-deferred)
+;;           ;; (org-mode . lsp-deferred)
+;;           )
+;;    :commands (lsp lsp-deferred)
+;;    :config
+;;    (setq lsp-headerline-breadcrumb-enable nil) ; The header line is not necessary.
+;;    (setq lsp-intelephense-multi-root nil)
+;;    ;; optionally
+;;    (use-package lsp-ui
+;;      :commands lsp-ui-mode
+;;      :init
+;;      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
+;;      :config
+;;      (setq lsp-ui-peek-enable t)
+;;      (setq lsp-ui-doc-enable nil)
+;;      (setq lsp-ui-imenu-enable t)
+;;      (setq lsp-ui-flycheck-enable t)
+;;      (setq lsp-ui-sideline-enable nil)
+;;      (setq lsp-ui-sideline-ignore-duplicate t))
+;;    (use-package lsp-treemacs
+;;      :commands lsp-treemacs-errors-list)
+;;    ;; (use-package dap-mode) ; optionally if you want to use debugger
+;;    ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
+;;    (use-package company-lsp
+;;      :config
+;;      (push 'company-lsp company-backends)
+;;      (add-to-list 'company-lsp-filter-candidates '(digestif . nil)) ; digestif
+;;      )
+;;    (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
+;;    )
 #+END_SRC
 *** LTex
 #+BEGIN_SRC emacs-lisp
-  (use-package lsp-ltex
-    :after (lsp-mode)
-    :hook (text-mode . (lambda ()
-                         (require 'lsp-ltex)
-                         (lsp-deferred)
-                         ))
-    :config
-    (setq lsp-ltex-language "zh-CN")
-    )
+;;  (use-package lsp-ltex
+;;    :ensure t
+;;    :hook (text-mode . (lambda ()
+;;                         (require 'lsp-ltex)
+;;                         (lsp-deferred)))
+;;    :config
+;;    (setq lsp-ltex-language "zh-CN")
+;;    )
 #+END_SRC
 ** Mail Client
 | notmuch    |   |
 | WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
-  (autoload 'notmuch "notmuch" "notmuch mail" t)
-  ;; (use-package notmuch)
+  ;; (autoload 'notmuch "notmuch" "notmuch mail" t)
+  (use-package notmuch
+    :ensure nil)
 
   (use-package notmuch-unread
-    :after (quelpa)
+    :after (quelpa notmuch doom-modeline)
+    :ensure nil
     :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
                             :fetcher github
                             :files ("notmuch-unread.el"))
     :config
-    (setq notmuch-unread-update-interval 300))
+    (setq notmuch-unread-update-interval 300)
+    (notmuch-unread-mode)
+    )
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1532,6 +1632,9 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                                            ))
     (require 'color)
     (set-face-attribute 'org-block nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-quote nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 3))
     (set-face-attribute 'org-block-begin-line nil :background
@@ -1824,8 +1927,13 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+END_SRC
 *** OrgRoam
 #+BEGIN_SRC emacs-lisp
+  (setq org-roam-v2-ack t)
   (use-package org-roam
-    :after (org)
+    :after (org quelpa)
+    :ensure nil
+    :quelpa (org-roam :repo "org-roam/org-roam"
+                 :fetcher github
+                 :files ("*"))
     :defer t
     :hook
     (after-init . org-roam-mode)
@@ -1841,28 +1949,38 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                 (("C-c n i" . org-roam-insert))
                 (("C-c n I" . org-roam-insert-immediate)))
     :config
+    (org-roam-setup)
+    ;; (require 'org-roam-protocol)
     (setq org-roam-rename-file-on-title-change nil))
 #+END_SRC
 *** OrgRoam-Server
+# org-roam-server does not support org-roam v2, use org-roam-ui instead.
 #+BEGIN_SRC emacs-lisp
-  (use-package org-roam-server
+  (use-package websocket)
+  (use-package simple-httpd)
+  (use-package org-roam-ui
+    :ensure nil
+    :quelpa
+    (org-roam-ui :repo "org-roam/org-roam-ui"
+                 :fetcher github
+                 :files ("*.el" "out"))
+    :after org-roam
+    ;; :hook
+    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+    ;;         a hookable mode anymore, you're advised to pick something yourself
+    ;;         if you don't care about startup time, use
+    :hook (after-init . org-roam-ui-mode)
     :config
-    (setq org-roam-server-host "127.0.0.1"
-          org-roam-server-port 8001
-          org-roam-server-authenticate nil
-          org-roam-server-export-inline-images t
-          org-roam-server-serve-files nil
-          org-roam-server-served-file-extensions '("pdf" "mp4" "ogv")
-          org-roam-server-network-poll t
-          org-roam-server-network-arrows nil
-          org-roam-server-network-label-truncate t
-          org-roam-server-network-label-truncate-length 60
-          org-roam-server-network-label-wrap-length 20))
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
   ;; Since the org module lazy loads org-protocol (waits until an org URL is
   ;; detected), we can safely chain `org-roam-protocol' to it.
   (use-package org-roam-protocol
     :ensure nil
-    :after org-protocol)
+    :after (org-protocol org-roam))
 #+END_SRC
 *** Org-Mindmap
 #+BEGIN_SRC emacs-lisp
@@ -1954,33 +2072,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+END_SRC
 *** Sis
-#+BEGIN_SRC emacs-lisp
-  (use-package sis
-    :disabled t
-    :defer t
-    ;; :hook
-    ;; enable the /follow context/ and /inline region/ mode for specific buffers
-    ;; (((text-mode prog-mode) . sis-context-mode)
-    ;;  ((text-mode prog-mode) . sis-inline-mode))
-    :config
-    ;; For MacOS
-    (sis-ism-lazyman-config
-     ;; English input source may be: "ABC", "US" or another one.
-     ;; "com.apple.keylayout.ABC"
-     "com.apple.keylayout.US"
-     ;; Other language input source: "rime", "sogou" or another one.
-     ;; "im.rime.inputmethod.Squirrel.Rime"
-     "com.sogou.inputmethod.sogou.pinyin")
-    ;; enable the /cursor color/ mode
-    (sis-global-cursor-color-mode t)
-    ;; enable the /respect/ mode
-    (sis-global-respect-mode t)
-    ;; enable the /context/ mode for all buffers
-    (sis-global-context-mode t)
-    ;; enable the /inline english/ mode for all buffers
-    (sis-global-inline-mode t)
-    )
-#+END_SRC
 *** ActivityWatch
 #+BEGIN_SRC emacs-lisp
   (use-package activity-watch-mode
@@ -2185,14 +2276,14 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package explain-pause-mode
-    :ensure nil
-    :after (quelpa quelpa-use-package)
-    :quelpa (explain-pause-mode :fetcher github
-                                :repo  "lastquestion/explain-pause-mode"
-                                :files ("*"))
-    :config
-    (explain-pause-mode))
+  ;; (use-package explain-pause-mode
+  ;;   :ensure nil
+  ;;   :after (quelpa quelpa-use-package)
+  ;;   :quelpa (explain-pause-mode :fetcher github
+  ;;                               :repo  "lastquestion/explain-pause-mode"
+  ;;                               :files ("*"))
+  ;;   :config
+  ;;   (explain-pause-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2251,4 +2342,53 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package chronos :ensure t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package telega
+    :defer t
+    :config
+    (setq telega-proxies
+          (list
+           '(:server "127.0.0.1" :port 7890 :enable t
+                     :type (:@type "proxyTypeSocks5"))
+           )))
+  ;; goood
+#+END_SRC
+
+* Emacs
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package emacs-webkit
+  ;;   :after (quelpa)
+  ;;   :ensure nil
+  ;;   :quelpa (emacs-webkit :fetcher github
+  ;;                         :repo "akirakyle/emacs-webkit"
+  ;;                         :branch "main"
+  ;;                         :files (:defaults "*.js" "*.css" "*.so")))
+  ;;                         ;; :build ("make")))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package xkcd)
+  (blink-cursor-mode 0)
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  ;;; Automatically choose the file to link with according to the selected text.
+  (defvar autolink-directory "~/Dropbox/Dreams")
+  (defun autolink--get-candidates (text)
+    "Search for the file name with TEXT."
+    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
+           (candidates (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+      (completing-read "Choose the one to link: " candidates)))
+  (defun autolink-try-link (start end)
+    "Try to guess the file to link according to the region between START and END."
+    (interactive "r") ; The "r" here will fill the start and end automatically.
+    (let* ((text (buffer-substring start end))
+           (file (autolink--get-candidates text)))
+      (goto-char end)
+      (insert "]]")
+      (goto-char start)
+      (insert (concat "[[" file "]["))))
 #+END_SRC
