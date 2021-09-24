@@ -110,6 +110,17 @@ Also from https://github.com/sachac/.emacs.d
   (require 'quelpa-use-package)
 #+END_SRC
 
+
+#+BEGIN_SRC emacs-lisp
+  (cl-letf (((symbol-function 'define-obsolete-function-alias) #'defalias))
+    (use-package benchmark-init
+      :ensure t
+      :config
+      (require 'benchmark-init-modes)                                     ; explicitly required
+      ;; To disable collection of benchmark data after init is done.
+      (add-hook 'after-init-hook #'benchmark-init/deactivate)))
+#+END_SRC
+
 *** Paradox: Mordern Package Menu
 #+BEGIN_SRC emacs-lisp
   (use-package paradox
@@ -240,7 +251,7 @@ Then use nyan-mode instead
   ;;   )
   (when (eq system-type 'darwin) (ns-auto-titlebar-mode))
   (setq ns-use-proxy-icon nil)
-  (when window-system (set-frame-size (selected-frame) 80 60))
+  (when window-system (set-frame-size (selected-frame) 100 80))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -277,7 +288,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
-    :defer t
+    :defer 5
     :after (company-emoji)
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
@@ -1521,7 +1532,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
   ;; Enable Org mode
   (use-package org
-    :defer t
+    :defer 2
     :config
     ;; Shortcuts
     (global-set-key (kbd "C-c a") 'org-agenda)
@@ -1533,7 +1544,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)"
+             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(c)"
              "|"
              "DONE(d!)" "CANCELED(c@)")))
     ;; Keyword colors
@@ -1567,13 +1578,43 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; shrink the size of PROPERTY list
     (font-lock-add-keywords
      'org-mode
-     '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 120) append))
+     '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 100) append))
      t)
     ;; Does not work well when font-lock is used
     ;; (add-text-properties 179 252 '(line-height 1))
     ;; (set-text-properties 179 252 '(face tiny-font))
     ;; (add-face-text-property 179 252 '(:height 120) t)
 
+    ;; ;; from https://emacs-china.org/t/emacs-org-mode-drawer-help-wanted/15207/19
+    ;; (defun org-hide-properties ()
+    ;;   "Hide org headline's properties using overlay."
+    ;;   (interactive)
+    ;;   (let (
+    ;;         ;; The following two collapes the drawer to the previous line.
+    ;;         ;; (property-drawer-re "\n ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n")
+    ;;         ;; (replaced-display "⚙\n")
+    ;;         ;; The following two removes the drawer.
+    ;;         ;; (property-drawer-re " ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n")
+    ;;         (property-drawer-re " ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:")
+    ;;         (replaced-display "")
+    ;;         )
+    ;;     (save-excursion
+    ;;       (goto-char (point-min))
+    ;;       (while (re-search-forward property-drawer-re nil t)
+    ;;         (let ((ol (make-overlay
+    ;;                    (match-beginning 0) (match-end 0))))
+    ;;           ;; (overlay-put ol 'type "property-drawer")
+    ;;           (overlay-put ol 'display replaced-display))))))
+    ;; (defun org-show-properties()
+    ;;   "Show org headline's properties using overlay."
+    ;;   (interactive)
+    ;;   (remove-overlays))
+    ;; ;; (remove-overlays 0 (buffer-size) 'type "property-drawer"))
+    ;; (defun org-loop-properties()
+    ;;   "Loop over org headlines' properties overlays."
+    ;;   (interactive)
+    ;;   (dolist (ol (overlays-in 0 (buffer-size)) nil)
+    ;;     (print (overlay-properties ol))))
 
     ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
     ;; (setq org-ellipsis "…")
@@ -1634,15 +1675,20 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (set-face-attribute 'org-block nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-code nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
     (set-face-attribute 'org-quote nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 3))
+    (setq org-fontify-quote-and-verse-blocks t)
     (set-face-attribute 'org-block-begin-line nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 4))
     (set-face-attribute 'org-block-end-line nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 4))
+
     (add-hook 'org-mode-hook
               (lambda ()
                 (org-shifttab 5)
@@ -1650,9 +1696,11 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                 (electric-indent-local-mode -1)
                 (mkvoya/better-wrap)
                 (prettify-symbols-mode)
+                ;; (org-hide-properties)
                 ))
-      ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-      ;;; But I don't need the odd levels only
+
+                ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+                ;;; But I don't need the odd levels only
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
@@ -1929,29 +1977,25 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   (setq org-roam-v2-ack t)
   (use-package org-roam
-    :after (org quelpa)
-    :ensure nil
-    :quelpa (org-roam :repo "org-roam/org-roam"
-                 :fetcher github
-                 :files ("*"))
-    :defer t
-    :hook
-    (after-init . org-roam-mode)
+    :after (org)
+    :defer 5
+    :ensure t
     :custom
     (org-roam-directory "~/Dropbox/Dreams/Org/")
     (org-roam-link-file-path-type 'relative)
     (org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
-    :bind (:map org-roam-mode-map
-                (("C-c n l" . org-roam)
-                 ("C-c n f" . org-roam-find-file)
-                 ("C-c n g" . org-roam-graph))
-                :map org-mode-map
-                (("C-c n i" . org-roam-insert))
-                (("C-c n I" . org-roam-insert-immediate)))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ;; Dailies
+           ("C-c n j" . org-roam-dailies-capture-today))
     :config
-    (org-roam-setup)
-    ;; (require 'org-roam-protocol)
-    (setq org-roam-rename-file-on-title-change nil))
+    (setq org-roam-rename-file-on-title-change nil)
+    (org-roam-db-autosync-mode)
+    ;; If using org-roam-protocol
+    (require 'org-roam-protocol))
 #+END_SRC
 *** OrgRoam-Server
 # org-roam-server does not support org-roam v2, use org-roam-ui instead.
@@ -1964,7 +2008,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (org-roam-ui :repo "org-roam/org-roam-ui"
                  :fetcher github
                  :files ("*.el" "out"))
-    :after org-roam
+    :after (org-roam)
     ;; :hook
     ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
     ;;         a hookable mode anymore, you're advised to pick something yourself
@@ -2011,6 +2055,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (setq notdeft-directories '("~/Dropbox/Dreams" "~/Dropbox/IPADS"))
     (setq notdeft-extension "org")
     (setq notdeft-secondary-extensions '("md" "txt" "scrbl"))
+    (setq notdeft-allow-org-property-drawers t)
     )
 #+END_SRC
 ** Others
@@ -2074,10 +2119,10 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** Sis
 *** ActivityWatch
 #+BEGIN_SRC emacs-lisp
-  (use-package activity-watch-mode
-    :defer t
-    :config
-    (global-activity-watch-mode))
+  ;; (use-package activity-watch-mode
+  ;;   :defer 100
+  ;;   :config
+  ;;   (global-activity-watch-mode))
 #+END_SRC
 ** 目前禁用的功能
 | org-brain  |   |
@@ -2147,6 +2192,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                  :files ("*"))
     :after (quelpa quelpa-use-package)
     :ensure nil
+    :defer 10
     :init
     (use-package epc :defer t)
     (use-package ctable :defer t)
@@ -2289,6 +2335,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
     :ensure nil
+    :defer 10
     :after (quelpa quelpa-use-package)
     :quelpa (image-click-mode :fetcher github
                               :repo  "mkvoya/image-click-mode"
@@ -2300,7 +2347,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package citre
-    :defer t
+    :defer 10
     :init
     ;; This is needed in `:init' block for lazy load to work.
     (require 'citre-config)
@@ -2322,7 +2369,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package ranger
-    :defer t)
+    :defer 10)
 #+END_SRC
 
 
@@ -2346,7 +2393,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package telega
-    :defer t
+    :defer 10
     :config
     (setq telega-proxies
           (list
@@ -2392,3 +2439,14 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
       (goto-char start)
       (insert (concat "[[" file "]["))))
 #+END_SRC
+
+* A mode to embed one buffer in another buffer and keep them in sync
+#+BEGIN_SRC emacs-lisp
+  (use-package freex
+    :after (quelpa)
+    :ensure nil
+    :quelpa (emacs-freex :fetcher github
+                         :repo "gregdetre/emacs-freex")
+    )
+#+END_SRC
+

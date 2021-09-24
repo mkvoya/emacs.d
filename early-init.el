@@ -18,7 +18,7 @@
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ;; No tool bar
-   (font . "Sarasa Mono SC-13")         ;; Set font
+   (font . "Sarasa Mono SC-14")         ;; Set font
    (vertical-scroll-bars . nil)))       ;; No vertical scroll-bars
 
 ;; It seems that we don't need the following anymore.
