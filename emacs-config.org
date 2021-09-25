@@ -56,79 +56,53 @@ Also from https://github.com/sachac/.emacs.d
 
 #+BEGIN_SRC emacs-lisp
   (setq custom-file "~/.emacs.d/customs.el")
-  (setq use-package-always-ensure t)
   (load custom-file t)
 #+END_SRC
 
 ** Packages
+*** straight.el replacing package.el
+| straight.el | https://github.com/raxod502/straight.el |
+| package.el  | built-in package system                 |
 
-*** Built-in Package System
-| package | built-in |
 #+BEGIN_SRC emacs-lisp
-  (require 'package)
-  ;; (setq package-enable-at-startup nil)
-  ;; (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-  ;; (add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
-  ;; (add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
-  (setq package-archives
-        '(
-          ("melpa" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/melpa/")
-          ;; ("melpa" . "https://melpa.org/packages/")
-          ("gnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/gnu/")
-          ("nongnu" . "https://mirrors.sjtug.sjtu.edu.cn/emacs-elpa/nongnu/"))
-        )
-  (package-initialize); done in init.el
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 5))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+
+  ;; Config straight.el features
+
 #+END_SRC
 
 *** use-package: A use-package declaration for simplifying your .emacs
 | use-package | https://github.com/jwiegley/use-package |
 #+BEGIN_SRC emacs-lisp
-  (unless (package-installed-p 'use-package)
-    (package-refresh-contents)
-    (package-install 'use-package t))
-  (setq use-package-verbose t)
-  ;; use-package-always-defer t
-  ;; use-package-always-ensure t) ; built-in packages need :ensure nil
-  (require 'use-package)
-#+END_SRC
-
-*** Quelpa: Build and install your Emacs Lisp packages on-the-fly directly from source
-| quelpa             | https://github.com/quelpa/quelpa             |
-| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
-#+BEGIN_SRC emacs-lisp
-  (unless (package-installed-p 'quelpa)
-    (with-temp-buffer
-      (url-insert-file-contents "https://raw.githubusercontent.com/quelpa/quelpa/master/quelpa.el")
-      (eval-buffer)
-      (quelpa-self-upgrade)))
-  (setq quelpa-update-melpa-p nil)
-  (require 'quelpa)
-  (quelpa
-   '(quelpa-use-package
-     :fetcher git
-     :url "https://github.com/quelpa/quelpa-use-package.git"))
-  (require 'quelpa-use-package)
+  (straight-use-package 'use-package)
+  (setq straight-use-package-by-default t)
 #+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
   (cl-letf (((symbol-function 'define-obsolete-function-alias) #'defalias))
     (use-package benchmark-init
-      :ensure t
       :config
       (require 'benchmark-init-modes)                                     ; explicitly required
       ;; To disable collection of benchmark data after init is done.
       (add-hook 'after-init-hook #'benchmark-init/deactivate)))
 #+END_SRC
 
-*** Paradox: Mordern Package Menu
-#+BEGIN_SRC emacs-lisp
-  (use-package paradox
-    :defer t
-    :config
-    (paradox-enable)
-    )
-#+END_SRC
+| quelpa             | https://github.com/quelpa/quelpa             |
+| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
+| paradox            | A modern interface for package.el           |
+
 
 ** Emacs Server
 #+BEGIN_SRC emacs-lisp
@@ -234,7 +208,6 @@ Then use nyan-mode instead
 
 #+BEGIN_SRC emacs-lisp
   (use-package nyan-mode
-    :defer t
     :config
     (nyan-mode t))
 #+END_SRC
@@ -263,7 +236,6 @@ Then use nyan-mode instead
 | diff-hl | https://github.com/dgutov/diff-hl |
 #+BEGIN_SRC emacs-lisp
   (use-package diff-hl
-    :defer 5
     :config
     (global-diff-hl-mode)
     (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
@@ -277,7 +249,6 @@ Then use nyan-mode instead
 
   ;;minibuffer editing
   ;;(use-package miniedit
-  ;;  :ensure t
   ;;  :defer t
   ;;  :commands minibuffer-edit
   ;;  :init (miniedit-install))
@@ -288,7 +259,6 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
-    :defer 5
     :after (company-emoji)
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
@@ -331,14 +301,12 @@ Then use nyan-mode instead
 
   (use-package company-posframe
     :after company
-    :defer t
     :config
     (company-posframe-mode 1))
 #+END_SRC
 
 *** Evil
 #+BEGIN_SRC emacs-lisp
-
   (setq linum-format "%d ")
   ;; (global-linum-mode t)
 
@@ -349,13 +317,14 @@ Then use nyan-mode instead
   ;;; Better evil
   (use-package evil
     ;; :after (smart-mode-line)
+    :straight t
+    :after (undo-tree)
     :config
     (setq evil-want-fine-undo t)
     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
     (global-undo-tree-mode)
     (evil-set-undo-system 'undo-tree)
     (use-package evil-numbers
-      :ensure nil
       :demand t
       :config
       (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
@@ -383,7 +352,6 @@ Then use nyan-mode instead
   ;; - https://github.com/PythonNut/evil-easymotion
   ;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
   (use-package evil-easymotion
-    :ensure nil
     :after (evil)
     :demand t
     :config
@@ -393,7 +361,6 @@ Then use nyan-mode instead
     (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
   (use-package neotree
-    :ensure nil
     :defer 5)
 
   ;; (use-package perspective
@@ -401,7 +368,6 @@ Then use nyan-mode instead
   ;; (persp-mode)
 
   (use-package flycheck
-    :ensure nil
     :defer t
     :config
     ;; (global-flycheck-mode)
@@ -409,13 +375,11 @@ Then use nyan-mode instead
     (setq flycheck-indication-mode 'left-fringe)
     (use-package flycheck-color-mode-line
       :after (flycheck)
-      :ensure nil
       :defer t
       :config
       (eval-after-load "flycheck"
         '(add-hook 'flycheck-mode-hook 'flycheck-color-mode-line-mode)))
     (use-package flycheck-status-emoji
-      :ensure nil
       :after (flycheck)
       :defer t)
     ;; Flycheck + proselint
@@ -435,7 +399,6 @@ Then use nyan-mode instead
   ;; optional: disable additional bindings for yanking text
   ;; (setq evil-magit-use-y-for-yank nil)
   (use-package evil-magit
-    :ensure nil
     :after (evil magit)
     :defer t)
 
@@ -455,7 +418,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   ;;; Smart Tab
   (use-package smart-tab
-    :ensure nil
+    :straight nil
     :defer 5
     :config
     (smart-tabs-insinuate 'c 'javascript))
@@ -507,7 +470,7 @@ Then use nyan-mode instead
 
   ;; (use-package sublimity
   ;;   :config
-  ;;   ;; (use-package sublimity-scroll :ensure t)
+  ;;   ;; (use-package sublimity-scrollt)
   ;;   (use-package sublimity-map :ensure nil) ;; experimental
   ;;   ;; (use-package sublimity-attractive :ensure nil)
   ;;   (sublimity-mode t)
@@ -552,7 +515,6 @@ Then use nyan-mode instead
 
 #+BEGIN_SRC emacs-lisp
   (use-package doom-modeline
-    :ensure t
     :after (hemisu-theme)
     :init (doom-modeline-mode 1)
     )
@@ -613,8 +575,6 @@ Then use nyan-mode instead
 | undo-tree | built-in |
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
-    :ensure nil
-    :defer 5
     :delight
     :config
     (progn
@@ -676,10 +636,7 @@ Then use nyan-mode instead
 | hemisu-light     |   |
 #+BEGIN_SRC emacs-lisp
   (use-package hemisu-theme
-    :after (quelpa quelpa-use-package)
-    :quelpa (hemisu-theme :repo "mkvoya/hemisu-theme"
-                          :fetcher github
-                          :files ("*.el"))
+    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
     :config
     (load-theme 'hemisu-light t)
     (custom-theme-set-faces
@@ -693,7 +650,6 @@ Then use nyan-mode instead
 *** Rainbow
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
-    :defer t
     :config
     (rainbow-mode t))
 #+END_SRC
@@ -841,8 +797,6 @@ Then use nyan-mode instead
     (c-set-style "my-style"))        ; use my-style defined above
   (add-hook 'c++-mode-hook 'my-c++-mode-hook)
   (use-package modern-cpp-font-lock
-    :ensure nil
-    :defer t
     :config
     (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
 #+END_SRC
@@ -870,7 +824,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
        ;;; AucTex
   (use-package tex
-    :ensure auctex
+    :straight auctex
     :defer 5
     :config
     ;; make latexmk available via C-c C-c
@@ -959,11 +913,7 @@ Then use nyan-mode instead
 #+BEGIN_SRC emacs-lisp
   (use-package projectile
     ;; :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
-    :after (quelpa quelpa-use-package)
-    :ensure nil
-    :quelpa (projectile  :repo "bbatsov/projectile"
-                          :fetcher github
-                          :files ("projectile.el"))
+    :straight (:host github :repo "bbatsov/projectile" :files ("projectile.el"))
     :delight projectile-mode
     :config
     (projectile-mode +1)
@@ -995,24 +945,12 @@ Then use nyan-mode instead
   (add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
 
   (use-package svg-tag-mode
-    :after (quelpa quelpa-use-package)
-    :quelpa (svg-tag-mode :repo "rougier/svg-tag-mode"
-                          :fetcher github
-                          :files ("svg-tag-mode.el")))
+    :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el")))
 #+END_SRC
 
 
 *** Maple Explorer
-#+BEGIN_SRC emacs-lisp
-  (use-package maple-explorer
-    :after (quelpa quelpa-use-package)
-    :quelpa (maple-explorer
-             :fetcher github
-             :repo "honmaple/emacs-maple-explorer")
-    :commands (maple-explorer-file maple-explorer-buffer maple-explorer-imenu maple-explorer-recentf)
-    :config
-    (setq maple-explorer-file-display-alist '((side . left) (slot . -1))))
-#+END_SRC
+| Maple Explorer | |
 
 *** Peep-dired
 #+BEGIN_SRC emacs-lisp
@@ -1091,16 +1029,14 @@ Then use nyan-mode instead
     ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package paren
-    :ensure nil
     :hook (after-init . show-paren-mode)
     :config
     (setq show-paren-when-point-inside-paren t
           show-paren-when-point-in-periphery t))
   (use-package so-long
-    :ensure nil
     :config (global-so-long-mode 1))
   (use-package simple
-    :ensure nil
+    :straight nil
     :hook (after-init . (lambda ()
                           (line-number-mode)
                           (column-number-mode)
@@ -1365,8 +1301,7 @@ Alternatives (Check the selectrum repo README)
 elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
-   ;; (use-package eglot
-   ;;   :ensure t)
+   ;; (use-package eglot)
    ;; (use-package eglot-ltex
    ;;   :after (eglot quelpa)
    ;;   :ensure nil
@@ -1382,11 +1317,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package nox
-    :after (quelpa company posframe)
-    :ensure nil
-    :quelpa (nox :repo "manateelazycat/nox"
-                 :fetcher github
-                 :files ("*.el"))
+    :after (company posframe)
+    :straight (:host github :repo "manateelazycat/nox" :files ("*.el"))
     :config
     (dolist (hook (list
                    'js-mode-hook
@@ -1402,7 +1334,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                    'c++-mode-hook
                    'haskell-mode-hook
                    ))
-      (add-hook hook '(lambda () (nox-ensure))))
+      (add-hook hook #'(lambda () (nox-ensure))))
     )
 
   (use-package languagetool
@@ -1461,7 +1393,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** LTex
 #+BEGIN_SRC emacs-lisp
 ;;  (use-package lsp-ltex
-;;    :ensure t
 ;;    :hook (text-mode . (lambda ()
 ;;                         (require 'lsp-ltex)
 ;;                         (lsp-deferred)))
@@ -1479,11 +1410,9 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :ensure nil)
 
   (use-package notmuch-unread
-    :after (quelpa notmuch doom-modeline)
+    :after (notmuch doom-modeline)
     :ensure nil
-    :quelpa (notmuch-unread :repo "mkvoya/notmuch-unread"
-                            :fetcher github
-                            :files ("notmuch-unread.el"))
+    :straight (:host github :repo "mkvoya/notmuch-unread" :files ("notmuch-unread.el"))
     :config
     (setq notmuch-unread-update-interval 300)
     (notmuch-unread-mode)
@@ -1805,7 +1734,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
     ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
   (use-package appt
-    :ensure nil
+    :straight nil
     :defer 10
     :config
     (setq
@@ -1852,7 +1781,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+BEGIN_SRC emacs-lisp
   (use-package ox-html
-    :ensure nil
+    :straight nil
     :after (org)
     :config
     ;; Org export code style
@@ -1881,7 +1810,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
-    :ensure nil
+    :straight nil
     :after (org)
     :config
     (setq org-icalendar-alarm-time 5)
@@ -1912,7 +1841,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;;; Org Publish
   (use-package ox-publish
-    :ensure nil
+    :straight nil
     :after (org)
     :config
     (setq org-publish-project-alist
@@ -1946,7 +1875,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
                         "~/Dropbox/Dreams/Org/Collections")))
   ;;; Captures
   (use-package org-capture
-    :ensure nil
+    :straight nil
     :after (org)
     :config
     (setq org-capture-templates nil)
@@ -1979,7 +1908,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   (use-package org-roam
     :after (org)
     :defer 5
-    :ensure t
     :custom
     (org-roam-directory "~/Dropbox/Dreams/Org/")
     (org-roam-link-file-path-type 'relative)
@@ -2003,12 +1931,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   (use-package websocket)
   (use-package simple-httpd)
   (use-package org-roam-ui
-    :ensure nil
-    :quelpa
-    (org-roam-ui :repo "org-roam/org-roam-ui"
-                 :fetcher github
-                 :files ("*.el" "out"))
     :after (org-roam)
+    :straight (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out"))
     ;; :hook
     ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
     ;;         a hookable mode anymore, you're advised to pick something yourself
@@ -2023,7 +1947,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   ;; Since the org module lazy loads org-protocol (waits until an org URL is
   ;; detected), we can safely chain `org-roam-protocol' to it.
   (use-package org-roam-protocol
-    :ensure nil
+    :straight nil
     :after (org-protocol org-roam))
 #+END_SRC
 *** Org-Mindmap
@@ -2047,10 +1971,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 *** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
-    :after (quelpa quelpa-use-package)
-    :quelpa (notdeft :repo "hasu/notdeft"
-                     :fetcher github
-                     :files ("*.el" "xapian"))
+    :straight (:host github :repo "hasu/notdeft" :files ("*.el" "xapian"))
     :config
     (setq notdeft-directories '("~/Dropbox/Dreams" "~/Dropbox/IPADS"))
     (setq notdeft-extension "org")
@@ -2187,11 +2108,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 * EAF
 #+BEGIN_SRC emacs-lisp
   (use-package eaf
-    :quelpa (eaf :fetcher github
-                 :repo  "manateelazycat/emacs-application-framework"
-                 :files ("*"))
-    :after (quelpa quelpa-use-package)
-    :ensure nil
+    :straight (:host github :repo "manateelazycat/emacs-application-framework")
     :defer 10
     :init
     (use-package epc :defer t)
@@ -2318,7 +2235,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 * MISC
 #+BEGIN_SRC emacs-lisp
-  (use-package marquee-header :ensure t :defer 10) ;; This is really an interesting package.
+  (use-package marquee-header :defer 10) ;; This is really an interesting package.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2336,10 +2253,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   (use-package image-click-mode
     :ensure nil
     :defer 10
-    :after (quelpa quelpa-use-package)
-    :quelpa (image-click-mode :fetcher github
-                              :repo  "mkvoya/image-click-mode"
-                              :files ("*.el"))
+    :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
     (add-hook 'org-mode-hook (lambda () (image-click-mode))))
     ;;(image-click-mode))
@@ -2388,7 +2302,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package chronos :ensure t)
+  (use-package chronos)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
