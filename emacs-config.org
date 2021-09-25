@@ -222,7 +222,9 @@ Then use nyan-mode instead
   ;;   (setq ns-use-proxy-icon nil)
   ;;   ;; (setq frame-title-format nil)
   ;;   )
-  (when (eq system-type 'darwin) (ns-auto-titlebar-mode))
+  (use-package ns-auto-titlebar
+    :config
+    (when (eq system-type 'darwin) (ns-auto-titlebar-mode)))
   (setq ns-use-proxy-icon nil)
   (when window-system (set-frame-size (selected-frame) 100 80))
 #+END_SRC
@@ -994,12 +996,7 @@ Then use nyan-mode instead
   ;; Emoji
   ;; Useful for https://github.com/dunn/company-emoji
   ;; https://www.reddit.com/r/emacs/comments/8ph0hq/i_have_converted_from_the_mac_port_to_the_ns_port/
-  ;; not tested with emacs26 (requires a patched Emacs version for multi-color font support)
-  (if (version< "27.0" emacs-version)
-      (set-fontset-font
-       "fontset-default" 'unicode "Apple Color Emoji" nil 'prepend)
-    (set-fontset-font
-     t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend))
+  ;; (set-fontset-font t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend)
   (use-package company-emoji)
 
 
@@ -1015,15 +1012,16 @@ Then use nyan-mode instead
   ;; (use-package emojify
   ;;   :hook (after-init . global-emojify-mode))
 
-  (use-package unicode-fonts
-    :config
-    (setq unicode-fonts-skip-font-groups
-          '(chinese-simplified chinese-traditional
-                               chinese-hanja chinese-kanji chinese-nom
-                               multicolor decorative low-quality-glyphs))
-    ;; This breaks the Sarasa font
-    ;; (unicode-fonts-setup)
-    )
+  ;; (use-package unicode-fonts
+  ;;   :disabled t
+  ;;   :config
+  ;;   (setq unicode-fonts-skip-font-groups
+  ;;         '(chinese-simplified chinese-traditional
+  ;;                              chinese-hanja chinese-kanji chinese-nom
+  ;;                              multicolor decorative low-quality-glyphs))
+  ;;   ;; This breaks the Sarasa font
+  ;;   ;; (unicode-fonts-setup)
+  ;;   )
 
     ;;; =========== Some builtin modes =============
     ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
@@ -2289,16 +2287,15 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 
 #+BEGIN_SRC emacs-lisp
-
   ;;  (set-fontset-font t 'unicode (font-spec :family "Cascadia Code PL" :size 14))
   ;;  (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
-    (defun set-fonts ()
-      (interactive)
-      (set-face-attribute 'default nil :font (font-spec :family "Cascadia Code PL" :size 14))
-      (set-fontset-font t 'unicode (font-spec :family "Apple Color Emoji" :size 14))
-      (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
-      )
-    ;; (add-hook window-setup-hook 'set-fonts)
+  ;; (defun set-fonts ()
+  ;;   (interactive)
+  ;;   (set-face-attribute 'default nil :font (font-spec :family "Cascadia Code PL" :size 14))
+  ;;   (set-fontset-font t 'unicode (font-spec :family "Apple Color Emoji" :size 14))
+  ;;   (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
+  ;;   )
+  ;; (add-hook window-setup-hook 'set-fonts)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2357,10 +2354,40 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 * A mode to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package freex
-    :after (quelpa)
-    :ensure nil
-    :quelpa (emacs-freex :fetcher github
-                         :repo "gregdetre/emacs-freex")
+    :straight (emacs-freex :host github
+                           :repo "gregdetre/emacs-freex")
     )
 #+END_SRC
 
+* Snails -- fuzzing search fastly
+#+BEGIN_SRC emacs-lisp
+  ;; Mostly from https://github.com/MatthewZMD/.emacs.d
+  (use-package snails
+    :straight (:host github :repo "manateelazycat/snails" :build (:not compile))
+    :custom-face
+    (snails-content-buffer-face ((t (:background "#111" :height 110))))
+    (snails-input-buffer-face ((t (:background "#222" :foreground "gold" :height 110))))
+    (snails-header-line-face ((t (:inherit font-lock-function-name-face :underline t :height 1.1))))
+    :init
+    (use-package exec-path-from-shell :if (featurep 'cocoa) :defer t)
+    :config
+    ;; Functions for specific backends
+    (defun snails-current-project ()
+      (interactive)
+      (snails '(snails-backend-projectile snails-backend-rg snails-backend-fd)))
+    (defun snails-active-recent-buffers ()
+      (interactive)
+      (snails '(snails-backend-buffer snails-backend-recentf)))
+    (defun snails-everywhere ()
+      (interactive)
+      (snails '(snails-backend-everything snails-backend-mdfind))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (set-face-attribute 'default nil :font "Sarasa Mono SC-14")
+  (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono SC-14")
+  (set-face-attribute 'variable-pitch nil :font "Sarasa Mono SC-14")
+
+  (dolist (face '(default fixed-pitch))
+    (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
+#+END_SRC
