@@ -37,3 +37,4 @@
 
 
 ;;; init.el ends here
+(put 'list-threads 'disabled nil)

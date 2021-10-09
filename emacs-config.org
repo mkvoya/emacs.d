@@ -61,8 +61,7 @@ Also from https://github.com/sachac/.emacs.d
 
 ** Packages
 *** straight.el replacing package.el
-| straight.el | https://github.com/raxod502/straight.el |
-| package.el  | built-in package system                 |
+| straight.el        | https://github.com/raxod502/straight.el      |
 
 #+BEGIN_SRC emacs-lisp
   (defvar bootstrap-version)
@@ -77,32 +76,30 @@ Also from https://github.com/sachac/.emacs.d
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
-
-  ;; Config straight.el features
-
 #+END_SRC
 
 *** use-package: A use-package declaration for simplifying your .emacs
 | use-package | https://github.com/jwiegley/use-package |
 #+BEGIN_SRC emacs-lisp
   (straight-use-package 'use-package)
-  (setq straight-use-package-by-default t)
+  (setq straight-use-package-by-default t) ; Ensure :straight t
 #+END_SRC
 
+*** Other alternatives
+| package.el         | built-in package system                      |
+| quelpa             | https://github.com/quelpa/quelpa             |
+| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
+| paradox            | A modern interface for package.el            |
 
+** Benchmarks
 #+BEGIN_SRC emacs-lisp
   (cl-letf (((symbol-function 'define-obsolete-function-alias) #'defalias))
     (use-package benchmark-init
       :config
-      (require 'benchmark-init-modes)                                     ; explicitly required
+      (require 'benchmark-init-modes) ; explicitly required
       ;; To disable collection of benchmark data after init is done.
       (add-hook 'after-init-hook #'benchmark-init/deactivate)))
 #+END_SRC
-
-| quelpa             | https://github.com/quelpa/quelpa             |
-| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
-| paradox            | A modern interface for package.el           |
-
 
 ** Emacs Server
 #+BEGIN_SRC emacs-lisp
@@ -197,7 +194,7 @@ Also from https://github.com/sachac/.emacs.d
 
 
 *** Scroll bar
-  This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
+This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
 #+BEGIN_SRC emacs-lisp
   ;; (global-yascroll-bar-mode 1); Yet Another scroll bar
 #+END_SRC
@@ -276,9 +273,9 @@ Then use nyan-mode instead
              company-keywords
              company-capf
              company-yasnippet
-             company-emoji
+             company-emoji)
              ;; company-ispell
-             company-lsp)
+             ;; company-lsp)
             (company-abbrev company-dabbrev)))
     ;; (setq company-frontends '(company-pseudo-tooltip-frontend
     ;;                           company-echo-metadata-frontend))
@@ -346,6 +343,10 @@ Then use nyan-mode instead
     ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
     ;; (setq evil-emacs-state-cursor '(hollow))
     (setq evil-emacs-state-cursor '(bar . 3))
+    ;; Disable Evil in snails-mode
+    (evil-set-initial-state 'snails-mode 'emacs)
+    (evil-set-initial-state 'notdeft-mode 'emacs)
+    (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-mode 1))
 
   ;;; Easy motion
@@ -729,7 +730,7 @@ Then use nyan-mode instead
     (setq calendar-holidays
           (append cal-china-x-important-holidays
                   cal-china-x-general-holidays))
-    ;; other-holidays))
+    ;; other-holidays
     )
 #+END_SRC
 *** Calfw - A calendar framework for Emacs
@@ -1336,6 +1337,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     )
 
   (use-package languagetool
+    :disabled t
     :config
     (setq languagetool-language-tool-jar
           "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-commandline.jar")
@@ -1347,9 +1349,16 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (global-set-key (kbd "C-c l b") 'languagetool-correct-buffer)
     (global-set-key (kbd "C-c l l") 'languagetool-set-language)
     )
+  (use-package flycheck-languagetool
+    :hook (text-mode . (lambda ()
+                         (require 'flycheck-languagetool)))
+    :init
+    (setq flycheck-languagetool-server-jar
+          "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
+    (setq flycheck-languagetool-language "en-US")
+    )
 
-
-#+End_src
+#+end_src
 
 #+BEGIN_SRC emacs-lisp
 ;;  (use-package lsp-mode
@@ -1572,7 +1581,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
     ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
     ;; (setq org-image-actual-width (/ (display-pixel-width) 3))
-    (setq org-image-actual-width 200)
+    (setq org-image-actual-width 400)
 
     (org-babel-do-load-languages
      'org-babel-load-languages
@@ -1631,6 +1640,8 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
+
+    (use-package org-contrib)
     )
 #+END_SRC
 
@@ -1825,6 +1836,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     :after (async)
     :config
     (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+    ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/Calendar")
     (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
     (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
     (setq org-caldav-files '("~/Dropbox/Dreams/Org/IPADS.sched.org"
@@ -1964,6 +1976,19 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     ;; (setq org-mind-map-engine "sfdp")   ; Multiscale version of fdp for the layout of large graphs
     ;; (setq org-mind-map-engine "twopi")  ; Radial layouts
     ;; (setq org-mind-map-engine "circo")  ; Circular Layout
+    (setq org-mind-map-default-edge-attribs '(("color" . "blue")
+                                              ("headport" . "w")
+                                              ("tailport" . "e")
+                                              ("tailclip" . "no")
+                                              ("headclip" . "no")
+                                              ("arrowhead" . "none")))
+    (setq org-mind-map-default-node-attribs '(("shape" . "plain")
+                                              ("color" . "white")))
+    (setq org-mind-map-default-graph-attribs '(("nodesep" . "0.75")
+                                               ("overlap" . "false")
+                                               ("spline" . "true")
+                                               ("rankdir" . "LR")))
+    (setq org-mind-map-unflatten-command "unflatten -l1")
     )
 #+END_SRC
 *** NotDeft
@@ -2106,6 +2131,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 * EAF
 #+BEGIN_SRC emacs-lisp
   (use-package eaf
+    :disabled t
     :straight (:host github :repo "manateelazycat/emacs-application-framework")
     :defer 10
     :init
@@ -2363,6 +2389,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 #+BEGIN_SRC emacs-lisp
   ;; Mostly from https://github.com/MatthewZMD/.emacs.d
   (use-package snails
+    :disabled t
     :straight (:host github :repo "manateelazycat/snails" :build (:not compile))
     :custom-face
     (snails-content-buffer-face ((t (:background "#111" :height 110))))
@@ -2391,3 +2418,65 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
   (dolist (face '(default fixed-pitch))
     (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package reveal-in-osx-finder)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package netease-cloud-music
+    :straight (:host github :repo "SpringHan/netease-cloud-music.el")
+    :config
+    ;; Functions for specific backends
+    (require 'netease-cloud-music-ui)
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-real
+    :straight (org-real :type git :host gitlab :repo "tygrdev/org-real")
+    :init
+    (setq org-real-default-visibility 2
+          org-real-flex-width 80
+          org-real-tooltips t
+          org-real-tooltip-timeout 0.5
+          org-real-include-context t
+          org-real-margin-x 2
+          org-real-margin-y 1
+          org-real-padding-x 2
+          org-real-padding-y 1))
+#+END_SRC
+
+#+begin_src emacs-lisp
+(use-package keystrokes
+    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package ns-win
+    :straight nil
+    :config
+    (setq mac-right-command-modifier 'control))
+#+end_src
+
+
+
+#+begin_src emacs-lisp
+  (use-package read-aloud
+    :config
+    (setq read-aloud-engine "say"))
+#+end_src
+
+
+* A Gantt Chart (Calendar) for Org Mode
+#+begin_src emacs-lisp
+  (use-package dash)
+  (use-package ts)
+  (use-package s)
+  (use-package org-ql
+    :after (ts))
+  (use-package elgantt
+    :after (org org-ql dash ts s)
+    :straight (:type git :host github :repo "legalnonsense/elgantt")
+    )
+#+end_src

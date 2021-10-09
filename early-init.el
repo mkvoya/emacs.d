@@ -31,6 +31,6 @@
 ;; (when (member "Sarasa Mono SC" (font-family-list))
 ;;   (set-fontset-font t nil (font-spec :family "Sarasa Mono SC"))
 ;;   (set-frame-font "Sarasa Mono SC" t t)
-;;   (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-13")))
+;;   (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-14")))
 
 ;;; early-init.el ends here
