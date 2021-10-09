@@ -1296,23 +1296,7 @@ Alternatives (Check the selectrum repo README)
 ** LSP
 | lsp-mode | https://github.com/emacs-lsp/lsp-mode |
 | elgot    |   |
-
-elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
-
-#+BEGIN_SRC emacs-lisp
-   ;; (use-package eglot)
-   ;; (use-package eglot-ltex
-   ;;   :after (eglot quelpa)
-   ;;   :ensure nil
-   ;;   :quelpa (eglot-ltex :repo "emacs-languagetool/eglot-ltex"
-   ;;                       :fetcher github
-   ;;                       :files ("*.el"))
-   ;;   :hook (text-mode . (lambda ()
-   ;;                        (require 'eglot-ltex)
-   ;;                        (call-interactively #'eglot)))
-   ;;   :init
-   ;;   (setq eglot-languagetool-server-path "~/.emacs.d/lsp-servers/ltex-ls-12.3.0/"))
-#+END_SRC
+| lsp-ltex | |
 
 #+BEGIN_SRC emacs-lisp
   (use-package nox
@@ -1360,53 +1344,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+end_src
 
-#+BEGIN_SRC emacs-lisp
-;;  (use-package lsp-mode
-;;    :init (setq lsp-keymap-prefix "C-c l")
-;;    :hook ((python-mode . lsp-deferred)
-;;           (lsp-mode . lsp-enable-which-key-integration) ; if you want which-key integration
-;;           (tex-mode . lsp-deferred)
-;;           (TeX-mode . lsp-deferred)
-;;           ;; (org-mode . lsp-deferred)
-;;           )
-;;    :commands (lsp lsp-deferred)
-;;    :config
-;;    (setq lsp-headerline-breadcrumb-enable nil) ; The header line is not necessary.
-;;    (setq lsp-intelephense-multi-root nil)
-;;    ;; optionally
-;;    (use-package lsp-ui
-;;      :commands lsp-ui-mode
-;;      :init
-;;      (add-hook 'lsp-mode-hook 'lsp-ui-mode)
-;;      :config
-;;      (setq lsp-ui-peek-enable t)
-;;      (setq lsp-ui-doc-enable nil)
-;;      (setq lsp-ui-imenu-enable t)
-;;      (setq lsp-ui-flycheck-enable t)
-;;      (setq lsp-ui-sideline-enable nil)
-;;      (setq lsp-ui-sideline-ignore-duplicate t))
-;;    (use-package lsp-treemacs
-;;      :commands lsp-treemacs-errors-list)
-;;    ;; (use-package dap-mode) ; optionally if you want to use debugger
-;;    ;; (use-package dap-LANGUAGE) ; to load the dap adapter for your language
-;;    (use-package company-lsp
-;;      :config
-;;      (push 'company-lsp company-backends)
-;;      (add-to-list 'company-lsp-filter-candidates '(digestif . nil)) ; digestif
-;;      )
-;;    (add-to-list 'lsp-language-id-configuration '(org-mode . "org"))
-;;    )
-#+END_SRC
-*** LTex
-#+BEGIN_SRC emacs-lisp
-;;  (use-package lsp-ltex
-;;    :hook (text-mode . (lambda ()
-;;                         (require 'lsp-ltex)
-;;                         (lsp-deferred)))
-;;    :config
-;;    (setq lsp-ltex-language "zh-CN")
-;;    )
-#+END_SRC
 ** Mail Client
 | notmuch    |   |
 | WanderLust |   |
@@ -2061,13 +1998,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 
 #+END_SRC
 *** Sis
-*** ActivityWatch
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package activity-watch-mode
-  ;;   :defer 100
-  ;;   :config
-  ;;   (global-activity-watch-mode))
-#+END_SRC
 ** 目前禁用的功能
 | org-brain  |   |
 | deft       |   |
@@ -2343,18 +2273,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
 * Emacs
 
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package emacs-webkit
-  ;;   :after (quelpa)
-  ;;   :ensure nil
-  ;;   :quelpa (emacs-webkit :fetcher github
-  ;;                         :repo "akirakyle/emacs-webkit"
-  ;;                         :branch "main"
-  ;;                         :files (:defaults "*.js" "*.css" "*.so")))
-  ;;                         ;; :build ("make")))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package xkcd)
   (blink-cursor-mode 0)
 #+END_SRC
@@ -2385,31 +2303,6 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     )
 #+END_SRC
 
-* Snails -- fuzzing search fastly
-#+BEGIN_SRC emacs-lisp
-  ;; Mostly from https://github.com/MatthewZMD/.emacs.d
-  (use-package snails
-    :disabled t
-    :straight (:host github :repo "manateelazycat/snails" :build (:not compile))
-    :custom-face
-    (snails-content-buffer-face ((t (:background "#111" :height 110))))
-    (snails-input-buffer-face ((t (:background "#222" :foreground "gold" :height 110))))
-    (snails-header-line-face ((t (:inherit font-lock-function-name-face :underline t :height 1.1))))
-    :init
-    (use-package exec-path-from-shell :if (featurep 'cocoa) :defer t)
-    :config
-    ;; Functions for specific backends
-    (defun snails-current-project ()
-      (interactive)
-      (snails '(snails-backend-projectile snails-backend-rg snails-backend-fd)))
-    (defun snails-active-recent-buffers ()
-      (interactive)
-      (snails '(snails-backend-buffer snails-backend-recentf)))
-    (defun snails-everywhere ()
-      (interactive)
-      (snails '(snails-backend-everything snails-backend-mdfind))))
-#+END_SRC
-
 #+BEGIN_SRC emacs-lisp
   (set-face-attribute 'default nil :font "Sarasa Mono SC-14")
   (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono SC-14")
@@ -2432,20 +2325,7 @@ elgot 似乎代码更加 nice，但是 lsp-mode 的生态更丰富？
     )
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package org-real
-    :straight (org-real :type git :host gitlab :repo "tygrdev/org-real")
-    :init
-    (setq org-real-default-visibility 2
-          org-real-flex-width 80
-          org-real-tooltips t
-          org-real-tooltip-timeout 0.5
-          org-real-include-context t
-          org-real-margin-x 2
-          org-real-margin-y 1
-          org-real-padding-x 2
-          org-real-padding-y 1))
-#+END_SRC
+| org-real | https://gitlab.com/tygrdev/org-real |
 
 #+begin_src emacs-lisp
 (use-package keystrokes
