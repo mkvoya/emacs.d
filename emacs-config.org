@@ -520,6 +520,8 @@ Then use nyan-mode instead
   (use-package doom-modeline
     :after (hemisu-theme)
     :init (doom-modeline-mode 1)
+    :config
+    (setq doom-modeline-height 20)
     )
   ;; (autoload 'notmuch "notmuch" "notmuch mail" t)
 
@@ -644,7 +646,7 @@ Then use nyan-mode instead
     (load-theme 'hemisu-light t)
     (custom-theme-set-faces
      'user
-     `(mode-line ((t (:background "#281a0f"))))
+     `(mode-line ((t (:background "#281a0f" :font "Sarasa Mono SC-11"))))
      `(mode-line-inactive ((t (:background "#99aaff")))))
     )
 #+END_SRC
@@ -1073,6 +1075,15 @@ Alternatives (Check the selectrum repo README)
     :init
     (vertico-mode)
     (setq vertico-cycle t))
+  (use-package vertico-posframe
+    :straight (:host github :repo "tumashu/vertico-posframe" :files ("*.el"))
+    :after (vertico)
+    :config
+    (vertico-posframe-mode 1)
+    (setq vertico-posframe-parameters
+          '((left-fringe . 8)
+            (right-fringe . 8)))
+    )
 
   ;; Use the `orderless' completion style.
   ;; Enable `partial-completion' for files to allow path expansion.
@@ -1410,6 +1421,7 @@ Alternatives (Check the selectrum repo README)
     ;; Shortcuts
     (global-set-key (kbd "C-c a") 'org-agenda)
     (global-set-key (kbd "C-c c") 'org-capture)
+    (setq org-display-remote-inline-images 'download)
 
     ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
     (setq org-log-done 'time)
@@ -1417,7 +1429,7 @@ Alternatives (Check the selectrum repo README)
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(c)"
+             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "|"
              "DONE(d!)" "CANCELED(c@)")))
     ;; Keyword colors
