@@ -629,7 +629,7 @@ Then use nyan-mode instead
     (custom-theme-set-faces
      'user
      `(mode-line ((t (:background "#281a0f" :font "Sarasa Mono SC-11"))))
-     `(mode-line-inactive ((t (:background "#99aaff")))))
+     `(mode-line-inactive ((t (:background "#c9cabf")))))
     )
 #+END_SRC
 
@@ -683,28 +683,7 @@ Then use nyan-mode instead
 
 ** Calender
 #+BEGIN_SRC emacs-lisp
-  ;; 分别是妇女节、植树节、劳动节、青年节、儿童节、教师节、国庆节、程序员节、双11
-  (setq holiday-local-holidays `((holiday-fixed 3 8  "Women's Day")
-                                 (holiday-fixed 3 12 "Arbor Day")
-                                 ,@(cl-loop for i from 1 to 3
-                                            collect `(holiday-fixed 5 ,i "International Workers' Day"))
-                                 (holiday-fixed 5 4  "Chinese Youth Day")
-                                 (holiday-fixed 6 1  "Children's Day")
-                                 (holiday-fixed 9 10 "Teachers' Day")
-                                 ,@(cl-loop for i from 1 to 7
-                                            collect `(holiday-fixed 10 ,i "National Day"))
-                                 (holiday-fixed 10 24 "Programmers' Day")
-                                 (holiday-fixed 11 11 "Singles' Day")))
-  ;; 分别是世界地球日、世界读书日、俄罗斯的那个程序员节
-  (setq holiday-other-holidays '((holiday-fixed 4 22 "Earth Day")
-                                 (holiday-fixed 4 23 "World Book Day")
-                                 (holiday-sexp '(if (or (zerop (% year 400))
-                                                        (and (% year 100) (zerop (% year 4))))
-                                                    (list 9 12 year)
-                                                  (list 9 13 year))
-                                               "World Programmers' Day")))
   (setq calendar-chinese-all-holidays-flag t)
-
   (use-package cal-china-x
     :defer t
     :config
@@ -714,17 +693,13 @@ Then use nyan-mode instead
     (setq calendar-holidays
           (append cal-china-x-important-holidays
                   cal-china-x-general-holidays))
-    ;; other-holidays
     )
 #+END_SRC
 *** Calfw - A calendar framework for Emacs
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
-  (use-package calfw
-    :defer t)
-  (use-package calfw-org
-    :defer t
-    :after (calfw org))
+  (use-package calfw :defer t)
+  (use-package calfw-org :defer t :after (calfw org))
 #+END_SRC
 *** whitespace
 | whitespace | Built-in | http://ergoemacs.org/emacs/whitespace-mode.html |
@@ -944,27 +919,7 @@ Then use nyan-mode instead
 #+END_SRC
 
 
-*** Maple Explorer
-| Maple Explorer | |
 
-*** Peep-dired
-#+BEGIN_SRC emacs-lisp
-  ;;preview files in dired
-  (use-package peep-dired
-    :defer t ; don't access `dired-mode-map' until `peep-dired' is loaded
-    :bind (:map dired-mode-map
-                ("P" . peep-dired)))
-
-  ;; Prevent polluting the system slipboard
-  ;; (setq select-enable-clipboard nil)
-  ;; Dired-sidebar is not good to use.
-  ;; (use-package dired-sidebar
-  ;;   :commands (dired-sidebar-toggle-sidebar))
-  ;; (use-package dired-subtree
-  ;;   :config
-  ;;   (bind-keys :map dired-mode-map
-  ;;              ("<S-return>" . dired-subtree-toggle)))
-#+END_SRC
 
 *** Tramp
 #+BEGIN_SRC emacs-lisp
@@ -1306,31 +1261,6 @@ Alternatives (Check the selectrum repo README)
 | lsp-mode | https://github.com/emacs-lsp/lsp-mode |
 | elgot    |                                       |
 
-#+BEGIN_SRC emacs-lisp
-  (use-package nox
-    :disabled t
-    :after (company posframe)
-    :straight (:host github :repo "manateelazycat/nox" :files ("*.el"))
-    :config
-    (dolist (hook (list
-                   'js-mode-hook
-                   'rust-mode-hook
-                   'python-mode-hook
-                   'ruby-mode-hook
-                   'java-mode-hook
-                   'sh-mode-hook
-                   'php-mode-hook
-                   'c-mode-common-hook
-                   'c-mode-hook
-                   'csharp-mode-hook
-                   'c++-mode-hook
-                   'haskell-mode-hook
-                   ))
-      (add-hook hook #'(lambda () (nox-ensure))))
-    )
-#+end_src
-
-
 ** Language and checking
 | flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
 | flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
@@ -1453,37 +1383,6 @@ Alternatives (Check the selectrum repo README)
     ;; (set-text-properties 179 252 '(face tiny-font))
     ;; (add-face-text-property 179 252 '(:height 120) t)
 
-    ;; ;; from https://emacs-china.org/t/emacs-org-mode-drawer-help-wanted/15207/19
-    ;; (defun org-hide-properties ()
-    ;;   "Hide org headline's properties using overlay."
-    ;;   (interactive)
-    ;;   (let (
-    ;;         ;; The following two collapes the drawer to the previous line.
-    ;;         ;; (property-drawer-re "\n ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n")
-    ;;         ;; (replaced-display "⚙\n")
-    ;;         ;; The following two removes the drawer.
-    ;;         ;; (property-drawer-re " ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n")
-    ;;         (property-drawer-re " ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:")
-    ;;         (replaced-display "")
-    ;;         )
-    ;;     (save-excursion
-    ;;       (goto-char (point-min))
-    ;;       (while (re-search-forward property-drawer-re nil t)
-    ;;         (let ((ol (make-overlay
-    ;;                    (match-beginning 0) (match-end 0))))
-    ;;           ;; (overlay-put ol 'type "property-drawer")
-    ;;           (overlay-put ol 'display replaced-display))))))
-    ;; (defun org-show-properties()
-    ;;   "Show org headline's properties using overlay."
-    ;;   (interactive)
-    ;;   (remove-overlays))
-    ;; ;; (remove-overlays 0 (buffer-size) 'type "property-drawer"))
-    ;; (defun org-loop-properties()
-    ;;   "Loop over org headlines' properties overlays."
-    ;;   (interactive)
-    ;;   (dolist (ol (overlays-in 0 (buffer-size)) nil)
-    ;;     (print (overlay-properties ol))))
-
     ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
     ;; (setq org-ellipsis "…")
     ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
@@ -1511,8 +1410,7 @@ Alternatives (Check the selectrum repo README)
         (org-force-open-current-window)))
     ;; Redefine file opening without clobbering universal argument
     (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
-    ;; org inline image width from https://www.reddit.com/r/emacs/comments/55zk2d/adjust_the_size_of_pictures_to_be_shown_inside/
-    ;; (setq org-image-actual-width (/ (display-pixel-width) 3))
+
     (setq org-image-actual-width 400)
 
     (org-babel-do-load-languages
@@ -1580,24 +1478,11 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;;; Org Style
   ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-  ;; ;; 打开 org-indent mode
   (setq org-startup-indented t)
   (use-package org-superstar
     :after (org)
     :config
     (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
-    ;; 设置 bullet list
-    ;; (with-eval-after-load 'org-superstar
-    ;;   (set-face-attribute 'org-superstar-item nil :height 1.2)
-    ;;   (set-face-attribute 'org-superstar-header-bullet nil :height 1.2)
-    ;;   (set-face-attribute 'org-superstar-leading nil :height 1.3))
-    ;; Set different bullets, with one getting a terminal fallback.
-    ;; (setq org-superstar-headline-bullets-list
-    ;;       '("◉" "◈" "○" "▷"))
-    ;; (setq org-superstar-headline-bullets-list
-    ;;       '("①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨"))
-
-    ;; ⎋〄
     ;; Stop cycling bullets to emphasize hierarchy of headlines.
     (setq org-superstar-cycle-headline-bullets nil)
     ;; Hide away leading stars on terminal.
@@ -1608,7 +1493,7 @@ Alternatives (Check the selectrum repo README)
           '((?* . ?⌬) ; * ; previously used: 8226
             (?+ . ?⋇) ; + ; previously used: 10210
             (?- . ?▪))) ; - ; previously used: 8211
-    ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑
+    ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷ "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" ⎋〄
     )
 
 #+END_SRC
@@ -1963,22 +1848,9 @@ Alternatives (Check the selectrum repo README)
     ;; (setq pyim-default-scheme 'quanpin)
     (setq pyim-default-scheme 'pyim-shuangpin)
 
-    ;; 设置 pyim 探针设置，这是 pyim 高级功能设置，可以实现 *无痛* 中英文切换 :-)
-    ;; 我自己使用的中英文动态切换规则是：
-    ;; 1. 光标只有在注释里面时，才可以输入中文。
-    ;; 2. 光标前是汉字字符时，才能输入中文。
-    ;; 3. 使用 M-m 快捷键，强制将光标前的拼音字符串转换为中文。
-    ;; (setq-default pyim-english-input-switch-functions
-    ;;               '(pyim-probe-dynamic-english
-    ;;                 pyim-probe-isearch-mode
-    ;;                 pyim-probe-program-mode
-    ;;                 pyim-probe-org-structure-template))
-
     (setq-default pyim-punctuation-half-width-functions
                   '(pyim-probe-punctuation-line-beginning
                     pyim-probe-punctuation-after-punctuation))
-    ;; 开启拼音搜索功能
-    (pyim-isearch-mode 1)
 
     ;; 使用 popup-el 来绘制选词框, 如果用 emacs26, 建议设置
     ;; 为 'posframe, 速度很快并且菜单不会变形，不过需要用户
@@ -1996,18 +1868,10 @@ Alternatives (Check the selectrum repo README)
         (pyim-forward-word)))
     (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
     (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
-    :bind
-    (("M-m" . pyim-convert-string-at-point) ;与 pyim-probe-dynamic-english 配合
-     ;; ("C-;" . pyim-delete-word-from-personal-buffer)
-     ("C-\\" . toggle-input-method)
-     ))
+)
 
 #+END_SRC
 *** Sis
-** 目前禁用的功能
-| org-brain  |   |
-| deft       |   |
-| zetteldeft |   |
 
 *** Custom key-bindings
 #+BEGIN_SRC emacs-lisp
@@ -2061,29 +1925,7 @@ Alternatives (Check the selectrum repo README)
 #+END_SRC
 ** EL
 #+BEGIN_SRC emacs-lisp
-  (setq source-directory "~/Library/Caches/Homebrew/emacs-plus@28--git/")
-#+END_SRC
-
-* EAF
-#+BEGIN_SRC emacs-lisp
-  (use-package eaf
-    :disabled t
-    :straight (:host github :repo "manateelazycat/emacs-application-framework")
-    :defer 10
-    :init
-    (use-package epc :defer t)
-    (use-package ctable :defer t)
-    (use-package deferred :defer t)
-    (use-package s :defer t)
-    :custom
-    (eaf-browser-continue-where-left-off t)
-    :config
-    (eaf-setq eaf-browser-enable-adblocker "true")
-    (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
-    (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
-    (eaf-bind-key take_photo "p" eaf-camera-keybinding)
-    (eaf-bind-key nil "M-q" eaf-browser-keybinding)
-    ) ;; unbind, see more in the Wiki
+  (setq source-directory "~/Library/Caches/Homebrew/emacs-plus@29--git/")
 #+END_SRC
 
 
@@ -2187,26 +2029,10 @@ Alternatives (Check the selectrum repo README)
 
     )
 #+END_SRC
-* Hints
-
-#+BEGIN_SRC emacs-lisp
-  ;; (setq resize-mini-frames t); to adjust the minibuffer high enough
-#+END_SRC
 
 * MISC
 #+BEGIN_SRC emacs-lisp
   (use-package marquee-header :defer 10) ;; This is really an interesting package.
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package explain-pause-mode
-  ;;   :ensure nil
-  ;;   :after (quelpa quelpa-use-package)
-  ;;   :quelpa (explain-pause-mode :fetcher github
-  ;;                               :repo  "lastquestion/explain-pause-mode"
-  ;;                               :files ("*"))
-  ;;   :config
-  ;;   (explain-pause-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2323,7 +2149,6 @@ Alternatives (Check the selectrum repo README)
     )
 #+END_SRC
 
-| org-real | https://gitlab.com/tygrdev/org-real |
 
 #+begin_src emacs-lisp
 (use-package keystrokes
@@ -2437,4 +2262,22 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package ranger :disabled t :defer 10)
+  (use-package eaf :disabled t)
+  (use-package peep-dired :disabled t) ; preview files in dired
+  (use-package maple-explorer :disabled t)
+  (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
+  (use-package org-brain :disabled t)
+  (use-package deft :disabled t)
+  (use-package zettledeft :disabled t)
+  (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
+  (use-package explain-pause-mode :disabled t)
 #+END_SRC
+
+
+Interesting Colors:
+
+(setq colorrrrs '("#383a42" "#fafafa" "#A6E22E" "#272822" "#fafafa" "#e45649"
+"#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42" "#F92672" "#CF4F1F"
+"#C26C0F" "#E6DB74" "#AB8C00" "#A18F00" "#989200" "#8E9500" "#A6E22E" "#729A1E"
+"#609C3C" "#4E9D5B" "#3C9F79" "#A1EFE4" "#299BA6" "#2896B5" "#2790C3" "#66D9EF"
+"#99aaff"))
