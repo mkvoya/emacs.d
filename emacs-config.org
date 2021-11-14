@@ -494,27 +494,9 @@ Then use nyan-mode instead
 #+END_SRC
 
 
-*** Smart-mode-line
-#+BEGIN_SRC emacs-lisp
-;;  ;; Mode line format
-;;  ;; Instead of powerline, airline, smart-mode-line, doom-modeline
-;;  (use-package smart-mode-line
-;;    ;; :defer 5
-;;    :config
-;;    (setq sml/no-confirm-load-theme t)
-;;    (setq sml/theme 'light)
-;;    (setq sml/shorten-modes t)
-;;    (setq sml/shorten-directory t)
-;;    (add-hook 'sml/after-setup-hook
-;;              (lambda ()
-;;                (setq-default mode-line-format
-;;                              (cons (propertize " " 'display
-;;                                                '((height 1.5)))
-;;                                                ;; '((raise -0.5) (height 2))
-;;                                    mode-line-format))))
-;;    (sml/setup)
-;;    )
-#+END_SRC
+*** Modeline
+| doom-modeline   |   |
+| smart-mode-line |  |
 
 #+BEGIN_SRC emacs-lisp
   (use-package doom-modeline
@@ -798,12 +780,20 @@ Then use nyan-mode instead
                                      (brace-list-open . 0)
                                      (innamespace . [0])
                                      (statement-case-open . +)))))
+  (c-add-style "my-ycsb-c++-style"
+               '("stroustrup"
+                 (c-basic-offset . 2)            ; indent by four spaces
+                 (tab-width . 2)
+                 (indent-tabs-mode . nil)        ; use tabs
+                 (c-offsets-alist . ((inline-open . 0)  ; custom indentation rules
+                                     (brace-list-open . 0)
+                                     (innamespace . [0])
+                                     (statement-case-open . +)))))
   (defun my-c++-mode-hook ()
-    (c-set-style "my-style"))        ; use my-style defined above
+    (c-set-style "my-ycsb-c++-style"))        ; use my-style defined above
   (add-hook 'c++-mode-hook 'my-c++-mode-hook)
   (use-package modern-cpp-font-lock
-    :config
-    (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
+    :ensure t)
 #+END_SRC
 
 *** Markdown
@@ -979,18 +969,25 @@ Then use nyan-mode instead
 *** Tramp
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
+    :straight nil
     :ensure nil
     :defer 5
     :config
     ;; (setq tramp-debug-buffer t)
-    (setq tramp-verbose 10))
+    (setq tramp-verbose 10)
+    (customize-set-variable
+     'tramp-ssh-controlmaster-options
+     (concat
+      "-o ControlPath=/Volumes/ramfs/ssh-ControlPath-%%r@%%h:%%p "
+      "-o ControlMaster=auto -o ControlPersist=yes"))
+    )
 
   (setq alert-default-style 'libnotify)
   (setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
 
   (modify-syntax-entry ?_ "w")
 
-     ;;; ========== Charset and Unicode and Emoji =============
+        ;;; ========== Charset and Unicode and Emoji =============
   ;; UTF-8
   (prefer-coding-system 'utf-8)
   (when (display-graphic-p)
@@ -1026,8 +1023,8 @@ Then use nyan-mode instead
   ;;   ;; (unicode-fonts-setup)
   ;;   )
 
-    ;;; =========== Some builtin modes =============
-    ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
+       ;;; =========== Some builtin modes =============
+       ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package paren
     :hook (after-init . show-paren-mode)
@@ -1047,7 +1044,7 @@ Then use nyan-mode instead
                           (setq word-wrap nil)
                           )))
 
-      ;;; ========== End of Some builtin modes ===========
+         ;;; ========== End of Some builtin modes ===========
   ;; Make gc pauses faster by decreasing the threshold.
   (setq gc-cons-threshold (* 2 1000 1000))
 #+END_SRC
@@ -1305,12 +1302,13 @@ Alternatives (Check the selectrum repo README)
                 ("j" . dired-jump)))
 #+END_SRC
 ** LSP
+| nox      |                                       |
 | lsp-mode | https://github.com/emacs-lsp/lsp-mode |
-| elgot    |   |
-| lsp-ltex | |
+| elgot    |                                       |
 
 #+BEGIN_SRC emacs-lisp
   (use-package nox
+    :disabled t
     :after (company posframe)
     :straight (:host github :repo "manateelazycat/nox" :files ("*.el"))
     :config
@@ -1330,20 +1328,16 @@ Alternatives (Check the selectrum repo README)
                    ))
       (add-hook hook #'(lambda () (nox-ensure))))
     )
+#+end_src
 
-  (use-package languagetool
-    :disabled t
-    :config
-    (setq languagetool-language-tool-jar
-          "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-commandline.jar")
-    (setq languagetool-java-arguments '("-Dfile.encoding=UTF-8"))
-    (setq languagetool-default-language "en-US")
-    (global-set-key (kbd "C-c l c") 'languagetool-check)
-    (global-set-key (kbd "C-c l d") 'languagetool-clear-buffer)
-    (global-set-key (kbd "C-c l p") 'languagetool-correct-at-point)
-    (global-set-key (kbd "C-c l b") 'languagetool-correct-buffer)
-    (global-set-key (kbd "C-c l l") 'languagetool-set-language)
-    )
+
+** Language and checking
+| flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
+| flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
+| lsp-ltex              | https://github.com/emacs-languagetool/lsp-ltex/             |
+| languagetool          | https://github.com/PillFall/Emacs-LanguageTool.el           |
+
+#+BEGIN_SRC emacs-lisp
   (use-package flycheck-languagetool
     :hook (text-mode . (lambda ()
                          (require 'flycheck-languagetool)))
@@ -1352,8 +1346,14 @@ Alternatives (Check the selectrum repo README)
           "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
     (setq flycheck-languagetool-language "en-US")
     )
-
-#+end_src
+  (use-package flycheck-grammarly
+    ;; :hook (text-mode . (lambda ()
+    ;;                      (require 'flycheck-languagetool)))
+    :disabled t
+    :config
+    (setq flycheck-grammarly-check-time 0.8)
+    )
+#+END_SRC
 
 ** Mail Client
 | notmuch    |   |
@@ -1374,25 +1374,8 @@ Alternatives (Check the selectrum repo README)
     )
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package wanderlust
-  ;;   :defer t
-  ;;   :config
-  ;;   (if (boundp 'mail-user-agent)
-  ;;       (setq mail-user-agent 'wl-user-agent))
-  ;;   (if (fboundp 'define-mail-user-agent)
-  ;;       (define-mail-user-agent
-  ;;         'wl-user-agent
-  ;;         'wl-user-agent-compose
-  ;;         'wl-draft-send
-  ;;         'wl-draft-kill
-  ;;         'mail-send-hook))
-  ;;   )
-#+END_SRC
-
 
 ** Feeding (RSS & Atom)
-*** Elfeed
 | elfeed | https://github.com/skeeto/elfeed |
 #+BEGIN_SRC emacs-lisp
   (use-package elfeed
@@ -1749,6 +1732,7 @@ Alternatives (Check the selectrum repo README)
     )
 #+END_SRC
 
+
 #+BEGIN_SRC emacs-lisp
   (use-package org-ref
     :disabled
@@ -1940,6 +1924,16 @@ Alternatives (Check the selectrum repo README)
     (setq org-mind-map-unflatten-command "unflatten -l1")
     )
 #+END_SRC
+
+*** org-roam-bibtex
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam-bibtex
+    :after org-roam
+    :config
+    (require 'org-ref)
+    )
+#+END_SRC
+
 *** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
@@ -2247,10 +2241,6 @@ Alternatives (Check the selectrum repo README)
 
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package ranger
-    :defer 10)
-#+END_SRC
 
 
 
@@ -2285,7 +2275,6 @@ Alternatives (Check the selectrum repo README)
 * Emacs
 
 #+BEGIN_SRC emacs-lisp
-  (use-package xkcd)
   (blink-cursor-mode 0)
 #+END_SRC
 #+BEGIN_SRC emacs-lisp
@@ -2324,9 +2313,6 @@ Alternatives (Check the selectrum repo README)
     (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package reveal-in-osx-finder)
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package netease-cloud-music
@@ -2372,3 +2358,83 @@ Alternatives (Check the selectrum repo README)
     :straight (:type git :host github :repo "legalnonsense/elgantt")
     )
 #+end_src
+
+
+#+BEGIN_SRC emacs-lisp
+  ;; My source code for bib
+  (defun paper_add()
+    "Add a paper to your Dreamland."
+    (interactive)
+    (let* ((base-dir "~/Dropbox/Dreams/Research/Papers")
+           (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
+           (title (string-trim (read-string "The paper title: ")))
+           (filename (replace-regexp-in-string ":" "," title))
+           (filepath (concat base-dir "/" conf "/" filename)))
+      (make-directory filepath)
+      (find-file filepath)
+      )
+    )
+  (require 'consult)
+  (defun mk/consult--find-builder--dir (input dir)
+    "Build command line given INPUT in DIR."
+    (pcase-let* ((cmd (split-string-and-unquote
+                       (concat "find " dir " -not ( -whilename */.* -prune )")))
+                 (type (consult--find-regexp-type (car cmd)))
+                 (`(,arg . ,opts) (consult--command-split input))
+                 (`(,re . ,hl) (funcall consult--regexp-compiler arg type)))
+      (when re
+        (list :command
+              (append cmd
+                      (cdr (mapcan
+                            (lambda (x)
+                              `("-and" "-iregex"
+                                ,(format ".*%s.*"
+                                         ;; HACK Replace non-capturing groups with capturing groups.
+                                         ;; GNU find does not support non-capturing groups.
+                                         (replace-regexp-in-string
+                                          "\\\\(\\?:" "\\(" x 'fixedcase 'literal))))
+                            re))
+                      opts)
+              :highlight hl))))
+  (defun mk/consult--find-builder (input)
+    "Build command line given INPUT in DIR."
+    (mk/consult--find-builder--dir input "~/Dropbox/Dreams/Research/Papers/"))
+  (defun consult--async-split-thingatpt (thing)
+    "Return THING at point with async initial prefix."
+    (when-let (str (thing-at-point thing))
+      (consult--async-split-initial str)))
+  (defun paper_find (&optional initial)
+    "Search a paper in your Dreamland, by title, with INITIAL input."
+    (interactive "P")
+    (let* ((base-dir "~/Dropbox/Dreams/Research/Papers/"))
+      (find-file (consult--read
+                  (consult--async-command #'mk/consult--find-builder
+                    (consult--async-map (lambda (x) (string-remove-prefix "./" x)))
+                    (consult--async-highlight #'mk/consult--find-builder)
+                    :file-handler t) ;; allow tramp
+                  :prompt "Dreamland's Paper > "
+                  :sort nil
+                  :require-match t
+                  :initial (consult--async-split-initial initial)
+                  :add-history (consult--async-split-thingatpt 'filename)
+                  :category 'file
+                  :history '(:input consult--find-history)))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package reveal-in-osx-finder)
+  (use-package crux)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package vterm)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package xkcd)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ranger :disabled t :defer 10)
+#+END_SRC
