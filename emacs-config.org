@@ -629,7 +629,7 @@ Then use nyan-mode instead
     (custom-theme-set-faces
      'user
      `(mode-line ((t (:background "#281a0f" :font "Sarasa Mono SC-11"))))
-     `(mode-line-inactive ((t (:background "#c9cabf")))))
+     `(mode-line-inactive ((t (:background "#c9cabf" :font "Sarasa Mono SC-11")))))
     )
 #+END_SRC
 
@@ -817,37 +817,10 @@ Then use nyan-mode instead
     (setq reftex-plug-into-AUCTeX t)
     (setq TeX-PDF-mode t)
 
-    ;; From https://emacs.stackexchange.com/questions/19472/how-to-let-auctex-open-pdf-with-pdf-tools
-    ;; ;; Use pdf-tools to open PDF files
-    ;; (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-    ;;       TeX-source-correlate-start-server t)
-    ;; ;; Update PDF buffers after successful LaTeX runs
-    ;; (add-hook 'TeX-after-compilation-finished-functions
-    ;;           #'TeX-revert-document-buffer)
-
     (setq TeX-view-program-selection '((output-pdf "PDF Viewer")))
     (setq TeX-view-program-list
           '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
-    ;; '(("PDF Viewer" "/Applications/Skim.app/Contents/SharedSupport/displayline -b -g %n %o %b")))
 
-    ;; (add-hook 'LaTeX-mode-hook
-    ;;           (lambda ()
-    ;;             (push
-    ;;              '("latexmk" "latexmk -pdf %s" TeX-run-TeX nil t
-    ;;                :help "Run latexmk on file")
-    ;;              TeX-command-list)))
-
-
-    ;; From https://www.reddit.com/r/emacs/comments/4ew1s8/blurry_pdf_in_pdftools_and_docviewmode/
-    ;; (use-package pdf-view
-    ;;   :defer 5
-    ;;   :config
-    ;;   (setq pdf-view-midnight-colors `(,(face-attribute 'default :foreground) .
-    ;;                                    ,(face-attribute 'default :background)))
-    ;;   (add-to-list 'auto-mode-alist '("\\.pdf\\'" . pdf-view-mode))
-    ;;   (add-hook 'pdf-view-mode-hook (lambda ()
-    ;;                                   (pdf-view-midnight-minor-mode)))
-    ;;   )
     (setq TeX-error-overview-open-after-TeX-run t)
     ;; (setq mkvoya/tex-auto-compile nil)
     ;; (defun mkvoya/tex-try-auto-compile ()
@@ -949,9 +922,7 @@ Then use nyan-mode instead
     (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
 
   ;; Emoji
-  ;; Useful for https://github.com/dunn/company-emoji
-  ;; https://www.reddit.com/r/emacs/comments/8ph0hq/i_have_converted_from_the_mac_port_to_the_ns_port/
-  ;; (set-fontset-font t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend)
+  (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
   (use-package company-emoji)
 
 
@@ -1410,8 +1381,6 @@ Alternatives (Check the selectrum repo README)
         (org-force-open-current-window)))
     ;; Redefine file opening without clobbering universal argument
     (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
-
-    (setq org-image-actual-width 400)
 
     (org-babel-do-load-languages
      'org-babel-load-languages
@@ -2026,7 +1995,6 @@ Alternatives (Check the selectrum repo README)
 
     (setq org-static-blog-index-front-matter
           "<h1> Hey it is </h1>\n")
-
     )
 #+END_SRC
 
@@ -2038,11 +2006,12 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
     :ensure nil
+    :after (org)
     :defer 10
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
+    (setq org-image-actual-width 400)
     (add-hook 'org-mode-hook (lambda () (image-click-mode))))
-    ;;(image-click-mode))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2064,10 +2033,7 @@ Alternatives (Check the selectrum repo README)
      ;; Set this if you use project management plugin like projectile.  It's
      ;; only used to display paths relatively, and doesn't affect actual use.
      citre-project-root-function #'projectile-project-root))
-
 #+END_SRC
-
-
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2103,24 +2069,6 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   (blink-cursor-mode 0)
 #+END_SRC
-#+BEGIN_SRC emacs-lisp
-  ;;; Automatically choose the file to link with according to the selected text.
-  (defvar autolink-directory "~/Dropbox/Dreams")
-  (defun autolink--get-candidates (text)
-    "Search for the file name with TEXT."
-    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
-           (candidates (delete "" (split-string (shell-command-to-string cmd) "\n"))))
-      (completing-read "Choose the one to link: " candidates)))
-  (defun autolink-try-link (start end)
-    "Try to guess the file to link according to the region between START and END."
-    (interactive "r") ; The "r" here will fill the start and end automatically.
-    (let* ((text (buffer-substring start end))
-           (file (autolink--get-candidates text)))
-      (goto-char end)
-      (insert "]]")
-      (goto-char start)
-      (insert (concat "[[" file "]["))))
-#+END_SRC
 
 * A mode to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
@@ -2139,22 +2087,6 @@ Alternatives (Check the selectrum repo README)
     (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
 #+END_SRC
 
-
-#+BEGIN_SRC emacs-lisp
-  (use-package netease-cloud-music
-    :straight (:host github :repo "SpringHan/netease-cloud-music.el")
-    :config
-    ;; Functions for specific backends
-    (require 'netease-cloud-music-ui)
-    )
-#+END_SRC
-
-
-#+begin_src emacs-lisp
-(use-package keystrokes
-    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
-#+end_src
-
 #+begin_src emacs-lisp
   (use-package ns-win
     :straight nil
@@ -2162,14 +2094,20 @@ Alternatives (Check the selectrum repo README)
     (setq mac-right-command-modifier 'control))
 #+end_src
 
-
-
 #+begin_src emacs-lisp
   (use-package read-aloud
     :config
     (setq read-aloud-engine "say"))
 #+end_src
 
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package emacs-badge
+    :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
+    )
+
+#+END_SRC
 
 * A Gantt Chart (Calendar) for Org Mode
 #+begin_src emacs-lisp
@@ -2187,18 +2125,30 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   ;; My source code for bib
-  (defun paper_add()
+  (setq paper-root-dir "~/Dropbox/Dreams/Research/Papers")
+  (defun paper-add()
     "Add a paper to your Dreamland."
     (interactive)
-    (let* ((base-dir "~/Dropbox/Dreams/Research/Papers")
+    (let* ((base-dir paper-root-dir)
            (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
            (title (string-trim (read-string "The paper title: ")))
            (filename (replace-regexp-in-string ":" "," title))
            (filepath (concat base-dir "/" conf "/" filename)))
-      (make-directory filepath)
+      (make-directory filepath t)
       (find-file filepath)
       )
     )
+
+  (defun paper-root()
+    "Open the paper root."
+    (interactive)
+    (find-file paper-root-dir))
+
+  (defun topic-root()
+    "Open the research topic root."
+    (interactive)
+    (find-file "~/Dropbox/Dreams/Research/ByTopic"))
+
   (require 'consult)
   (defun mk/consult--find-builder--dir (input dir)
     "Build command line given INPUT in DIR."
@@ -2228,7 +2178,7 @@ Alternatives (Check the selectrum repo README)
     "Return THING at point with async initial prefix."
     (when-let (str (thing-at-point thing))
       (consult--async-split-initial str)))
-  (defun paper_find (&optional initial)
+  (defun paper-find (&optional initial)
     "Search a paper in your Dreamland, by title, with INITIAL input."
     (interactive "P")
     (let* ((base-dir "~/Dropbox/Dreams/Research/Papers/"))
@@ -2244,6 +2194,32 @@ Alternatives (Check the selectrum repo README)
                   :add-history (consult--async-split-thingatpt 'filename)
                   :category 'file
                   :history '(:input consult--find-history)))))
+  (defun paper-open()
+    "Open the file in PDF Expert. Code borrowed from the crux package."
+    (interactive)
+    (let ((current-file-name
+           (if (eq major-mode 'dired-mode)
+               (dired-get-file-for-visit)
+             buffer-file-name)))
+      (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
+    )
+
+  ;;; Automatically choose the file to link with according to the selected text.
+  (defvar autolink-directory "~/Dropbox/Dreams")
+  (defun autolink--get-candidates (text)
+    "Search for the file name with TEXT."
+    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
+           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
+      (completing-read "Choose the one to link: " candidates)))
+  (defun paper-link (start end)
+    "Try to guess the file to link according to the region between START and END."
+    (interactive "r") ; The "r" here will fill the start and end automatically.
+    (let* ((text (buffer-substring start end))
+           (file (autolink--get-candidates text)))
+      (goto-char end)
+      (insert "]]")
+      (goto-char start)
+      (insert (concat "[[" file "]["))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2261,7 +2237,7 @@ Alternatives (Check the selectrum repo README)
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ranger :disabled t :defer 10)
+  (use-package ranger :disabled t)
   (use-package eaf :disabled t)
   (use-package peep-dired :disabled t) ; preview files in dired
   (use-package maple-explorer :disabled t)
@@ -2271,6 +2247,10 @@ Alternatives (Check the selectrum repo README)
   (use-package zettledeft :disabled t)
   (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
   (use-package explain-pause-mode :disabled t)
+  (use-package keystrokes :disabled t
+    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
+  (use-package netease-cloud-music :disabled t
+    :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
 #+END_SRC
 
 
