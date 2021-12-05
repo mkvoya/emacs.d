@@ -48,6 +48,7 @@ Also from https://github.com/sachac/.emacs.d
   ;; (set-face-attribute 'default nil :height 160)
 
   (add-hook 'prog-mode-hook #'hs-minor-mode)
+
 #+END_SRC
 
 * Bootstrap
@@ -626,10 +627,22 @@ Then use nyan-mode instead
     :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
     :config
     (load-theme 'hemisu-light t)
-    (custom-theme-set-faces
-     'user
-     `(mode-line ((t (:background "#281a0f" :font "Sarasa Mono SC-11"))))
-     `(mode-line-inactive ((t (:background "#c9cabf" :font "Sarasa Mono SC-11")))))
+    (setq modeline-bgcolor "#281a0f")
+    (setq modeline-alertcolor "#c82a2f")
+    (setq modeline-alertcolor "#782a2f")
+
+    (defun modeline-alert()
+      (custom-theme-set-faces
+       'user
+       `(mode-line ((t (:background ,modeline-alertcolor :font "Sarasa Mono SC-11"))))
+       `(mode-line-inactive ((t (:background "#c9cabf" :font "Sarasa Mono SC-11"))))))
+    (defun modeline-normal()
+      (custom-theme-set-faces
+       'user
+       `(mode-line ((t (:background ,modeline-bgcolor :font "Sarasa Mono SC-11"))))
+       `(mode-line-inactive ((t (:background "#c9cabf" :font "Sarasa Mono SC-11"))))))
+    (modeline-normal)
+
     )
 #+END_SRC
 
@@ -998,15 +1011,16 @@ Alternatives (Check the selectrum repo README)
     :init
     (vertico-mode)
     (setq vertico-cycle t))
-  (use-package vertico-posframe
-    :straight (:host github :repo "tumashu/vertico-posframe" :files ("*.el"))
-    :after (vertico)
-    :config
-    (vertico-posframe-mode 1)
-    (setq vertico-posframe-parameters
-          '((left-fringe . 8)
-            (right-fringe . 8)))
-    )
+
+;;  (use-package vertico-posframe
+;;    :straight (:host github :repo "tumashu/vertico-posframe" :files ("*.el"))
+;;    :after (vertico)
+;;    :config
+;;    (vertico-posframe-mode 1)
+;;    (setq vertico-posframe-parameters
+;;          '((left-fringe . 8)
+;;            (right-fringe . 8)))
+;;    )
 
   ;; Use the `orderless' completion style.
   ;; Enable `partial-completion' for files to allow path expansion.
@@ -2038,7 +2052,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   ;;  (set-fontset-font t 'unicode (font-spec :family "Cascadia Code PL" :size 14))
-  ;;  (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
+  (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
   ;; (defun set-fonts ()
   ;;   (interactive)
   ;;   (set-face-attribute 'default nil :font (font-spec :family "Cascadia Code PL" :size 14))
@@ -2079,12 +2093,12 @@ Alternatives (Check the selectrum repo README)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (set-face-attribute 'default nil :font "Sarasa Mono SC-14")
-  (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono SC-14")
-  (set-face-attribute 'variable-pitch nil :font "Sarasa Mono SC-14")
+  ;; (set-face-attribute 'default nil :font "Sarasa Mono SC-14")
+  ;; (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono SC-14")
+  ;; (set-face-attribute 'variable-pitch nil :font "Sarasa Mono SC-14")
 
-  (dolist (face '(default fixed-pitch))
-    (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
+  ;; (dolist (face '(default fixed-pitch))
+  ;;   (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -2107,6 +2121,20 @@ Alternatives (Check the selectrum repo README)
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     )
 
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package popweb
+    :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
+    :config
+    (setq popweb-root (file-name-directory (locate-library "popweb.el")))
+    (add-to-list 'load-path (concat popweb-root "extension/latex"))
+    (require 'popweb-latex)
+    (add-to-list 'load-path (concat popweb-root "extension/dict"))
+    (require 'popweb-dict-bing)
+    (require 'popweb-dict-youdao)
+    )
 #+END_SRC
 
 * A Gantt Chart (Calendar) for Org Mode
@@ -2233,6 +2261,11 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package xkcd)
+  (use-package emacs
+    :config
+    ;; (better-pixel-scroll-mode)
+    (setq delete-by-moving-to-trash t)
+    )
 #+END_SRC
 
 
@@ -2254,6 +2287,26 @@ Alternatives (Check the selectrum repo README)
 #+END_SRC
 
 
+#+BEGIN_SRC emacs-lisp
+  ;; Speedup the C++ file over Tramp.
+  (setq remote-file-name-inhibit-cache nil)
+  (setq vc-ignore-dir-regexp
+        (format "%s\\|%s"
+                vc-ignore-dir-regexp
+                tramp-file-name-regexp))
+  (setq tramp-verbose 1)
+
+  ;; Projectile optimizations over Tramp.
+  (defadvice projectile-project-root (around ignore-remote first activate)
+    (unless (file-remote-p default-directory) ad-do-it))
+
+  (defun insert-datetime()
+    "Insert the current date and time."
+    (interactive)
+    (insert (format-time-string "%F %T")))
+
+#+END_SRC
+
 Interesting Colors:
 
 (setq colorrrrs '("#383a42" "#fafafa" "#A6E22E" "#272822" "#fafafa" "#e45649"
@@ -2261,3 +2314,28 @@ Interesting Colors:
 "#C26C0F" "#E6DB74" "#AB8C00" "#A18F00" "#989200" "#8E9500" "#A6E22E" "#729A1E"
 "#609C3C" "#4E9D5B" "#3C9F79" "#A1EFE4" "#299BA6" "#2896B5" "#2790C3" "#66D9EF"
 "#99aaff"))
+
+
+* Fonts
+
+#+BEGIN_SRC emacs-lisp
+  (use-package cnfonts
+    :config
+    ;; 让 cnfonts 在 Emacs 启动时自动生效。
+    (cnfonts-mode 1)
+    ;; 添加两个字号增大缩小的快捷键
+    (define-key cnfonts-mode-map (kbd "C--") #'cnfonts-decrease-fontsize)
+    (define-key cnfonts-mode-map (kbd "C-=") #'cnfonts-increase-fontsize)
+    (setq cnfonts-profiles
+          '("general" "code" "org-mode" "read-book"))
+    (setq cnfonts-use-system-type t)
+    (setq cnfonts-use-face-font-rescale t)
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (setq cnfonts-personal-fontnames
+        '(()
+          ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05")
+          ))
+#+END_SRC
