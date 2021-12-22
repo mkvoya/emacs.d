@@ -41,16 +41,7 @@ Also from https://github.com/sachac/.emacs.d
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (global-hl-line-mode t)
-  (set-face-background 'hl-line "#d0fed0")
-  (set-face-foreground 'hl-line nil)
-  (set-face-foreground 'highlight nil)
-
   (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-  ;; (set-face-attribute 'default nil :height 160)
-
-  (add-hook 'prog-mode-hook #'hs-minor-mode)
-
 #+END_SRC
 
 * Bootstrap
@@ -137,8 +128,7 @@ Also from https://github.com/sachac/.emacs.d
                                                 (car (file-expand-wildcards
                                                       (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
             ;; Only set after LIBRARY_PATH can find gcc libraries.
-            (setq comp-deferred-compilation t))
-        (message "Native comp is *not* available"))))
+            (setq comp-deferred-compilation t)))))
 #+END_SRC
 ** Configs
 #+BEGIN_SRC emacs-lisp
@@ -204,19 +194,9 @@ Also from https://github.com/sachac/.emacs.d
 This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
 
 #+BEGIN_SRC emacs-lisp
-  (use-package yascroll
-    :disabled t
-    :config
-    (global-yascroll-bar-mode 1))
-#+END_SRC
-
-Don't use nyan-mode unless mode-line is enabled.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package nyan-mode
-    :disabled t
-    :config
-    (nyan-mode t))
+  ;; (use-package yascroll :disabled t :config (global-yascroll-bar-mode 1))
+  ;; Don't use nyan-mode unless mode-line is enabled.
+  ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
 #+END_SRC
 
 
@@ -379,6 +359,7 @@ Don't use nyan-mode unless mode-line is enabled.
     ;; Disable Evil in snails-mode
     (evil-set-initial-state 'snails-mode 'emacs)
     (evil-set-initial-state 'notdeft-mode 'emacs)
+    (evil-set-initial-state 'vterm-mode 'emacs)
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-mode 1))
 
@@ -529,70 +510,9 @@ Don't use nyan-mode unless mode-line is enabled.
 
 
 *** Modeline
-| doom-modeline   |   |
+| doom-modeline   |  |
 | smart-mode-line |  |
 
-#+BEGIN_SRC emacs-lisp
-  (use-package doom-modeline
-    :disabled t
-    :after (hemisu-theme)
-    :init (doom-modeline-mode 1)
-    :config
-    (setq doom-modeline-height 20)
-    )
-  ;; (autoload 'notmuch "notmuch" "notmuch mail" t)
-
-  ;; `notmuch' notifications in doom-modeline
-  (use-package emacs
-    :disabled t
-    :defer 5
-    :after (doom-modeline notmuch-unread)
-    :config
-
-    (require 'doom-modeline-segments)
-    (require 'notmuch-unread)
-
-    (defun notmuch-open-unread-view()
-      "Open notmuch panel for unread mails."
-      (interactive)
-      (notmuch-search "tag:unread"))
-
-    ;; Add notmuch notifications in doom-modeline.
-    (doom-modeline-def-segment
-      notmuch
-      "Show notifications of any unread emails in `notmuch'."
-      (when (and (doom-modeline--active)
-                 (not doom-modeline--limited-width-p)
-                 ;; don't display if the unread mails count is zero
-                 (> notmuch-unread-emails 0))
-        (concat
-         (doom-modeline-spc)
-         (propertize
-          (concat
-           (doom-modeline-icon 'material "email" "📧" "#"
-                               :face 'doom-modeline-notification
-                               :height 1.1 :v-adjust -0.2)
-           (doom-modeline-vspc)
-           (propertize
-            (if (> notmuch-unread-emails doom-modeline-number-limit)
-                (format "%d+" doom-modeline-number-limit)
-              (number-to-string notmuch-unread-emails))
-            'face '(:inherit
-                    (doom-modeline-unread-number doom-modeline-notification))))
-          'mouse-face 'mode-line-highlight
-          'keymap '(mode-line keymap
-                              (mouse-1 . notmuch-open-unread-view)
-                              (mouse-2 . notmuch-open-unread-view)
-                              (mouse-3 . notmuch-open-unread-view))
-          'help-echo (concat (if (= notmuch-unread-emails 1)
-                                 "You have an unread email"
-                               (format "You have %s unread emails" notmuch-unread-emails))
-                             "\nClick here to view "
-                             (if (= notmuch-unread-emails 1) "it" "them")))
-         (doom-modeline-spc))
-        )))
-
-#+END_SRC
 #+BEGIN_SRC emacs-lisp
   (use-package awesome-tray
     :after (notmuch-unread)
@@ -802,43 +722,13 @@ Don't use nyan-mode unless mode-line is enabled.
     (rainbow-mode t))
 #+END_SRC
 *** delight: altering mode appearences on mode line
-| delight | https://elpa.gnu.org/packages/delight.html |
-#+BEGIN_SRC emacs-lisp
-  ;;; (require 'diminish); => use delight
-  (use-package delight
-    :defer 5
-    :config
-    (delight '((abbrev-mode " Abv" "abbrev")
-               (smart-tab-mode " \\t" "smart-tab")
-               (eldoc-mode nil "eldoc")
-               (yas-mode)
-               (pyim-isearch-mode)
-               (company-mode)
-               (image-click-mode)
-               (which-key-mode nil "which-key")
-               (Undo-Tree "UT" "undo-tree")
-               (overwrite-mode " Ov" t)))
-    (delight 'rainbow-mode)
-    (delight 'visual-line-mode "↩" t)
-    (delight 'beacon-mode "" "beacon")
-    (delight 'org-roam-mode "" "org-roam")
-    (delight 'org-mode "♘" :major)
-    (delight 'org-indent-mode  "")
-    (delight 'flycheck-mode "" "flycheck")
-    (delight 'yas-minor-mode "" "yasnippet")
-    (delight 'emacs-lisp-mode "Elisp" :major)
-    (delight 'company-mode "☺" "company-mode")
-    (delight 'pyim-isearch-mode)
-    ;; (delight 'explain-pause-mode)
-    ;; (delight 'which-key-mode "" "which-key"))
-   )
-  (add-to-list 'auto-mode-alist '("\\.eps\\'" . image-mode))
-#+END_SRC
+| diminish         |                                            |
+| delight (better) | https://elpa.gnu.org/packages/delight.html |
 
 
 *** Async
 #+BEGIN_SRC emacs-lisp
-  (use-package async)
+  (use-package async :defer 5)
 #+END_SRC
 
 
@@ -1114,11 +1004,13 @@ Don't use nyan-mode unless mode-line is enabled.
        ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package paren
+    :defer 5
     :hook (after-init . show-paren-mode)
     :config
     (setq show-paren-when-point-inside-paren t
           show-paren-when-point-in-periphery t))
   (use-package so-long
+    :defer 5
     :config (global-so-long-mode 1))
   (use-package simple
     :straight nil
@@ -1132,8 +1024,6 @@ Don't use nyan-mode unless mode-line is enabled.
                           )))
 
          ;;; ========== End of Some builtin modes ===========
-  ;; Make gc pauses faster by decreasing the threshold.
-  (setq gc-cons-threshold (* 2 1000 1000))
 #+END_SRC
 
 ** Completion
@@ -1495,27 +1385,24 @@ Alternatives (Check the selectrum repo README)
     ;; Strike through the whole line with DONE entry
     (font-lock-add-keywords
      'org-mode
-     '(("\\* \\<DONE .*" 0 'gnus-emphasis-strikethru append))
-     ;; '(("\\* \\<DONE [^\\*]*" 0 'gnus-emphasis-strikethru append))
-     ;; '(("^\\(\\(\\*\\)+ \\<DONE\\> [^\\*]?*\\)\\2 " 1 'gnus-emphasis-strikethru append))
+     '(("\\* \\<DONE .*" 0 'shr-strike-through append))
      t)
     (font-lock-add-keywords
      'org-mode
-     ;; '(("\\* \\<CANCELED [^\\*]*" 0 'gnus-emphasis-strikethru append))
-     '(("\\* \\<CANCELED .*" 0 'gnus-emphasis-strikethru append))
+     '(("\\* \\<CANCELED .*" 0 'shr-strike-through append))
      t)
 
-    ;; define a useless face
-    (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
-    ;; shrink the size of PROPERTY list
-    (font-lock-add-keywords
-     'org-mode
-     '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 100) append))
-     t)
-    ;; Does not work well when font-lock is used
-    ;; (add-text-properties 179 252 '(line-height 1))
-    ;; (set-text-properties 179 252 '(face tiny-font))
-    ;; (add-face-text-property 179 252 '(:height 120) t)
+    ;; ;; define a useless face
+    ;; (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
+    ;; ;; shrink the size of PROPERTY list
+    ;; (font-lock-add-keywords
+    ;;  'org-mode
+    ;;  '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 100) append))
+    ;;  t)
+    ;; ;; Does not work well when font-lock is used
+    ;; ;; (add-text-properties 179 252 '(line-height 1))
+    ;; ;; (set-text-properties 179 252 '(face tiny-font))
+    ;; ;; (add-face-text-property 179 252 '(:height 120) t)
 
     ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
     ;; (setq org-ellipsis "…")
@@ -1530,7 +1417,6 @@ Alternatives (Check the selectrum repo README)
       (let ((org-link-frame-setup (quote
                                    ((vm . vm-visit-folder)
                                     (vm-imap . vm-visit-imap-folder)
-                                    (gnus . gnus)
                                     (file . find-file)
                                     (wl . wl)))
                                   ))
@@ -1597,13 +1483,52 @@ Alternatives (Check the selectrum repo README)
                 ;; (org-hide-properties)
                 ))
 
-                ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-                ;;; But I don't need the odd levels only
+                       ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+                       ;;; But I don't need the odd levels only
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
 
     (use-package org-contrib)
+
+    (defun __org-indent--compute-prefixes ()
+      "Compute prefix strings for regular text and headlines."
+      (setq org-indent--heading-line-prefixes
+            (make-vector org-indent--deepest-level nil))
+      (setq org-indent--inlinetask-line-prefixes
+            (make-vector org-indent--deepest-level nil))
+      (setq org-indent--text-line-prefixes
+            (make-vector org-indent--deepest-level nil))
+      (when (> org-indent-indentation-per-level 0)
+        (dotimes (n org-indent--deepest-level)
+          (let ((indentation (if (<= n 1) 0
+                               (* (1- org-indent-indentation-per-level)
+                                  (1- n)))))
+            ;; Headlines line prefixes.
+            (let ((heading-prefix (make-string indentation ?*)))
+              (aset org-indent--heading-line-prefixes
+                    n
+                    (org-add-props heading-prefix nil 'face 'org-macro))
+              ;; Inline tasks line prefixes
+              (aset org-indent--inlinetask-line-prefixes
+                    n
+                    (cond ((<= n 1) "")
+                          ((bound-and-true-p org-inlinetask-show-first-star)
+                           (concat org-indent-inlinetask-first-star
+                                   (substring heading-prefix 1)))
+                          (t (org-add-props heading-prefix nil 'face 'org-macro)))))
+            ;; Text line prefixes.
+            ;;(make-string (+ n indentation) ?\s)
+            (aset org-indent--text-line-prefixes
+                  n
+                  (org-add-props
+                      (concat (string-join (-repeat (1- n)
+                                                    (concat "|" (make-string (1- org-indent-indentation-per-level) ?\s))))
+                              (and (> n 0)
+                                   (char-to-string ?\s)))
+                      nil 'face 'org-macro))))))
+
+
     )
 #+END_SRC
 
@@ -2009,6 +1934,8 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "s-<left>") 'tab-previous)
+  (global-set-key (kbd "s-<right>") 'tab-next)
   (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
   ;; Open ibuffer upon "C-c i"
   (global-set-key (kbd "C-c i") 'ibuffer)
@@ -2475,6 +2402,7 @@ Interesting Colors:
         )))
 
   (use-package popwin
+    :disabled t
     :config
     (popwin-mode 1)
     )
@@ -2610,4 +2538,26 @@ Interesting Colors:
       :config
       (evil-collection-paper-setup))
     )
+
+  (use-package hl-line
+    :config
+    (global-hl-line-mode t)
+    (set-face-background 'hl-line "#d0fed0")
+    (set-face-foreground 'hl-line nil)
+    (set-face-foreground 'highlight nil))
+
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  ;; Python Support
+  (use-package elpy)
+  (use-package py-autopep8)
+  (use-package blacken)
+  (use-package ein)
+  (use-package live-py-mode)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package jinja2-mode)
+(use-package vue-mode)
 #+END_SRC
