@@ -13,9 +13,9 @@
     (load-file "~/.emacs.d/emacs-config.el")
 
     ;; Collect garbage when all else is done
-    (garbage-collect))
+    ;; (garbage-collect)
+    )
 
-
-
+(setq gc-cons-threshold (expt 2 23))
 
 ;;; init.el ends here

@@ -235,9 +235,11 @@ This package is disabled since it conflicts with dashboard and the result is ver
           '("general" "code" "org-mode" "read-book"))
     (setq cnfonts-use-system-type t)
     (setq cnfonts-use-face-font-rescale t)
+    (defun set-apple-emoji-font(fontsizes-list)
+      (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend))
+    (add-hook 'cnfonts-set-font-finish-hook #'set-apple-emoji-font)
     ;; 让 cnfonts 在 Emacs 启动时自动生效。
     (cnfonts-mode 1)
-    (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
     ;; 添加两个字号增大缩小的快捷键
     (define-key cnfonts-mode-map (kbd "C--") #'cnfonts-decrease-fontsize)
     (define-key cnfonts-mode-map (kbd "C-=") #'cnfonts-increase-fontsize)
@@ -515,7 +517,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 #+BEGIN_SRC emacs-lisp
   (use-package awesome-tray
-    :after (notmuch-unread)
+    :after (notmuch)
     :straight (:host github :repo "manateelazycat/awesome-tray")
     :config
     ;; (setq mode-line-format nil)
@@ -529,9 +531,13 @@ This package is disabled since it conflicts with dashboard and the result is ver
       '((t (:italic t)))
       "Hello module face."
       :group 'awesome-tray)
-    (require 'notmuch-unread)
     (defun awesome-tray-module-notmuch-info ()
-      (format "[%d]" notmuch-unread-emails))
+      (format
+       "[%s]"
+       (replace-regexp-in-string
+        "\n" ""
+        (notmuch-command-to-string "count" "tag:unread"))))
+
     (add-to-list 'awesome-tray-module-alist
                  '("notmuch" . (awesome-tray-module-notmuch-info
                                 awesome-tray-module-battery-face)))
@@ -543,11 +549,11 @@ This package is disabled since it conflicts with dashboard and the result is ver
         (create-image
          (concat
           (format "/* XPM */
-        static char * %s[] = {
-        \"%i %i 2 1\",
-        \". c %s\",
-        \"  c %s\",
-        "
+                      static char * %s[] = {
+                      \"%i %i 2 1\",
+                      \". c %s\",
+                      \"  c %s\",
+                      "
                   (downcase (replace-regexp-in-string " " "_" name))
                   (length (car data))
                   (length data)
@@ -1313,19 +1319,7 @@ Alternatives (Check the selectrum repo README)
 | WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
-  ;; (autoload 'notmuch "notmuch" "notmuch mail" t)
-  (use-package notmuch
-    :ensure nil)
-
-  (use-package notmuch-unread
-    ;; :after (notmuch doom-modeline)
-    :after (notmuch)
-    :ensure nil
-    :straight (:host github :repo "mkvoya/notmuch-unread" :files ("notmuch-unread.el"))
-    :config
-    (setq notmuch-unread-update-interval 300)
-    (notmuch-unread-mode)
-    )
+  (use-package notmuch :ensure nil)
 #+END_SRC
 
 
@@ -1354,6 +1348,13 @@ Alternatives (Check the selectrum repo README)
   ;; Enable Org mode
   (use-package org
     :defer 2
+    :init
+    (setq org-modules '(ol-doi
+                        ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
+                        ol-bibtex
+                        ol-docview
+                        ol-irc
+                        ol-info))
     :config
     ;; Shortcuts
     (global-set-key (kbd "C-c a") 'org-agenda)
@@ -1792,7 +1793,7 @@ Alternatives (Check the selectrum repo README)
   (setq org-roam-v2-ack t)
   (use-package org-roam
     :after (org)
-    :defer 5
+    :defer
     :custom
     (org-roam-directory "~/Dropbox/Dreams/Org/")
     (org-roam-link-file-path-type 'relative)
@@ -2294,7 +2295,16 @@ Alternatives (Check the selectrum repo README)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package vterm)
+  (use-package vterm
+    :config
+    (defun vterm-new()
+      "Add a new vterm session with given name."
+      (interactive)
+      (let ((session-name (string-trim (read-string "Enter the name for the session: "))))
+        (vterm session-name)
+        )
+      )
+    )
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2560,4 +2570,28 @@ Interesting Colors:
 #+BEGIN_SRC emacs-lisp
   (use-package jinja2-mode)
 (use-package vue-mode)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package tab-bar
+    :config
+    (defun tab-bar-padding-left()
+      "                ")
+    (setq tab-bar-format
+          '(tab-bar-padding-left
+            tab-bar-format-history
+            tab-bar-format-tabs
+            tab-bar-separator
+            tab-bar-format-add-tab))
+    (set-face-attribute
+     'tab-bar nil
+     :background "white"
+     :height 1.2
+     :font (font-spec :family "Sans Serif" :size 16))
+     ;; :font (font-spec :family "Heiti SC" :weight 'normal :size 18)
+    (tab-bar-mode 1)
+    )
+
 #+END_SRC

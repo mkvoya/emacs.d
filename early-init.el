@@ -18,7 +18,11 @@
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ;; No tool bar
-   ;; (font . "Sarasa Mono SC-14")         ;; Set font
+   ;; (undecorated . 1)                 ; this will completely remove the titlebar
+   (ns-titlebar-height-adjust . -10)    ; this is actually not used
+   (ns-title-hidden . 1)                ; hide the title text in the titlebar
+   (ns-fullsize-content . 1)            ; make the content full size
+   (ns-transparent-titlebar . 1)        ; make the titlebar transparent
    (vertical-scroll-bars . nil)))       ;; No vertical scroll-bars
 
 ;; It seems that we don't need the following anymore.
