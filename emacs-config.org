@@ -2595,3 +2595,9 @@ Interesting Colors:
     )
 
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package transclusion-minor-mode
+    :disabled t
+    :straight (:host github :repo "whacked/transclusion-minor-mode"))
+#+END_SRC
