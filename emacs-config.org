@@ -531,12 +531,20 @@ This package is disabled since it conflicts with dashboard and the result is ver
       '((t (:italic t)))
       "Hello module face."
       :group 'awesome-tray)
+    (defun notmuch-open-unread-view()
+      "Open notmuch panel for unread mails."
+      (interactive)
+      (notmuch-search "tag:unread"))
     (defun awesome-tray-module-notmuch-info ()
-      (format
-       "[%s]"
-       (replace-regexp-in-string
-        "\n" ""
-        (notmuch-command-to-string "count" "tag:unread"))))
+      (let ((info (format "[%s]" (replace-regexp-in-string "\n" "" (notmuch-command-to-string "count" "tag:unread")))))
+        (propertize
+         info
+         'help-echo "Unread!"
+         'local-map (let ((map (make-sparse-keymap)))
+                      (define-key map [mouse-1]
+                                  #'notmuch-open-unread-view)
+                      map)
+         )))
 
     (add-to-list 'awesome-tray-module-alist
                  '("notmuch" . (awesome-tray-module-notmuch-info
@@ -549,11 +557,11 @@ This package is disabled since it conflicts with dashboard and the result is ver
         (create-image
          (concat
           (format "/* XPM */
-                      static char * %s[] = {
-                      \"%i %i 2 1\",
-                      \". c %s\",
-                      \"  c %s\",
-                      "
+                            static char * %s[] = {
+                            \"%i %i 2 1\",
+                            \". c %s\",
+                            \"  c %s\",
+                            "
                   (downcase (replace-regexp-in-string " " "_" name))
                   (length (car data))
                   (length data)
@@ -858,6 +866,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
     ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
     ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
     (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
+    (add-to-list 'TeX-command-list '("Make Clean" "make clean" TeX-run-command nil t))
     ;; (setq-default TeX-command-default "Make")
     ;; from https://gist.github.com/stefano-meschiari/9217695
     (setq TeX-auto-save t)
@@ -945,6 +954,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
   (add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
 
   (use-package svg-tag-mode
+    :disabled t
     :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el")))
 #+END_SRC
 
@@ -1246,7 +1256,7 @@ Alternatives (Check the selectrum repo README)
 *** 无错
 #+BEGIN_SRC emacs-lisp
   (use-package wucuo
-    :defer 5
+    :disabled t
     :config
     (add-hook 'prog-mode-hook #'wucuo-start)
     (add-hook 'text-mode-hook #'wucuo-start)
@@ -1877,6 +1887,14 @@ Alternatives (Check the selectrum repo README)
     )
 #+END_SRC
 
+*** Org-transclusion
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-transclusion
+    :after org)
+  ;; :bind (("<f12>" . #'org-transclusion-add))
+  ;; ("C-n t" . #'org-transclusion-mode)
+#+END_SRC
 *** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
@@ -1935,8 +1953,9 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
-  (global-set-key (kbd "s-<left>") 'tab-previous)
-  (global-set-key (kbd "s-<right>") 'tab-next)
+  (global-set-key (kbd "M-s-<left>") 'tab-previous)
+  (global-set-key (kbd "M-s-<right>") 'tab-next)
+  (global-set-key (kbd "M-s-n") 'tab-new)
   (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
   ;; Open ibuffer upon "C-c i"
   (global-set-key (kbd "C-c i") 'ibuffer)
@@ -2561,8 +2580,12 @@ Interesting Colors:
 #+BEGIN_SRC emacs-lisp
   ;; Python Support
   (use-package elpy)
-  (use-package py-autopep8)
-  (use-package blacken)
+  (use-package py-autopep8
+    :config
+    (setq py-autopep8-options '("--max-line-length=120")))
+  (use-package blacken
+    :config
+    (setq blacken-line-length 120))
   (use-package ein)
   (use-package live-py-mode)
 #+END_SRC
@@ -2600,4 +2623,21 @@ Interesting Colors:
   (use-package transclusion-minor-mode
     :disabled t
     :straight (:host github :repo "whacked/transclusion-minor-mode"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package gitlab-ci-mode)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dockerfile-mode)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package send-to-osx-grammarly
+    :disabled t ; Actually, it's not too complex to copy the text to grammarly by hand
+    :straight (:host github :repo "mmagnus/emacs-grammarly")
+    :bind (("C-c C-g h" . #'send-to-osx-grammarly-push)
+           ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
 #+END_SRC

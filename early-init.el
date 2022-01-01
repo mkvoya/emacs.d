@@ -10,31 +10,26 @@
  package-enable-at-startup nil
  package-native-compile t)
 
+(when (display-graphic-p)
+  (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
+  (scroll-bar-mode nil)
+  (menu-bar-mode nil))
+
 (setq-default
  default-frame-alist
- '((horizontal-scroll-bars . nil)       ;; No horizontal scroll-bars
+ '(
    (left-fringe . 8)                    ;; Thin left fringe
-   (menu-bar-lines . 0)                 ;; No menu bar
+   (menu-bar-lines . 0)                 ; No menu bar
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
-   (tool-bar-lines . 0)                 ;; No tool bar
+   (tool-bar-lines . 0)                 ; No tool bar
    ;; (undecorated . 1)                 ; this will completely remove the titlebar
    (ns-titlebar-height-adjust . -10)    ; this is actually not used
    (ns-title-hidden . 1)                ; hide the title text in the titlebar
    (ns-fullsize-content . 1)            ; make the content full size
    (ns-transparent-titlebar . 1)        ; make the titlebar transparent
-   (vertical-scroll-bars . nil)))       ;; No vertical scroll-bars
-
-;; It seems that we don't need the following anymore.
-;; ;;; Window
-;; (tool-bar-mode -1) ; close tool bar (-1 is switch)
-;; (menu-bar-mode -1) ; close menu bar
-;; (scroll-bar-mode -1) ; close the scroll bar
-
-;; refs: https://emacs-china.org/t/inconsolata/7997
-;; (when (member "Sarasa Mono SC" (font-family-list))
-;;   (set-fontset-font t nil (font-spec :family "Sarasa Mono SC"))
-;;   (set-frame-font "Sarasa Mono SC" t t)
-;;   (add-to-list 'default-frame-alist '(font . "Sarasa Mono SC-14")))
+   (vertical-scroll-bars . nil)         ; No vertical scroll-bars
+   (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
+   ))
 
 ;;; early-init.el ends here
