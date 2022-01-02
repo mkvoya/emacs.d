@@ -964,11 +964,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
     (setq fill-column 1024))
   (add-hook 'TeX-mode-hook #'mkvoya/tex-mode-hook)
 
-  (use-package svg-tag-mode
-    :disabled t
-    :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el")))
 #+END_SRC
-
 
 
 
@@ -1364,11 +1360,16 @@ Alternatives (Check the selectrum repo README)
 
 ** Org-mode
 *** Org
+
+
+
 #+BEGIN_SRC emacs-lisp
 
   ;; Enable Org mode
   (use-package org
-    :defer 2
+    :mode ("\\.org\\'" . org-mode)
+    :bind (("C-c a" . #'org-agenda)
+           ("C-c c" . #'org-capture))
     :init
     (setq org-modules '(ol-doi
                         ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
@@ -1377,9 +1378,7 @@ Alternatives (Check the selectrum repo README)
                         ol-irc
                         ol-info))
     :config
-    ;; Shortcuts
-    (global-set-key (kbd "C-c a") 'org-agenda)
-    (global-set-key (kbd "C-c c") 'org-capture)
+
     (setq org-display-remote-inline-images 'download)
 
     ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
@@ -1407,29 +1406,11 @@ Alternatives (Check the selectrum repo README)
     ;; Strike through the whole line with DONE entry
     (font-lock-add-keywords
      'org-mode
-     '(("\\* \\<DONE .*" 0 'shr-strike-through append))
-     t)
-    (font-lock-add-keywords
-     'org-mode
-     '(("\\* \\<CANCELED .*" 0 'shr-strike-through append))
+     '(("\\* \\<DONE .*" 0 'shr-strike-through append)
+       ("\\* \\<CANCELED .*" 0 'shr-strike-through append))
      t)
 
-    ;; ;; define a useless face
-    ;; (defface tiny-font '((t :height 100)) "Face for function parameters." :group 'org-mode)
-    ;; ;; shrink the size of PROPERTY list
-    ;; (font-lock-add-keywords
-    ;;  'org-mode
-    ;;  '((" ?*\\:PROPERTIES\\:\\(\n.*?\\)*?.*?\\:END\\:\n" 0 '(:height 100) append))
-    ;;  t)
-    ;; ;; Does not work well when font-lock is used
-    ;; ;; (add-text-properties 179 252 '(line-height 1))
-    ;; ;; (set-text-properties 179 252 '(face tiny-font))
-    ;; ;; (add-face-text-property 179 252 '(:height 120) t)
-
-    ;; from https://github.com/psamim/dotfiles/blob/master/doom/config.el#L73
-    ;; (setq org-ellipsis "…")
-    ;; ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵
-    ;; (setq org-ellipsis "↴▾▽▼↩↘↸")
+    ;; …, ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵ "↴▾▽▼↩↘↸"
     (setq org-ellipsis "▾")
 
     ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
@@ -1464,7 +1445,7 @@ Alternatives (Check the selectrum repo README)
     (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
     ;; Better blocks
-    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "✎")
+    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "λ")  ; previously ✎
                                            ("#+END_SRC" . "□")
                                            ("#+begin_src" . "λ")
                                            ("#+end_src" . "□")
@@ -1472,11 +1453,9 @@ Alternatives (Check the selectrum repo README)
                                            ("#+end_quote" . ?«)
                                            ("#+BEGIN_QUOTE" . ?»)
                                            ("#+END_QUOTE" . ?«)
-                                           ("[ ]" . "☐")
-                                           ("[X]" . "☑")
-                                           ("[-]" . "❍")
                                            ("PROPERTIES" . "⚙")
                                            ))
+
     (require 'color)
     (set-face-attribute 'org-block nil :background
                         (color-darken-name
@@ -1489,8 +1468,7 @@ Alternatives (Check the selectrum repo README)
                          (face-attribute 'default :background) 3))
     (setq org-fontify-quote-and-verse-blocks t)
     (set-face-attribute 'org-block-begin-line nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 4))
+                        "#E4D6E8")
     (set-face-attribute 'org-block-end-line nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 4))
@@ -1505,13 +1483,13 @@ Alternatives (Check the selectrum repo README)
                 ;; (org-hide-properties)
                 ))
 
-                       ;;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
-                       ;;; But I don't need the odd levels only
+    ;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+    ;; But I don't need the odd levels only
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
 
-    (use-package org-contrib)
+    (use-package org-contrib :disabled)
 
     (defun __org-indent--compute-prefixes ()
       "Compute prefix strings for regular text and headlines."
@@ -1555,13 +1533,71 @@ Alternatives (Check the selectrum repo README)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
+  (use-package svg-lib :demand t)
+  (use-package svg-tag-mode
+    :commands svg-tag-mode
+    :hook (org-mode . svg-tag-mode)
+    :demand t
+    :after (svg-lib org)
+    :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el"))
+    :config
+    (defun mk/svg-checkbox-empty()
+      (let* ((svg (svg-create 14 14)))
+        (svg-rectangle svg 0 0 14 14 :fill 'white :rx 2 :stroke-width 2.5 :stroke-color 'black)
+        (svg-image svg :ascent 'center)
+        ))
+
+    (defun mk/svg-checkbox-filled()
+      (let* ((svg (svg-create 14 14)))
+        (svg-rectangle svg 0 0 14 14 :fill "#2CAADC" :rx 2)
+        (svg-polygon svg '((5.5 . 11) (12 . 3.5) (11 . 2) (5.5 . 9) (1.5 . 5) (1 . 6.5))
+                     :stroke-color 'white :stroke-width 1 :fill 'white)
+        (svg-image svg :ascent 'center)
+        ))
+    ;; (insert-image (svg-checkbox-empty))
+    ;; (insert-image (svg-checkbox-filled))
+    (defun mk/svg-checkbox-toggle()
+      (interactive)
+      (save-excursion
+        (let* ((start-pos (line-beginning-position))
+               (end-pos (line-end-position))
+               (text (buffer-substring-no-properties start-pos end-pos))
+               (case-fold-search t)  ; Let X and x be the same in search
+               )
+          (beginning-of-line)
+          (cond ((string-match-p "\\[X\\]" text)
+                 (progn
+                   (re-search-forward "\\[X\\]" end-pos)
+                   (replace-match "[ ]")))
+                ((string-match-p "\\[ \\]" text)
+                 (progn
+                   (search-forward "[ ]" end-pos)
+                   (replace-match "[X]")))
+                ))))
+    (setq svg-tag-tags
+          '(("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+                                         (svg-tag-make tag :beg 2))))
+            ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+                                           (svg-tag-make tag :beg 2 :end -1))))
+            ("\\[ \\]" . ((lambda (_tag) (mk/svg-checkbox-empty))
+                          (lambda () (interactive) (mk/svg-checkbox-toggle))
+                          "Click to toggle."
+                          ))
+            ("\\(\\[[Xx]\\]\\)" . ((lambda (_tag) (mk/svg-checkbox-filled))
+                          (lambda () (interactive) (mk/svg-checkbox-toggle))
+                          "Click to toggle."))
+            ))
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
   ;;; Org Style
   ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
   (setq org-startup-indented t)
   (use-package org-superstar
     :after (org)
+    :hook (org-mode . org-superstar-mode)
     :config
-    (add-hook 'org-mode-hook (lambda () (org-superstar-mode 1)))
     ;; Stop cycling bullets to emphasize hierarchy of headlines.
     (setq org-superstar-cycle-headline-bullets nil)
     ;; Hide away leading stars on terminal.
@@ -1572,7 +1608,7 @@ Alternatives (Check the selectrum repo README)
           '((?* . ?⌬) ; * ; previously used: 8226
             (?+ . ?⋇) ; + ; previously used: 10210
             (?- . ?▪))) ; - ; previously used: 8211
-    ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷ "①" "②" "③" "④" "⑤" "⑥" "⑦" "⑧" "⑨" ⎋〄
+    ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
     )
 
 #+END_SRC
@@ -2652,3 +2688,19 @@ Interesting Colors:
     :bind (("C-c C-g h" . #'send-to-osx-grammarly-push)
            ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
 #+END_SRC
+
+
+:TAD:
+
+ :TODO:
+
+ :TAG:SDFS:
+
+ (insert-image (mk/svg-checkbox-empty))
+
+[ ] sdf
+[ ] asdf
+[X] sdf sdf
+[ ] ok
+
+- we need to replace the svg-tag-mode's ~font-lock-flush~ with ~font-lock-update~ to enable the nice bullets.
