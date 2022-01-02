@@ -643,6 +643,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 *** Undo-tree
 | undo-tree | built-in |
+
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
     :delight
@@ -652,8 +653,10 @@ This package is disabled since it conflicts with dashboard and the result is ver
       (setq undo-tree-visualizer-timestamps t)
       (setq undo-tree-visualizer-diff t)))
 #+END_SRC
+
 *** Yasnippet: A template system for Emacs
 | yasnippet | https://github.com/joaotavora/yasnippet |
+
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :ensure nil
@@ -668,6 +671,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 *** Beacon - A light that follows your cursor around so you don't lose it!
 | beacon | https://github.com/Malabarba/beacon |
+
 #+BEGIN_SRC emacs-lisp
   (use-package beacon
     :config
@@ -678,6 +682,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 *** Which-Key: Emacs package that displays available keybindings in popup
 | which-key | https://github.com/justbur/emacs-which-key |
+
 #+BEGIN_SRC emacs-lisp
   ;; which-key is a fork of guide-key
   (use-package which-key
@@ -704,6 +709,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 | manoj-light      |   |
 | doom-one-light   |   |
 | hemisu-light     |   |
+
 #+BEGIN_SRC emacs-lisp
   (use-package hemisu-theme
     :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
@@ -730,23 +736,27 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 
 *** Rainbow
+
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
     :config
     (rainbow-mode t))
 #+END_SRC
+
 *** delight: altering mode appearences on mode line
 | diminish         |                                            |
 | delight (better) | https://elpa.gnu.org/packages/delight.html |
 
 
 *** Async
+
 #+BEGIN_SRC emacs-lisp
   (use-package async :defer 5)
 #+END_SRC
 
 
 ** Calender
+
 #+BEGIN_SRC emacs-lisp
   (setq calendar-chinese-all-holidays-flag t)
   (use-package cal-china-x
@@ -760,6 +770,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
                   cal-china-x-general-holidays))
     )
 #+END_SRC
+
 *** Calfw - A calendar framework for Emacs
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
