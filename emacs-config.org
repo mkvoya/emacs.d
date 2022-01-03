@@ -250,11 +250,22 @@ This package is disabled since it conflicts with dashboard and the result is ver
 | diff-hl | https://github.com/dgutov/diff-hl |
 #+BEGIN_SRC emacs-lisp
   (use-package diff-hl
+    :defer t
+    :after (magit)
     :config
     (global-diff-hl-mode)
     (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
     (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :straight nil  ; built-in
+    :defer t)
+  (use-package git-link :defer t)
+  (use-package forge :after (magit) :defer t)
+#+END_SRC
+
 
 #+BEGIN_SRC emacs-lisp
 
@@ -630,6 +641,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 #+BEGIN_SRC emacs-lisp
   (use-package beacon
+    :defer t
     :config
     (setq beacon-color "#00ff00")
     ;; (setq beacon-size 40)
@@ -695,6 +707,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
+    :defer t
     :config
     (rainbow-mode t))
 #+END_SRC
@@ -709,7 +722,7 @@ But since we use the tray, we don't need the modeline anymore.
 *** Async
 
 #+BEGIN_SRC emacs-lisp
-  (use-package async :defer 5)
+  (use-package async :defer t)
 #+END_SRC
 
 
@@ -930,8 +943,9 @@ But since we use the tray, we don't need the modeline anymore.
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
     :straight nil
-    :ensure nil
-    :defer 5
+    :init
+    (use-package tramp-sh :straight nil :defer t)
+    :defer t
     :config
     ;; (setq tramp-debug-buffer t)
     (setq tramp-verbose 10)
@@ -1058,6 +1072,8 @@ Alternatives (Check the selectrum repo README)
     (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
     ;; Enable recursive minibuffers
     (setq enable-recursive-minibuffers t)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
     )
 
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -1189,7 +1205,6 @@ LSP, emmm... who use LSP?
 
 ** Org-mode
 *** Org
-
 
 
 #+BEGIN_SRC emacs-lisp
@@ -1360,6 +1375,18 @@ LSP, emmm... who use LSP?
 
     )
 #+END_SRC
+
+
+Add svg checkbox that can be clicked.
+
+An example:
+
+    [X] item1
+    [ ] item2
+      [X] item 3
+    [ ] item3
+
+- Currently we need to replace the svg-tag-mode's ~font-lock-flush~ with ~font-lock-update~ to enable the svg checkboxs.
 
 #+BEGIN_SRC emacs-lisp
   (use-package svg-lib :demand t)
@@ -1553,6 +1580,7 @@ LSP, emmm... who use LSP?
   (use-package ox-html
     :straight nil
     :after (org)
+    :defer t
     :config
     ;; Org export code style
     (setq org-html-htmlize-output-type 'css)
@@ -2326,9 +2354,9 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   (use-package helm
+    :disabled t
     :config
     (setq helm-display-function 'helm-display-buffer-in-own-frame)
-
 
     (defun md/alfred-source-system ()
       (helm-build-sync-source "System"
@@ -2464,20 +2492,22 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   ;; Python Support
-  (use-package elpy)
+  (use-package elpy :defer t)
   (use-package py-autopep8
+    :defer t
     :config
     (setq py-autopep8-options '("--max-line-length=120")))
   (use-package blacken
+    :defer t
     :config
     (setq blacken-line-length 120))
-  (use-package ein)
-  (use-package live-py-mode)
+  (use-package ein :defer t)
+  (use-package live-py-mode :defer t)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package jinja2-mode)
-(use-package vue-mode)
+  (use-package jinja2-mode :mode "\\.jinja2\\'")
+  (use-package vue-mode :mode "\\.vue\\'")
 #+END_SRC
 
 
@@ -2511,12 +2541,12 @@ Interesting Colors:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package gitlab-ci-mode)
+  (use-package gitlab-ci-mode :defer t)
 #+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package dockerfile-mode)
+  (use-package dockerfile-mode :mode "Dockerfile")
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2535,10 +2565,3 @@ Interesting Colors:
  :TAG:SDFS:
 
  (insert-image (mk/svg-checkbox-empty))
-
-[ ] sdf
-[ ] asdf
-[X] sdf sdf
-[ ] ok
-
-- we need to replace the svg-tag-mode's ~font-lock-flush~ with ~font-lock-update~ to enable the nice bullets.
