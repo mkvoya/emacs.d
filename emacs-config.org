@@ -1377,14 +1377,18 @@ LSP, emmm... who use LSP?
 #+END_SRC
 
 
+*** SVG checkboxs
+
 Add svg checkbox that can be clicked.
+
+[[file:emacs-config.org.assets/svg-checkbox.gif]]
 
 An example:
 
     [X] item1
     [ ] item2
       [X] item 3
-    [ ] item3
+    [X] item3
 
 - Currently we need to replace the svg-tag-mode's ~font-lock-flush~ with ~font-lock-update~ to enable the svg checkboxs.
 
