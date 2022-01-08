@@ -32,6 +32,6 @@
  '(org-agenda-files
    '("~/Dropbox/Dreams/Org/Plans.org" "~/Dropbox/Dreams/Org/IPADS.sched.org" "~/Dropbox/Dreams/Org/Inbox.org" "~/Dropbox/Dreams/Org/Main.org"))
  '(org-clock-mode-line-total 'current)
- )
+ '(safe-local-variable-values '((org-image-actual-width))))
 
 ;;; customs.el ends here

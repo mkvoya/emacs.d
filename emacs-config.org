@@ -261,7 +261,10 @@ This package is disabled since it conflicts with dashboard and the result is ver
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :straight nil  ; built-in
-    :defer t)
+    :defer t
+    :config
+    (setq magit-diff-refine-hunk t)
+    )
   (use-package git-link :defer t)
   (use-package forge :after (magit) :defer t)
 #+END_SRC
@@ -528,7 +531,6 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 #+BEGIN_SRC emacs-lisp
   (use-package awesome-tray
-    :after (notmuch)
     :straight (:host github :repo "manateelazycat/awesome-tray")
     :config
     ;; (setq mode-line-format nil)
@@ -545,9 +547,17 @@ This package is disabled since it conflicts with dashboard and the result is ver
     (defun notmuch-open-unread-view()
       "Open notmuch panel for unread mails."
       (interactive)
+      (require 'notmuch)
       (notmuch-search "tag:unread"))
+    (defun notmuch-count-unread()
+      "Get the notmuch unread mail count if notmuch is loaded."
+      (if (fboundp 'notmuch-command-to-string)
+          (replace-regexp-in-string "\n" ""
+                                    (notmuch-command-to-string "count"
+                                                               "tag:unread"))
+        "?"))
     (defun awesome-tray-module-notmuch-info ()
-      (let ((info (format "[%s]" (replace-regexp-in-string "\n" "" (notmuch-command-to-string "count" "tag:unread")))))
+      (let ((info (format "[%s]" (notmuch-count-unread))))
         (propertize
          info
          'help-echo "Unread!"
@@ -563,14 +573,14 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
     (defun mk/svg-scrollbar (height width pmax pmin winend winstart fgcolor bgcolor)
       "Generate an svg image for scrollbar of size HEIGHT x WIDTH for PMAX to PMIN given WINEND and WINSTART and FGCOLOR and BGCOLOR."
-      (let* ((top (1- (round (* height (/ (float winstart) (float pmax))))))
-             (bot (1+ (round (* height (/ (float winend) (float pmax))))))
+      (let* ((top (/ (* (- height 2) (float winstart)) pmax))
+             (bot (/ (* (- height 2) (float winend)) pmax))
              (svg (svg-create width height)))
-        (setq top (max top 0))
-        (setq top (min top (1- height)))
-        (setq bot (max bot (1+ top)))
-        (svg-rectangle svg 0 0 width height :fill bgcolor :rx 2 :stroke-width 2.5)
-        (svg-rectangle svg 0 top width bot :fill fgcolor)
+        ;; (setq top (min top (- height 2.1)))
+        ;; (setq bot (max bot (+ top 0.1)))
+        ;; (pp (format "%d~%d => %f %f\n" winstart winend top bot))
+        (svg-rectangle svg 0 0 width height :fill bgcolor :rx 2 :stroke-width 0)
+        (svg-rectangle svg 0 top width bot :fill fgcolor :stroke-width 0)
         (svg-image svg :ascent 'center)
         ))
 
@@ -686,6 +696,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
     (setq modeline-bgcolor "#281a0f")
     (setq modeline-alertcolor "#c82a2f")
     (setq modeline-alertcolor "#782a2f")
+    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 
     (defun modeline-alert()
       (custom-theme-set-faces
@@ -779,7 +790,7 @@ But since we use the tray, we don't need the modeline anymore.
 #+END_SRC
 *** PostScript/ps
 #+BEGIN_SRC emacs-lisp
-  (add-hook 'ps-mode-hook 'doc-view-toggle-display)
+  ;; (add-hook 'ps-mode-hook 'doc-view-toggle-display)
 #+END_SRC
 *** C
 #+BEGIN_SRC emacs-lisp
@@ -878,6 +889,8 @@ But since we use the tray, we don't need the modeline anymore.
     ;;   )
     ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
 
+  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+
     (use-package company-auctex
       :defer t
       :after (company)
@@ -898,6 +911,23 @@ But since we use the tray, we don't need the modeline anymore.
       (add-to-list 'company-backends 'company-reftex-citations))
     (use-package auctex-latexmk)
     )
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package pdf-tools :defer t
+    :init
+    :mode ("\\.pdf\\'" . pdf-view-mode)
+    :magic ("%PDF" . pdf-view-mode)
+    :config
+    (pdf-loader-install)
+    (add-hook 'pdf-view-mode-hook #'(lambda () (pixel-scroll-precision-mode -1)))
+    )
+  ;; (use-package pdf-tools
+  ;;   :magic ("%PDF" . pdf-view-mode)
+  ;;   :config
+  ;;   (pdf-tools-install :no-query))
 #+END_SRC
 
 *** Projectile
@@ -1064,6 +1094,10 @@ Alternatives (Check the selectrum repo README)
       (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
       (ivy-posframe-mode 1)
       )
+    (use-package prescient :defer t)
+    (use-package ivy-prescient :after (counsel)
+      :config
+      (ivy-prescient-mode))
     (ivy-mode 1)
     :config
     ;; Do not allow the cursor in the minibuffer prompt
@@ -1181,7 +1215,7 @@ LSP, emmm... who use LSP?
 | WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
-  (use-package notmuch :ensure nil)
+  (use-package notmuch :ensure nil :defer t)
 #+END_SRC
 
 
@@ -1211,6 +1245,7 @@ LSP, emmm... who use LSP?
 
   ;; Enable Org mode
   (use-package org
+    :defer t
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
            ("C-c c" . #'org-capture))
@@ -1221,6 +1256,10 @@ LSP, emmm... who use LSP?
                         ol-docview
                         ol-irc
                         ol-info))
+    (use-package org-num-mode
+      :defer t
+      :straight nil  ; built-in with org-mode
+      :hook (org-mode . org-num-mode))
     :config
 
     (setq org-display-remote-inline-images 'download)
@@ -1451,10 +1490,11 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;;; Org Style
+        ;;; Org Style
   ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
   (setq org-startup-indented t)
   (use-package org-superstar
+    :defer t
     :after (org)
     :hook (org-mode . org-superstar-mode)
     :config
@@ -1470,6 +1510,15 @@ An example:
             (?- . ?▪))) ; - ; previously used: 8211
     ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
     )
+
+  (use-package org-bars
+    :straight (:host github :repo "tonyaldon/org-bars")
+    :defer t
+    :after (org)
+    :config
+    (setq org-bars-with-dynamic-stars-p nil)
+    )
+
 
 #+END_SRC
 
@@ -1613,6 +1662,7 @@ An example:
 #+BEGIN_SRC emacs-lisp
   ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
+    :defer t
     :straight nil
     :after (org)
     :config
@@ -1627,6 +1677,7 @@ An example:
           '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
     )
   (use-package org-caldav
+    :defer t
     :after (async)
     :config
     (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
@@ -1645,6 +1696,7 @@ An example:
 #+BEGIN_SRC emacs-lisp
   ;;; Org Publish
   (use-package ox-publish
+    :defer t
     :straight nil
     :after (org)
     :config
@@ -1679,6 +1731,7 @@ An example:
                         "~/Dropbox/Dreams/Org/Collections")))
   ;;; Captures
   (use-package org-capture
+    :defer t
     :straight nil
     :after (org)
     :config
@@ -1711,7 +1764,7 @@ An example:
   (setq org-roam-v2-ack t)
   (use-package org-roam
     :after (org)
-    :defer
+    :defer t
     :custom
     (org-roam-directory "~/Dropbox/Dreams/Org/")
     (org-roam-link-file-path-type 'relative)
@@ -1732,9 +1785,10 @@ An example:
 *** OrgRoam-Server
 # org-roam-server does not support org-roam v2, use org-roam-ui instead.
 #+BEGIN_SRC emacs-lisp
-  (use-package websocket)
-  (use-package simple-httpd)
+  (use-package websocket :defer t)
+  (use-package simple-httpd :defer t)
   (use-package org-roam-ui
+    :defer t
     :after (org-roam)
     :straight (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out"))
     ;; :hook
@@ -1751,6 +1805,7 @@ An example:
   ;; Since the org module lazy loads org-protocol (waits until an org URL is
   ;; detected), we can safely chain `org-roam-protocol' to it.
   (use-package org-roam-protocol
+    :defer t
     :straight nil
     :after (org-protocol org-roam))
 #+END_SRC
@@ -1759,7 +1814,8 @@ An example:
   ;; This is an Emacs package that creates graphviz directed graphs from
   ;; the headings of an org file
   (use-package org-mind-map
-    :init (require 'ox-org)
+    :defer t
+    :after (ox-org)
     ;; Uncomment the below if 'ensure-system-packages` is installed
     ;;:ensure-system-package (gvgen . graphviz)
     :config
@@ -1789,16 +1845,15 @@ An example:
 *** org-roam-bibtex
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-bibtex
-    :after org-roam
-    :config
-    (require 'org-ref)
-    )
+    :defer t
+    :after (org-roam org-ref))
 #+END_SRC
 
 *** Org-transclusion
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
+    :defer t
     :after org)
   ;; :bind (("<f12>" . #'org-transclusion-add))
   ;; ("C-n t" . #'org-transclusion-mode)
@@ -1806,6 +1861,7 @@ An example:
 *** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
+    :defer t
     :straight (:host github :repo "hasu/notdeft" :files ("*.el" "xapian"))
     :config
     (setq notdeft-directories '("~/Dropbox/Dreams" "~/Dropbox/IPADS"))
@@ -1818,43 +1874,33 @@ An example:
 *** Input Method
 | pyim | https://github.com/tumashu/pyim |
 #+BEGIN_SRC emacs-lisp
-  (use-package pyim
-    :ensure nil
-    :demand t
-    :after (evil)
-    :config
-    ;; 激活 basedict 拼音词库，五笔用户请继续阅读 README
-    (use-package pyim-basedict
-      :ensure nil
-      :config (pyim-basedict-enable))
-
-    (setq default-input-method "pyim")
-    ;; (setq pyim-default-scheme 'quanpin)
-    (setq pyim-default-scheme 'pyim-shuangpin)
-
-    (setq-default pyim-punctuation-half-width-functions
-                  '(pyim-probe-punctuation-line-beginning
-                    pyim-probe-punctuation-after-punctuation))
-
-    ;; 使用 popup-el 来绘制选词框, 如果用 emacs26, 建议设置
-    ;; 为 'posframe, 速度很快并且菜单不会变形，不过需要用户
-    ;; 手动安装 posframe 包。
-    (setq pyim-page-tooltip 'posframe)
-    ;; (setq pyim-page-tooltip 'popup)
-    ;; 选词框显示5个候选词
-    (setq pyim-page-length 5)
-    (defun mk/forward-word()
-      "mk's better forward-word."
-      (interactive)
-      (if (char-equal (char-after) (string-to-char " "))
-          (while (char-equal (char-after) (string-to-char " "))
-            (right-char 1))
-        (pyim-forward-word)))
-    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
-)
+  ;;   (defun mk/forward-word()
+  ;;     "mk's better forward-word."
+  ;;     (interactive)
+  ;;     (if (char-equal (char-after) (string-to-char " "))
+  ;;         (while (char-equal (char-after) (string-to-char " "))
+  ;;           (right-char 1))
+  ;;       (pyim-forward-word)))
+  ;;   ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+  ;;   ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
+  ;;
 
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package jieba
+    :after (evil)
+    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
+    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
+    (jieba-mode)
+    (define-key evil-motion-state-map (kbd "w") #'jieba-forward-word)
+    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
+    )
+
+#+END_SRC
+
+
 *** Sis
 
 *** Custom key-bindings
@@ -2067,7 +2113,7 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package chronos)
+  (use-package chronos :defer t)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2091,6 +2137,8 @@ An example:
 * A mode to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package freex
+    :disabled t
+    :defer t
     :straight (emacs-freex :host github
                            :repo "gregdetre/emacs-freex")
     )
@@ -2114,6 +2162,7 @@ An example:
 
 #+begin_src emacs-lisp
   (use-package read-aloud
+    :defer t
     :config
     (setq read-aloud-engine "say"))
 #+end_src
@@ -2122,6 +2171,7 @@ An example:
 #+BEGIN_SRC emacs-lisp
 
   (use-package emacs-badge
+    :defer t
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     )
 
@@ -2130,6 +2180,7 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package popweb
+    :defer t
     :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
     :config
     (setq popweb-root (file-name-directory (locate-library "popweb.el")))
@@ -2143,12 +2194,14 @@ An example:
 
 * A Gantt Chart (Calendar) for Org Mode
 #+begin_src emacs-lisp
-  (use-package dash)
-  (use-package ts)
-  (use-package s)
+  (use-package dash :defer t)
+  (use-package ts :defer t)
+  (use-package s :defer t)
   (use-package org-ql
+    :defer t
     :after (ts))
   (use-package elgantt
+    :defer t
     :after (org org-ql dash ts s)
     :straight (:type git :host github :repo "legalnonsense/elgantt")
     )
@@ -2226,12 +2279,13 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package reveal-in-osx-finder)
-  (use-package crux)
+  (use-package reveal-in-osx-finder :defer t)
+  (use-package crux :defer t)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package vterm
+    :defer t
     :config
     (defun vterm-new()
       "Add a new vterm session with given name."
@@ -2244,7 +2298,7 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package xkcd)
+  (use-package xkcd :defer t)
   (use-package emacs
     :config
     (pixel-scroll-precision-mode)
@@ -2254,8 +2308,9 @@ An example:
 
 
 #+BEGIN_SRC emacs-lisp
+  (use-package eaf :disabled t
+    :straight (:type git :host gitlab :repo "emacs-eaf/emacs-application-framework" :files ("*")))
   (use-package ranger :disabled t)
-  (use-package eaf :disabled t)
   (use-package peep-dired :disabled t) ; preview files in dired
   (use-package maple-explorer :disabled t)
   (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
@@ -2303,6 +2358,7 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   (use-package adoc-mode
+    :defer t
     :straight (:host github :repo "sensorflo/adoc-mode"))
 #+END_SRC
 
@@ -2459,7 +2515,7 @@ Interesting Colors:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package highlight-indent-guides)
+  (use-package highlight-indent-guides :defer t)
 #+END_SRC
 
 
@@ -2486,6 +2542,7 @@ Interesting Colors:
     )
 
   (use-package hl-line
+    :defer t
     :config
     (global-hl-line-mode t)
     (set-face-background 'hl-line "#d0fed0")
@@ -2510,8 +2567,8 @@ Interesting Colors:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package jinja2-mode :mode "\\.jinja2\\'")
-  (use-package vue-mode :mode "\\.vue\\'")
+  (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
+  (use-package vue-mode :mode "\\.vue\\'" :defer t)
 #+END_SRC
 
 
@@ -2550,7 +2607,7 @@ Interesting Colors:
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package dockerfile-mode :mode "Dockerfile")
+  (use-package dockerfile-mode :mode "Dockerfile" :defer t)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
