@@ -32,6 +32,11 @@
    (ns-transparent-titlebar . 1)        ; make the titlebar transparent
    (vertical-scroll-bars . nil)         ; No vertical scroll-bars
    (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
+   (width . 90)
+   (height . 100)
+   (font . "Menlo-14")
    ))
+
+;; (when window-system (set-frame-size (selected-frame) 100 80))
 
 ;;; early-init.el ends here

@@ -41,7 +41,7 @@ Also from https://github.com/sachac/.emacs.d
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
+;;  (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 #+END_SRC
 
 * Bootstrap
@@ -107,6 +107,7 @@ Also from https://github.com/sachac/.emacs.d
   ;;; Get shell env from user shell.
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
+      :defer t
       :config
       (exec-path-from-shell-initialize)
       (if (and (fboundp 'native-comp-available-p)
@@ -159,7 +160,8 @@ Also from https://github.com/sachac/.emacs.d
    ;; Prevent Extraneous Tabs
    indent-tabs-mode nil
    fill-column 80
-   line-spacing 0.1) ; Line space
+   ;; line-spacing 0.1
+   ) ; Line space
   (setq indent-tabs-mode nil)
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
@@ -178,7 +180,7 @@ Also from https://github.com/sachac/.emacs.d
   ;;(bind-key "M-SPC" 'cycle-spacing)
 
   ;; Show column number
-  (column-number-mode 1)
+  ;; (column-number-mode 1)  ; we don't even use the modeline
 
   ;; Sentence
   (setq sentence-end-double-space nil) ; Use only one space to end a sentence
@@ -202,18 +204,11 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 *** Window System
 #+BEGIN_SRC emacs-lisp
-
-  ;; (when (memq window-system '(mac ns))
-  ;;   (add-to-list 'default-frame-alist '(ns-appearance . light)) ;; {light, dark}
-  ;;   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  ;;   (setq ns-use-proxy-icon nil)
-  ;;   ;; (setq frame-title-format nil)
-  ;;   )
   (use-package ns-auto-titlebar
+    :disabled t  ; We used a better patch.
     :config
     (when (eq system-type 'darwin) (ns-auto-titlebar-mode)))
-  (setq ns-use-proxy-icon nil)
-  (when window-system (set-frame-size (selected-frame) 100 80))
+  ;; (setq ns-use-proxy-icon nil)  ; What is this for?
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -945,6 +940,8 @@ But since we use the tray, we don't need the modeline anymore.
 
 *** Dashboard
 #+BEGIN_SRC emacs-lisp
+  (use-package all-the-icons
+    :if (display-graphic-p))
   (use-package dashboard
     :diminish dashboard-mode
     :config
@@ -955,6 +952,8 @@ But since we use the tray, we don't need the modeline anymore.
                             ;; (agenda . 5)
                             (projects . 5)
                             (registers . 5)))
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
     (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
     (dashboard-setup-startup-hook))
 #+END_SRC
@@ -999,7 +998,7 @@ But since we use the tray, we don't need the modeline anymore.
 
   ;; Emoji
   (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
-  (use-package company-emoji)
+  (use-package company-emoji :defer t)
 
 
   ;; Unicode
