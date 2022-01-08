@@ -15,6 +15,8 @@
   (scroll-bar-mode nil)
   (menu-bar-mode nil))
 
+(setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@29--git"))
+
 (setq-default
  default-frame-alist
  '(

@@ -288,6 +288,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
   ;; Autocomplete
   (use-package company
     :after (company-emoji)
+    :defer t
     :config
     ;; (add-hook 'prog-mode-hook 'company-mode)
     (setq company-dabbrev-downcase nil
@@ -393,8 +394,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
     ;; (global-set-key (kbd "SPC") 'avy-goto-char)
     (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
-  (use-package neotree
-    :defer 5)
+  (use-package neotree :defer t)
 
   ;; (use-package perspective
   ;;   :defer t)
@@ -442,7 +442,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 *** Ctrl-f
 #+BEGIN_SRC emacs-lisp
   (use-package ctrlf
-    :defer 5
+    :defer t
     :config
     (ctrlf-mode +1))
 #+END_SRC
@@ -452,7 +452,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
   ;;; Smart Tab
   (use-package smart-tab
     :straight nil
-    :defer 5
+    :defer t
     :config
     (smart-tabs-insinuate 'c 'javascript))
 #+END_SRC
@@ -637,10 +637,10 @@ This package is disabled since it conflicts with dashboard and the result is ver
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
     :ensure nil
-    :defer 5
+    :defer t
     :config
     (use-package yasnippet-snippets
-      :defer 5
+      :defer t
       :after (yasnippet))
     (yas-global-mode 1)
     )
@@ -664,7 +664,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 #+BEGIN_SRC emacs-lisp
   ;; which-key is a fork of guide-key
   (use-package which-key
-    :defer 5
+    :defer t
     :bind (
            ("C-h ,m" . which-key-show-major-mode)
            ("C-h ,t" . which-key-show-top-level)
@@ -853,7 +853,7 @@ But since we use the tray, we don't need the modeline anymore.
        ;;; AucTex
   (use-package tex
     :straight auctex
-    :defer 5
+    :defer t
     :config
     ;; make latexmk available via C-c C-c
     ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
@@ -897,7 +897,7 @@ But since we use the tray, we don't need the modeline anymore.
       :config
       (company-auctex-init))
     (use-package reftex
-      :defer 5
+      :defer t
       :config
       (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
       (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
@@ -952,7 +952,7 @@ But since we use the tray, we don't need the modeline anymore.
     ;;(setq dashboard-startup-banner "/path/to/image")
     (setq dashboard-items '((recents  . 10)
                             (bookmarks . 10)
-                            (agenda . 5)
+                            ;; (agenda . 5)
                             (projects . 5)
                             (registers . 5)))
     (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
@@ -1029,13 +1029,13 @@ But since we use the tray, we don't need the modeline anymore.
        ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package paren
-    :defer 5
+    :defer t
     :hook (after-init . show-paren-mode)
     :config
     (setq show-paren-when-point-inside-paren t
           show-paren-when-point-in-periphery t))
   (use-package so-long
-    :defer 5
+    :defer t
     :config (global-so-long-mode 1))
   (use-package simple
     :straight nil
@@ -1147,7 +1147,7 @@ Ivy-rich also has this feature.
   ;; Enable richer annotations using the Marginalia package
   (use-package marginalia
     :disabled t
-    :defer 5
+    :defer t
     ;; The :init configuration is always executed (Not lazy!)
     :init
     ;; Must be in the :init section of use-package such that the mode gets
@@ -1215,7 +1215,7 @@ LSP, emmm... who use LSP?
 | WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
-  (use-package notmuch :ensure nil :defer t)
+  (use-package notmuch :ensure nil :defer 5)  ; start after being idle for 5s
 #+END_SRC
 
 
@@ -1245,7 +1245,7 @@ LSP, emmm... who use LSP?
 
   ;; Enable Org mode
   (use-package org
-    :defer t
+    :defer 2
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
            ("C-c c" . #'org-capture))
@@ -1261,6 +1261,13 @@ LSP, emmm... who use LSP?
       :straight nil  ; built-in with org-mode
       :hook (org-mode . org-num-mode))
     :config
+
+    ;; Org agenda is loaded, add it back to the dashboard
+    (setq dashboard-items '((recents  . 10)
+                            (bookmarks . 10)
+                            (agenda . 5)
+                            (projects . 5)
+                            (registers . 5)))
 
     (setq org-display-remote-inline-images 'download)
 
@@ -1373,45 +1380,6 @@ LSP, emmm... who use LSP?
     ;;org-odd-levels-only t
 
     (use-package org-contrib :disabled)
-
-    (defun __org-indent--compute-prefixes ()
-      "Compute prefix strings for regular text and headlines."
-      (setq org-indent--heading-line-prefixes
-            (make-vector org-indent--deepest-level nil))
-      (setq org-indent--inlinetask-line-prefixes
-            (make-vector org-indent--deepest-level nil))
-      (setq org-indent--text-line-prefixes
-            (make-vector org-indent--deepest-level nil))
-      (when (> org-indent-indentation-per-level 0)
-        (dotimes (n org-indent--deepest-level)
-          (let ((indentation (if (<= n 1) 0
-                               (* (1- org-indent-indentation-per-level)
-                                  (1- n)))))
-            ;; Headlines line prefixes.
-            (let ((heading-prefix (make-string indentation ?*)))
-              (aset org-indent--heading-line-prefixes
-                    n
-                    (org-add-props heading-prefix nil 'face 'org-macro))
-              ;; Inline tasks line prefixes
-              (aset org-indent--inlinetask-line-prefixes
-                    n
-                    (cond ((<= n 1) "")
-                          ((bound-and-true-p org-inlinetask-show-first-star)
-                           (concat org-indent-inlinetask-first-star
-                                   (substring heading-prefix 1)))
-                          (t (org-add-props heading-prefix nil 'face 'org-macro)))))
-            ;; Text line prefixes.
-            ;;(make-string (+ n indentation) ?\s)
-            (aset org-indent--text-line-prefixes
-                  n
-                  (org-add-props
-                      (concat (string-join (-repeat (1- n)
-                                                    (concat "|" (make-string (1- org-indent-indentation-per-level) ?\s))))
-                              (and (> n 0)
-                                   (char-to-string ?\s)))
-                      nil 'face 'org-macro))))))
-
-
     )
 #+END_SRC
 
@@ -1585,7 +1553,7 @@ An example:
     ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
   (use-package appt
     :straight nil
-    :defer 10
+    :defer t
     :config
     (setq
      appt-time-msg-list nil ;; clear existing appt list
@@ -1874,16 +1842,6 @@ An example:
 *** Input Method
 | pyim | https://github.com/tumashu/pyim |
 #+BEGIN_SRC emacs-lisp
-  ;;   (defun mk/forward-word()
-  ;;     "mk's better forward-word."
-  ;;     (interactive)
-  ;;     (if (char-equal (char-after) (string-to-char " "))
-  ;;         (while (char-equal (char-after) (string-to-char " "))
-  ;;           (right-char 1))
-  ;;       (pyim-forward-word)))
-  ;;   ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-  ;;   ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
-  ;;
 
 #+END_SRC
 
@@ -1894,7 +1852,17 @@ An example:
     :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
     :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
     (jieba-mode)
-    (define-key evil-motion-state-map (kbd "w") #'jieba-forward-word)
+    (defun mk/forward-word()
+      "mk's better forward-word."
+      (interactive)
+      (let ((char (char-after)))
+        (if (memq char (string-to-list " \n\r\\"))
+            (re-search-forward "\\\s+")
+          (jieba-forward-word))))
+    ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+    ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
+
+    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
     (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
     )
 
@@ -1957,9 +1925,6 @@ An example:
       ))
 #+END_SRC
 ** EL
-#+BEGIN_SRC emacs-lisp
-  (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@29--git/"))
-#+END_SRC
 
 
 * 3rd-party
@@ -2064,14 +2029,14 @@ An example:
 
 * MISC
 #+BEGIN_SRC emacs-lisp
-  (use-package marquee-header :defer 10) ;; This is really an interesting package.
+  (use-package marquee-header :defer t) ;; This is really an interesting package.
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
     :ensure nil
     :after (org)
-    :defer 10
+    :defer t
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
     (setq org-image-actual-width 400)
@@ -2080,7 +2045,7 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package citre
-    :defer 10
+    :defer t
     :init
     ;; This is needed in `:init' block for lazy load to work.
     (require 'citre-config)
@@ -2118,7 +2083,7 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package telega
-    :defer 10
+    :defer t
     :config
     (setq telega-proxies
           (list
@@ -2618,6 +2583,60 @@ Interesting Colors:
            ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package buffer-focus-hook
+    :straight (:host github :repo "mschuldt/buffer-focus-hook")
+    :defer t)
+
+  (use-package posframe
+    :defer t
+    :config
+
+    (defun mk/posframe-onclick ()
+      (message "click!"))
+
+    (defun mk/posframe-setup-click-callback ()
+      (require 'buffer-focus-hook)
+      (buffer-focus-in-callback 'mk/check-notification-click)
+      (message "setup")
+      )
+
+    (defun mk/posframe-notify ()
+      (when (posframe-workable-p)
+        (posframe-show " *Notifications*"
+                       :string "This is a test"
+                       :position '(1, 1)
+                       :background-color "lightgreen"
+                       :accept-focus t
+                       :initialize #'mk/posframe-setup-click-callback
+                       :border-color "grey"
+                       :timeout 2
+                       :border-width 1
+                       :poshandler 'posframe-poshandler-frame-top-center)))
+    )
+
+  (use-package emacs
+    :defer t
+    :ensure nil
+    :after (org posframe dashboard)
+    :config
+    (with-current-buffer (get-buffer-create " *Notifications*")
+      (erase-buffer)
+      (dashboard-insert-agenda 5)
+      )
+    (when (posframe-workable-p)
+      (posframe-show " *Notifications*"
+                     :position '(1, 1)
+                     :background-color "wheat"
+                     ;; :accept-focus t
+                     :initialize #'mk/posframe-setup-click-callback
+                     :border-color "grey"
+                     :timeout 3
+                     :border-width 1
+                     :poshandler 'posframe-poshandler-frame-top-center))
+    )
+
+#+END_SRC
 
 :TAD:
 
