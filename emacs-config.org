@@ -2639,3 +2639,23 @@ Interesting Colors:
  :TAG:SDFS:
 
  (insert-image (mk/svg-checkbox-empty))
+
+ #+BEGIN_SRC emacs-lisp
+   (defun mk/notionify-turn-to-page (@begin @end)
+     "Turn the selected text to a page link. If the function is called in the page =file.org=, a directory called =file.org.dir= will be auto created if not exists. A new file will be created with the name of selected text + '.org' (@BEGIN -to- @END .org) suffix. This mimics the action of turning the selected line into a new page in Notion.so, while this function is better since the page does not need to be a single line. The text will be turned into a hyperlink to the new file."
+     (interactive
+      (if (use-region-p)
+          (list (region-beginning) (region-end))
+        (list (line-beginning-position) (line-end-position))))
+     (save-excursion
+       (save-restriction
+         (narrow-to-region @begin @end)
+         (let (($dir (concat (string-trim-right (buffer-name) ".dir"))
+                     ($subpage (buffer-substring-no-properties (point-min) (point-max))))
+               (make-directory $dir t)
+               (goto-char (point-min))
+               (insert (concat "[[file:./" $dir "/" $subpage) ".org][")
+               (goto-char (point-max))
+               (insert "]]")))
+         )))
+ #+END_SRC
