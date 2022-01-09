@@ -107,7 +107,7 @@ Also from https://github.com/sachac/.emacs.d
   ;;; Get shell env from user shell.
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
-      :defer t
+      :defer 2
       :config
       (exec-path-from-shell-initialize)
       (if (and (fboundp 'native-comp-available-p)
@@ -159,9 +159,9 @@ Also from https://github.com/sachac/.emacs.d
    ;; (setq compilation-scroll-output 'first-error)
    ;; Prevent Extraneous Tabs
    indent-tabs-mode nil
-   fill-column 80
+   fill-column 100
    ;; line-spacing 0.1
-   ) ; Line space
+   )
   (setq indent-tabs-mode nil)
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
@@ -176,12 +176,6 @@ Also from https://github.com/sachac/.emacs.d
   ;; lazy answer
   (fset 'yes-or-no-p 'y-or-n-p)
 
-  ;; Clean up spaces
-  ;;(bind-key "M-SPC" 'cycle-spacing)
-
-  ;; Show column number
-  ;; (column-number-mode 1)  ; we don't even use the modeline
-
   ;; Sentence
   (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
@@ -195,6 +189,8 @@ Also from https://github.com/sachac/.emacs.d
 
 This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
 
+We now use a small SVG scroll indicator shown in the awesome-tray.
+
 #+BEGIN_SRC emacs-lisp
   ;; (use-package yascroll :disabled t :config (global-yascroll-bar-mode 1))
   ;; Don't use nyan-mode unless mode-line is enabled.
@@ -204,6 +200,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 *** Window System
 #+BEGIN_SRC emacs-lisp
+  ;; We already hide the whole titlebar via an Emacs patch.
   (use-package ns-auto-titlebar
     :disabled t  ; We used a better patch.
     :config
@@ -338,7 +335,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
   ;;  :config
   ;;  (spaceline-spacemacs-theme))
 
-  ;;; Better evil
+    ;;; Better evil
   (use-package evil
     ;; :after (smart-mode-line)
     :straight t
@@ -375,7 +372,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-mode 1))
 
-  ;;; Easy motion
+    ;;; Easy motion
   ;; Options includes:
   ;; - https://github.com/abo-abo/avy
   ;; - https://github.com/PythonNut/evil-easymotion
@@ -385,8 +382,20 @@ This package is disabled since it conflicts with dashboard and the result is ver
     :demand t
     :config
     (evilem-default-keybindings "SPC")
-    ;; (evilem-define (kbd "SPC c") 'avy-goto-char)
-    ;; (global-set-key (kbd "SPC") 'avy-goto-char)
+
+    (defun avy-goto-char (char &optional arg)
+      "Jump to the currently visible CHAR.
+  The window scope is determined by `avy-all-windows' (ARG negates it)."
+      (interactive (list (read-char "char: " t)
+                         current-prefix-arg))
+      (if (= ?  char)
+          (counsel-M-x)
+        (avy-with avy-goto-char
+          (avy-jump
+           (if (= 13 char)
+               "\n"
+             (regexp-quote (string char)))
+           :window-flip arg))))
     (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
 
   (use-package neotree :defer t)
@@ -457,6 +466,7 @@ This package is disabled since it conflicts with dashboard and the result is ver
 #+BEGIN_SRC emacs-lisp
   ;;; MK's cheatsheet
   (use-package cheatsheet
+    :defer t
     :config
     (cheatsheet-add :group 'Emacs
                     :key "C-x u"
@@ -479,14 +489,14 @@ This package is disabled since it conflicts with dashboard and the result is ver
 
 
 *** Smooth scrolling
-#+BEGIN_SRC emacs-lisp
-  ;; scroll one line at a time (less "jumpy" than defaults)
-  (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
-  (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-  (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-  (setq scroll-step 1) ;; keyboard scroll one line at a time
 
-  ;;(use-package etags-select)
+| sublimity        |   |
+| smooth-scrolling |   |
+| good-scroll      |   |
+
+
+#+BEGIN_SRC emacs-lisp
+  ;; (use-package etags-select)  ; What is this for?
 
   ;;;; Mouse scrolling in terminal emacs
   (unless (display-graphic-p)
@@ -495,27 +505,6 @@ This package is disabled since it conflicts with dashboard and the result is ver
     (xterm-mouse-mode t)
     (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
     (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
-
-  ;; (use-package sublimity
-  ;;   :config
-  ;;   ;; (use-package sublimity-scrollt)
-  ;;   (use-package sublimity-map :ensure nil) ;; experimental
-  ;;   ;; (use-package sublimity-attractive :ensure nil)
-  ;;   (sublimity-mode t)
-  ;;   )
-
-  ;; Do we still need this if we have good-scroll?
-  ;; (use-package smooth-scrolling
-  ;;   :config
-  ;;   ;; the number 3 is buggy here when scrolling down.
-  ;;   (setq smooth-scroll-margin 2)
-  ;;   (smooth-scrolling-mode 1)
-  ;;   )
-  ;;; The effect of good-scroll is good, but slow.
-  (use-package good-scroll
-    :disabled t
-    :config
-    (good-scroll-mode t))
 
 #+END_SRC
 
@@ -1214,7 +1203,10 @@ LSP, emmm... who use LSP?
 | WanderLust |   |
 #+BEGIN_SRC emacs-lisp
   ;; Mails
-  (use-package notmuch :ensure nil :defer 5)  ; start after being idle for 5s
+  (use-package notmuch
+    :after (exec-path-from-shell)
+    :ensure nil
+    :defer 5)  ; start after being idle for 5s
 #+END_SRC
 
 
@@ -1874,6 +1866,7 @@ An example:
 #+BEGIN_SRC emacs-lisp
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
   (global-set-key (kbd "M-s-<left>") 'tab-previous)
   (global-set-key (kbd "M-s-<right>") 'tab-next)
   (global-set-key (kbd "M-s-n") 'tab-new)
@@ -2270,12 +2263,14 @@ An example:
     )
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package ranger :defer t)  ; ranger mode
+  (use-package peep-dired :disabled t)  ; Preview files in dired, but we use ranger instead.
+#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package eaf :disabled t
     :straight (:type git :host gitlab :repo "emacs-eaf/emacs-application-framework" :files ("*")))
-  (use-package ranger :disabled t)
-  (use-package peep-dired :disabled t) ; preview files in dired
   (use-package maple-explorer :disabled t)
   (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
   (use-package org-brain :disabled t)
