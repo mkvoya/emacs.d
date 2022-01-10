@@ -904,7 +904,28 @@ But since we use the tray, we don't need the modeline anymore.
     :init
     :mode ("\\.pdf\\'" . pdf-view-mode)
     :magic ("%PDF" . pdf-view-mode)
+    :bind (
+           ("<wheel-right>" . image-forward-hscroll)
+           ("<wheel-left>" . image-backward-hscroll)
+           ("<pinch>" . mk/pdf-tools-scale-pinch)
+           )
     :config
+
+    (defun mk/pdf-tools-scale-pinch (event)
+      "Adjust the height of the default face by the scale in the pinch event EVENT."
+      (interactive "e")
+      (when (not (eq (event-basic-type event) 'pinch))
+        (error "bad event type"))
+      (let ((window (posn-window (nth 1 event)))
+            (scale (nth 4 event))
+            (dx (nth 2 event))
+            (dy (nth 3 event))
+            (angle (nth 5 event)))
+        (with-selected-window window
+          (when (< scale 1)
+            (pdf-view-shrink 1.1))
+          (when (> scale 1)
+            (pdf-view-enlarge 1.1)))))
     (pdf-loader-install)
     (add-hook 'pdf-view-mode-hook #'(lambda () (pixel-scroll-precision-mode -1)))
     )
@@ -1241,6 +1262,13 @@ LSP, emmm... who use LSP?
     :bind (("C-c a" . #'org-agenda)
            ("C-c c" . #'org-capture))
     :init
+    ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
+    (defun org-syntax-table-modify ()
+      "Modify `org-mode-syntax-table' for the current org buffer."
+      (modify-syntax-entry ?< "." org-mode-syntax-table)
+      (modify-syntax-entry ?> "." org-mode-syntax-table))
+    (add-hook 'org-mode-hook #'org-syntax-table-modify)
+
     (setq org-modules '(ol-doi
                         ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
                         ol-bibtex
@@ -2628,6 +2656,7 @@ Interesting Colors:
                      :timeout 3
                      :border-width 1
                      :poshandler 'posframe-poshandler-frame-top-center))
+    (let ((dashboard-force-refresh t)) (dashboard-insert-startupify-lists))
     )
 
 #+END_SRC
