@@ -596,37 +596,36 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (setq awesome-tray-info-padding-right 4)
 
+    (defun mk/make-frame ()
+      "Make a frame with the tray-buffer used for aweseome-tray."
+      (interactive)
+      (let* ((f (make-frame))
+             (fid (frame-parameter f 'window-id))
+             (tray-buffer-name (format "  *Traybuf-%s*" fid))
+             (fname (frame-parameter f 'name))
+             (tray-buffer (get-buffer-create tray-buffer-name))
+             (w (minibuffer-window f)))
+        (set-frame-parameter f 'tray-buffer tray-buffer)
+        (with-window-non-dedicated w
+          (set-window-buffer w tray-buffer)
+          )
+        f)
+      )
 
     ;; Override for the scroll image display.
     (defun awesome-tray-flush-info ()
       (let* ((tray-info (awesome-tray-build-active-info))
-             (scroll-info (awesome-tray-module-scroll-info)))
+             (scroll-info (awesome-tray-module-scroll-info))
              ;;
-             ;;(f (selected-frame))
-             ;;(fid (frame-parameter f 'window-id))
-             ;;(tray-buffer-name (format "  *Traybuf-%s*" fid))
-             ;;(fminibuf (frame-parameter f 'minibuffer))
-             ;;(fname (frame-parameter f 'name))
-             ;;(tray-buffer (if (eq 't fminibuf)
-             ;;                 (get-buffer-create tray-buffer-name)
-             ;;               " *Minibuf-0*"))
-             ;;(w (minibuffer-window)))
-        ;;(print fname)
+             (f (selected-frame))
+             (tray-buffer (frame-parameter f 'tray-buffer)))
+        (unless tray-buffer
+          (setq tray-buffer " *Minibuf-0*"))
         ;;(when (and (eq 't fminibuf)
         ;;           (not (string-prefix-p " *Minibuf-" fname))
         ;;           (not (string-prefix-p " *Traybuf-" fname))
-        ;;           (not (eq (window-buffer w) tray-buffer)))
-        ;;  ;;(print (format "t:%s n:%s"
-        ;;  ;;               (frame-parameter f 'title)
-        ;;  ;;               (frame-parameter f 'name)
-        ;;  ;;               ))
-        ;;  (with-window-non-dedicated w
-        ;;    (set-window-buffer w tray-buffer)
-        ;;    ;;(other-window 1)
-        ;;    ;; (switch-to-prev-buffer w)
-        ;;    ))
-        (with-current-buffer ;tray-buffer
-                           " *Minibuf-0*"
+        ;;           (not (eq (window-buffer w) tray-buffer))))
+        (with-current-buffer tray-buffer
           (erase-buffer)
           (insert (concat (make-string (max 0 (- (awesome-tray-get-frame-width) (string-width tray-info) awesome-tray-info-padding-right)) ?\ ) tray-info))
           (insert " ")
@@ -1161,19 +1160,6 @@ Alternatives (Check the selectrum repo README)
   (use-package vlf :defer t)
 #+END_SRC
 
-
-*** 无错
-#+BEGIN_SRC emacs-lisp
-  (use-package wucuo
-    :disabled t
-    :config
-    (add-hook 'prog-mode-hook #'wucuo-start)
-    (add-hook 'text-mode-hook #'wucuo-start)
-    (setq ispell-program-name "aspell")
-    ;; You could add extra option "--camel-case" for since Aspell 0.60.8
-    ;; @see https://github.com/redguardtoo/emacs.d/issues/796
-    (setq ispell-extra-args '("--sug-mode=ultra" "--lang=en_US" "--run-together" "--run-together-limit=16" "--camel-case")))
-#+END_SRC
 
 *** marginalia.el -- Marginalia in the minibuffer
 
@@ -2429,108 +2415,6 @@ Interesting Colors:
 
 #+END_SRC
 
-
-#+BEGIN_SRC emacs-lisp
-  (use-package helm
-    :disabled t
-    :config
-    (setq helm-display-function 'helm-display-buffer-in-own-frame)
-
-    (defun md/alfred-source-system ()
-      (helm-build-sync-source "System"
-        :multimatch nil
-        :requires-pattern nil
-        :candidates '(("Lock" . "xset dpms force off")  ;; turns laptop screen off and triggers i3lock
-                      ("Sleep" . "systemctl suspend -i")
-                      ("Restart" . "systemctl reboot -i")
-                      ("Shutdown" . "systemctl poweroff -i"))
-        :action '(("Execute" . (lambda (candidate)
-                                 (shell-command (concat candidate " >/dev/null 2>&1 & disown") nil nil))))))
-
-    (defun md/alfred-source-apps ()
-      (helm-build-sync-source "Apps"
-        :multimatch nil
-        :requires-pattern nil
-        :candidates (lambda ()
-                      (-map
-                       (lambda (item)
-                         (s-chop-suffix ".desktop" item))
-                       (-filter (lambda (d) (not (or (string= d ".") (string= d ".."))))
-                                (directory-files "/usr/share/applications"))))
-        :action '(("Launch" . (lambda (candidate)
-                                (shell-command (concat "gtk-launch " candidate " >/dev/null 2>&1 & disown") nil nil))))))
-
-    (defvar md/alfred-source-search-candidates
-      '(("DuckDuckGo" . ("d" . "https://www.duckduckgo.com/?q=%s"))
-        ("Google" . ("g" . "https://www.google.co.uk/search?q=%s"))))
-
-    (defun md/strip-first-word (s)
-      "Remove the first word from a string"
-      (string-remove-prefix (format "%s " (car (split-string s))) s))
-
-    (defun md/alfred-source-search ()
-      (helm-build-sync-source "Search"
-        :nohighlight t
-        :nomark t
-        :multimatch nil
-        :requires-pattern t
-        :candidates md/alfred-source-search-candidates
-        ;; Count it as a match if the prefix matches, eg. "d ..."
-        :match '((lambda (candidate)
-                   (string= (car (cdr (assoc candidate md/alfred-source-search-candidates)))
-                            (car (split-string helm-pattern)))))
-        :fuzzy-match nil
-        ;; Instead of displaying the exact thing that you type, display "DuckDuckGo: %s..."
-        :filtered-candidate-transformer '((lambda (candidates source)
-                                            (map 'list (lambda (c)
-                                                         (cons (format "%s: %s" (car c)
-                                                                       (md/strip-first-word helm-pattern)) (cdr c)))
-                                                 candidates)))
-        ;; Build the URL, replacing %s with your input. Open it with browse-url.
-        :action '(("Search" . (lambda (candidate)
-                                (browse-url (format (cdr candidate) ;; the url
-                                                    (url-hexify-string
-                                                     ;; This removes the "g " part from the string
-                                                     (md/strip-first-word helm-pattern)))))))))
-
-    (defun md/alfred ()
-      (interactive)
-      (with-current-buffer (get-buffer-create "*alfred*")
-        (let ((frame (make-frame '((name . "alfred")
-                                   ;; (window-system . ns)
-                                   (auto-raise . t) ; focus on this frame
-                                   (height . 10)
-                                   (internal-border-width . 20)
-                                   (left . 0.33)
-                                   (left-fringe . 0)
-                                   (line-spacing . 3)
-                                   (menu-bar-lines . 0)
-                                   (right-fringe . 0)
-                                   (tool-bar-lines . 0)
-                                   (top . 48)
-                                   (undecorated . t) ; enable to remove frame border
-                                   (unsplittable . t)
-                                   (vertical-scroll-bars . nil)
-                                   (width . 110))))
-              (alert-hide-all-notifications t)
-              (inhibit-message t)
-              (mode-line-format nil)
-              (helm-mode-line-string nil)
-              (helm-full-frame t)
-              (helm-display-header-line nil)
-              (helm-use-undecorated-frame-option nil))
-          (helm :sources (list (md/alfred-source-system)
-                               (md/alfred-source-apps)
-                               (md/alfred-source-search))
-                :prompt ""
-                :buffer "*alfred*")
-          (delete-frame frame)
-          ;; If we don't kill the buffer it messes up future state.
-          (kill-buffer "*alfred*")
-          ;; I don't want this to cause the main frame to flash
-          (x-urgency-hint (selected-frame) nil))))
-    )
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package highlight-indent-guides :defer t)
