@@ -279,26 +279,37 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
-    :after (company-emoji)
-    :defer t
-    :config
-    ;; (add-hook 'prog-mode-hook 'company-mode)
+    ;; :defer t
+    :init
     (setq company-dabbrev-downcase nil
           company-show-numbers t
-          company-minimum-prefix-length 2)
-    (setq company-tooltip-flip-when-above t)
-    (global-company-mode 1)
-    ;; (company-statistics-mode 1)
-    ;; (require 'company-emoji)
+          company-minimum-prefix-length 2
+          company-tooltip-flip-when-above t)
+
+    (use-package yasnippet
+      :ensure
+      :demand
+      :config
+      (yas-global-mode 1)
+      )
+    (use-package yasnippet-snippets
+       :after yasnippet)
+
+    (use-package company-emoji :ensure t :defer nil)
     (setq company-backends
           '((company-files
              company-keywords
              company-capf
              company-yasnippet
              company-emoji)
-             ;; company-ispell
-             ;; company-lsp)
+            ;; company-ispell
+            ;; company-lsp
             (company-abbrev company-dabbrev)))
+
+    :config
+    (add-hook 'prog-mode-hook 'company-mode)
+    ;; (company-statistics-mode 1)
+    (global-company-mode 1)
     ;; (setq company-frontends '(company-pseudo-tooltip-frontend
     ;;                           company-echo-metadata-frontend))
     (with-eval-after-load 'company
@@ -645,15 +656,6 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 | yasnippet | https://github.com/joaotavora/yasnippet |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :ensure nil
-    :defer t
-    :config
-    (use-package yasnippet-snippets
-      :defer t
-      :after (yasnippet))
-    (yas-global-mode 1)
-    )
 #+END_SRC
 
 *** Beacon - A light that follows your cursor around so you don't lose it!
@@ -1035,7 +1037,6 @@ But since we use the tray, we don't need the modeline anymore.
 
   ;; Emoji
   (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
-  (use-package company-emoji :defer t)
 
 
   ;; Unicode
@@ -2753,7 +2754,3 @@ Interesting Colors:
       (put sym 'no-counsel-M-x #'ignore))
     )
 #+END_SRC
-
-(mk/create-tray-buffer-for-frame (selected-frame))
-
-()
