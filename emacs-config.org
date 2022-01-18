@@ -585,11 +585,37 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (setq awesome-tray-info-padding-right 4)
 
+
     ;; Override for the scroll image display.
     (defun awesome-tray-flush-info ()
       (let* ((tray-info (awesome-tray-build-active-info))
              (scroll-info (awesome-tray-module-scroll-info)))
-        (with-current-buffer " *Minibuf-0*"
+             ;;
+             ;;(f (selected-frame))
+             ;;(fid (frame-parameter f 'window-id))
+             ;;(tray-buffer-name (format "  *Traybuf-%s*" fid))
+             ;;(fminibuf (frame-parameter f 'minibuffer))
+             ;;(fname (frame-parameter f 'name))
+             ;;(tray-buffer (if (eq 't fminibuf)
+             ;;                 (get-buffer-create tray-buffer-name)
+             ;;               " *Minibuf-0*"))
+             ;;(w (minibuffer-window)))
+        ;;(print fname)
+        ;;(when (and (eq 't fminibuf)
+        ;;           (not (string-prefix-p " *Minibuf-" fname))
+        ;;           (not (string-prefix-p " *Traybuf-" fname))
+        ;;           (not (eq (window-buffer w) tray-buffer)))
+        ;;  ;;(print (format "t:%s n:%s"
+        ;;  ;;               (frame-parameter f 'title)
+        ;;  ;;               (frame-parameter f 'name)
+        ;;  ;;               ))
+        ;;  (with-window-non-dedicated w
+        ;;    (set-window-buffer w tray-buffer)
+        ;;    ;;(other-window 1)
+        ;;    ;; (switch-to-prev-buffer w)
+        ;;    ))
+        (with-current-buffer ;tray-buffer
+                           " *Minibuf-0*"
           (erase-buffer)
           (insert (concat (make-string (max 0 (- (awesome-tray-get-frame-width) (string-width tray-info) awesome-tray-info-padding-right)) ?\ ) tray-info))
           (insert " ")
@@ -964,6 +990,7 @@ But since we use the tray, we don't need the modeline anymore.
                             (registers . 5)))
     (setq dashboard-set-heading-icons t)
     (setq dashboard-set-file-icons t)
+    (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
     (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
     (dashboard-setup-startup-hook))
 #+END_SRC
@@ -2075,6 +2102,8 @@ An example:
     (global-set-key (kbd "C-x c p") 'citre-ace-peek)
     (global-set-key (kbd "C-]") 'citre-jump)
     (global-set-key (kbd "C-t") 'citre-jump-back)
+    (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
+    (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
     :config
     (setq
      ;; Set this if readtags is not in your path.
@@ -2161,6 +2190,7 @@ An example:
     )
 
 #+END_SRC
+
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2688,3 +2718,42 @@ Interesting Colors:
                (insert "]]")))
          )))
  #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package project
+    :straight nil
+    :config
+    (dolist (sym '(project-search
+                   project-other-window-command
+                   project-vc-dir
+                   project-display-buffer
+                   project-dired
+                   project-execute-extended-command
+                   project-switch-to-buffer
+                   project-query-replace-regexp
+                   project-find-file
+                   project-kill-buffers
+                   project-forget-project
+                   project-eshell
+                   project-or-external-find-regexp
+                   project-other-frame-command
+                   project-other-tab-command
+                   project-shell
+                   project-find-dir
+                   project-async-shell-command
+                   project-compile
+                   project-switch-project
+                   project-shell-command
+                   project-forget-zombie-projects
+                   project-remember-projects-under
+                   project-forget-projects-under
+                   project-display-buffer-other-frame
+                   project-or-external-find-file
+                   project-find-regexp))
+      (put sym 'no-counsel-M-x #'ignore))
+    )
+#+END_SRC
+
+(mk/create-tray-buffer-for-frame (selected-frame))
+
+()

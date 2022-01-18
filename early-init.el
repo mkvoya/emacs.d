@@ -35,6 +35,7 @@
    (width . 90)
    (height . 100)
    (font . "Menlo-14")
+   (minibuffer . t)
    ))
 
 ;; (when window-system (set-frame-size (selected-frame) 100 80))
