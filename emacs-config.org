@@ -596,36 +596,14 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (setq awesome-tray-info-padding-right 4)
 
-    (defun mk/make-frame ()
-      "Make a frame with the tray-buffer used for aweseome-tray."
-      (interactive)
-      (let* ((f (make-frame))
-             (fid (frame-parameter f 'window-id))
-             (tray-buffer-name (format "  *Traybuf-%s*" fid))
-             (fname (frame-parameter f 'name))
-             (tray-buffer (get-buffer-create tray-buffer-name))
-             (w (minibuffer-window f)))
-        (set-frame-parameter f 'tray-buffer tray-buffer)
-        (with-window-non-dedicated w
-          (set-window-buffer w tray-buffer)
-          )
-        f)
-      )
-
     ;; Override for the scroll image display.
     (defun awesome-tray-flush-info ()
       (let* ((tray-info (awesome-tray-build-active-info))
-             (scroll-info (awesome-tray-module-scroll-info))
-             ;;
-             (f (selected-frame))
-             (tray-buffer (frame-parameter f 'tray-buffer)))
-        (unless tray-buffer
-          (setq tray-buffer " *Minibuf-0*"))
-        ;;(when (and (eq 't fminibuf)
+             (scroll-info (awesome-tray-module-scroll-info)))
         ;;           (not (string-prefix-p " *Minibuf-" fname))
         ;;           (not (string-prefix-p " *Traybuf-" fname))
         ;;           (not (eq (window-buffer w) tray-buffer))))
-        (with-current-buffer tray-buffer
+        (with-current-buffer " *Minibuf-0*"
           (erase-buffer)
           (insert (concat (make-string (max 0 (- (awesome-tray-get-frame-width) (string-width tray-info) awesome-tray-info-padding-right)) ?\ ) tray-info))
           (insert " ")
@@ -1376,7 +1354,7 @@ LSP, emmm... who use LSP?
                                            ("#+end_quote" . ?«)
                                            ("#+BEGIN_QUOTE" . ?»)
                                            ("#+END_QUOTE" . ?«)
-                                           ("PROPERTIES" . "⚙")
+                                           ;; ("PROPERTIES" . "⚙")
                                            ))
 
     (require 'color)
@@ -1730,34 +1708,35 @@ An example:
     (let ((name (read-string "Filename: ")))
       (expand-file-name (format "%s.org" name)
                         "~/Dropbox/Dreams/Org/Collections")))
-  ;;; Captures
+              ;;; Captures
   (use-package org-capture
     :defer t
     :straight nil
     :after (org)
     :config
-    (setq org-capture-templates nil)
-    (add-to-list 'org-capture-templates
-                 '("j" "Journals" entry
-                   (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
-                   "* %U - %^{heading}\n  %?"))
+    (setq org-capture-templates
+          '(
+            ("j" "Journals" entry
+             (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
+             "* %U - %^{heading}\n  %?")
+            ("t" "Tasks" entry
+             (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
+             "* TODO %?\nADDED: %u\n%a")
+            ("b" "Bookmarks" entry
+             (file+datetree "~/Dropbox/Dreams/Org/Collections/Bookmarks.org" "Bookmarks")
+             "* %U - %^{title}\nADDED: %U\n%?")
+            ("p" "Plans" entry
+             (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
+             "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1)
+            ("c" "Collection" entry
+             (file mkvoya/create-capture-file)
+             "<org")
+            ("n" "News" entry
+             (file+headline "~/Dropbox/Dreams/Org/News.org" "Inbox")
+             "* %^{title}\n:PROPERTIES:\n:LINK: %^{link}\n:ADD-TIME: %U\n:TAGS: %^g\n:END:\n%?")
+            )
+          )
     ;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
-    (add-to-list 'org-capture-templates
-                 '("t" "Tasks" entry
-                   (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
-                   "* TODO %?\nADDED: %u\n%a"))
-    (add-to-list 'org-capture-templates
-                 '("b" "Bookmarks" entry
-                   (file+datetree "~/Dropbox/Dreams/Org/Collections/Bookmarks.org" "Bookmarks")
-                   "* %U - %^{title}\nADDED: %U\n%?"))
-    (add-to-list 'org-capture-templates
-                 '("p" "Plans" entry
-                   (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
-                   "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1))
-    (add-to-list 'org-capture-templates
-                 '("c" "Collection" entry
-                   (file mkvoya/create-capture-file)
-                   "<org"))
     )
 #+END_SRC
 *** OrgRoam
@@ -2068,9 +2047,8 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
-    :ensure nil
+    :ensure t
     :after (org)
-    :defer t
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
     (setq org-image-actual-width 400)
