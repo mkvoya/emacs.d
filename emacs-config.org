@@ -75,6 +75,7 @@ Also from https://github.com/sachac/.emacs.d
 *** use-package: A use-package declaration for simplifying your .emacs
 | use-package | https://github.com/jwiegley/use-package |
 #+BEGIN_SRC emacs-lisp
+  (setq use-package-compute-statistics t)
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t) ; Ensure :straight t
 #+END_SRC
@@ -192,7 +193,12 @@ This package is disabled since it conflicts with dashboard and the result is ver
 We now use a small SVG scroll indicator shown in the awesome-tray.
 
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package yascroll :disabled t :config (global-yascroll-bar-mode 1))
+  (use-package yascroll
+    :config
+    ;; (advice-add :after 'pixel-scroll-up 'run-window-scroll-functions)
+    ;; (advice-add :after 'pixel-scroll-down 'run-window-scroll-functions)
+    (global-yascroll-bar-mode 1)
+    )
   ;; Don't use nyan-mode unless mode-line is enabled.
   ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
 #+END_SRC
@@ -346,7 +352,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   ;;  :config
   ;;  (spaceline-spacemacs-theme))
 
-    ;;; Better evil
+      ;;; Better evil
   (use-package evil
     ;; :after (smart-mode-line)
     :straight t
@@ -383,7 +389,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-mode 1))
 
-    ;;; Easy motion
+      ;;; Easy motion
   ;; Options includes:
   ;; - https://github.com/abo-abo/avy
   ;; - https://github.com/PythonNut/evil-easymotion
@@ -396,7 +402,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (defun avy-goto-char (char &optional arg)
       "Jump to the currently visible CHAR.
-  The window scope is determined by `avy-all-windows' (ARG negates it)."
+    The window scope is determined by `avy-all-windows' (ARG negates it)."
       (interactive (list (read-char "char: " t)
                          current-prefix-arg))
       (if (= ?  char)
@@ -566,49 +572,8 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
                  '("notmuch" . (awesome-tray-module-notmuch-info
                                 awesome-tray-module-battery-face)))
 
-    (defun mk/svg-scrollbar (height width pmax pmin winend winstart fgcolor bgcolor)
-      "Generate an svg image for scrollbar of size HEIGHT x WIDTH for PMAX to PMIN given WINEND and WINSTART and FGCOLOR and BGCOLOR."
-      (let* ((top (/ (* (- height 2) (float winstart)) pmax))
-             (bot (/ (* (- height 2) (float winend)) pmax))
-             (svg (svg-create width height)))
-        ;; (setq top (min top (- height 2.1)))
-        ;; (setq bot (max bot (+ top 0.1)))
-        ;; (pp (format "%d~%d => %f %f\n" winstart winend top bot))
-        (svg-rectangle svg 0 0 width height :fill bgcolor :rx 2 :stroke-width 0)
-        (svg-rectangle svg 0 top width bot :fill fgcolor :stroke-width 0)
-        (svg-image svg :ascent 'center)
-        ))
-
-    (defun awesome-tray-module-scroll-info ()
-      (let* ((color1 "#ff3fef")
-             (color2 "#2a2a2a")
-             (height 15)
-             (width (* (frame-char-width) 2))
-             pmax
-             pmin
-             (ws (window-start))
-             (we (window-end)))
-        (save-restriction
-          (widen)
-          (setq pmax (point-max))
-          (setq pmin (point-min)))
-        (mk/svg-scrollbar height width pmax pmin we ws color1 color2)))
-
     (setq awesome-tray-info-padding-right 4)
 
-    ;; Override for the scroll image display.
-    (defun awesome-tray-flush-info ()
-      (let* ((tray-info (awesome-tray-build-active-info))
-             (scroll-info (awesome-tray-module-scroll-info)))
-        ;;           (not (string-prefix-p " *Minibuf-" fname))
-        ;;           (not (string-prefix-p " *Traybuf-" fname))
-        ;;           (not (eq (window-buffer w) tray-buffer))))
-        (with-current-buffer " *Minibuf-0*"
-          (erase-buffer)
-          (insert (concat (make-string (max 0 (- (awesome-tray-get-frame-width) (string-width tray-info) awesome-tray-info-padding-right)) ?\ ) tray-info))
-          (insert " ")
-          (insert-image scroll-info)
-          )))
     (setq awesome-tray-active-modules
           '("location" "buffer-name" "belong" "file-path" "buffer-read-only"
             "mode-name" "circe" "notmuch" "evil" "date"))
@@ -773,9 +738,6 @@ But since we use the tray, we don't need the modeline anymore.
   (defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
   (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
   (add-hook 'prog-mode-hook 'linum-mode)
-  ;;(add-hook 'prog-mode-hook
-  ;;         (lambda () (add-to-list 'write-file-functions
-  ;;                                 'delete-trailing-whitespace)))
 #+END_SRC
 *** PostScript/ps
 #+BEGIN_SRC emacs-lisp
@@ -955,10 +917,13 @@ But since we use the tray, we don't need the modeline anymore.
 
 *** Dashboard
 #+BEGIN_SRC emacs-lisp
+  (use-package xkcd :defer)
   (use-package all-the-icons
     :if (display-graphic-p))
   (use-package dashboard
     :diminish dashboard-mode
+    :init
+    (use-package page-break-lines :ensure t :defer nil)
     :config
     (setq dashboard-banner-logo-title "What a nice day!")
     ;;(setq dashboard-startup-banner "/path/to/image")
@@ -1377,7 +1342,7 @@ LSP, emmm... who use LSP?
     (add-hook 'org-mode-hook
               (lambda ()
                 ;; (org-shifttab 5)
-                (add-to-list 'write-file-functions 'delete-trailing-whitespace)
+                ;; (add-to-list 'write-file-functions 'delete-trailing-whitespace)
                 (electric-indent-local-mode -1)
                 (mkvoya/better-wrap)
                 (prettify-symbols-mode)
@@ -2278,7 +2243,6 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package xkcd :defer t)
   (use-package emacs
     :config
     (pixel-scroll-precision-mode)
