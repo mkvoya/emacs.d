@@ -9,6 +9,7 @@ Also from https://github.com/sachac/.emacs.d
 * Env
 
 #+BEGIN_SRC emacs-lisp
+
   (setq native-comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
   (setq .org "~/.emacs.d/emacs-config.org")
   (setq .el (concat (file-name-sans-extension .org) ".el"))
@@ -108,7 +109,6 @@ Also from https://github.com/sachac/.emacs.d
   ;;; Get shell env from user shell.
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
-      :defer 2
       :config
       (exec-path-from-shell-initialize)
       (if (and (fboundp 'native-comp-available-p)
@@ -174,6 +174,7 @@ Also from https://github.com/sachac/.emacs.d
       (setq word-wrap nil)
       ))
 
+
   ;; lazy answer
   (fset 'yes-or-no-p 'y-or-n-p)
 
@@ -182,6 +183,18 @@ Also from https://github.com/sachac/.emacs.d
 
 #+END_SRC
 
+*** delight: altering mode appearences on mode line
+
+| diminish         |                                            |
+| delight (better) | https://elpa.gnu.org/packages/delight.html |
+#+BEGIN_SRC emacs-lisp
+  (use-package delight
+    :config
+    (delight '((org-indent-mode)
+               (visual-line-mode)
+               (company-posframe-mode)))
+    )
+#+END_SRC
 
 *** Scroll bar
 
@@ -194,6 +207,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
 #+BEGIN_SRC emacs-lisp
   (use-package yascroll
+    :delight
     :config
     ;; (advice-add :after 'pixel-scroll-up 'run-window-scroll-functions)
     ;; (advice-add :after 'pixel-scroll-down 'run-window-scroll-functions)
@@ -292,6 +306,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   ;; Autocomplete
   (use-package company
     ;; :defer t
+    :delight
     :init
     (setq company-dabbrev-downcase nil
           company-show-numbers t
@@ -300,11 +315,13 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (use-package yasnippet
       :ensure
+      :delight
       :demand
       :config
       (yas-global-mode 1)
       )
     (use-package yasnippet-snippets
+       :delight
        :after yasnippet)
 
     (use-package company-emoji :ensure t :defer nil)
@@ -344,6 +361,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     )
 
   (use-package company-posframe
+    :delight
     :after company
     :config
     (company-posframe-mode 1))
@@ -360,7 +378,6 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
       ;;; Better evil
   (use-package evil
-    ;; :after (smart-mode-line)
     :straight t
     :init
     (use-package undo-fu)
@@ -429,6 +446,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   ;; (persp-mode)
 
   (use-package flycheck
+    :delight
     :defer t
     :config
     ;; (global-flycheck-mode)
@@ -534,61 +552,9 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
 
 *** Modeline
-| doom-modeline   |  |
-| smart-mode-line |  |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package awesome-tray
-    :straight (:host github :repo "manateelazycat/awesome-tray")
-    :init
-    (provide 'battery)
-    :config
-    ;; (setq mode-line-format nil)
-    (setq window-divider-default-right-width 2)
-    (setq window-divider-default-bottom-width 2)
-    (setq window-divider-default-places t)
-    (window-divider-mode 1)
-    (setq-default mode-line-format nil)
-
-    (defface awesome-tray-module-notmuch-face
-      '((t (:italic t)))
-      "Hello module face."
-      :group 'awesome-tray)
-    (defun notmuch-open-unread-view()
-      "Open notmuch panel for unread mails."
-      (interactive)
-      (require 'notmuch)
-      (notmuch-search "tag:unread"))
-    (defun notmuch-count-unread()
-      "Get the notmuch unread mail count if notmuch is loaded."
-      (if (fboundp 'notmuch-command-to-string)
-          (replace-regexp-in-string "\n" ""
-                                    (notmuch-command-to-string "count"
-                                                               "tag:unread"))
-        "?"))
-    (defun awesome-tray-module-notmuch-info ()
-      (let ((info (format "[%s]" (notmuch-count-unread))))
-        (propertize
-         info
-         'help-echo "Unread!"
-         'local-map (let ((map (make-sparse-keymap)))
-                      (define-key map [mouse-1]
-                                  #'notmuch-open-unread-view)
-                      map)
-         )))
-
-    (add-to-list 'awesome-tray-module-alist
-                 '("notmuch" . (awesome-tray-module-notmuch-info
-                                awesome-tray-module-battery-face)))
-
-    (setq awesome-tray-info-padding-right 4)
-
-    (setq awesome-tray-active-modules
-          '("location" "buffer-name" "belong" "file-path" "buffer-read-only"
-            "mode-name" "circe" "notmuch" "evil" "date"))
-    (awesome-tray-mode 1)
-    )
-#+END_SRC
+| doom-modeline   |   |
+| smart-mode-line |   |
+| awesome-tray    |   |
 
 *** Undo-tree
 | undo-tree | built-in |
@@ -650,6 +616,57 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 | hemisu-light     |   |
 
 #+BEGIN_SRC emacs-lisp
+
+#+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (use-package calendar
+    :init
+    (setq calendar-longitude 121.4737
+          calendar-latitude 31.2304
+          calendar-location-name "SH")
+
+    (use-package celestial-mode-line
+      :disabled
+      :init
+      ;; (defvar celestial-mode-line-phase-representation-alist '((0 . "○") (1 . "☽") (2 . "●") (3 . "☾")))
+      ;; (defvar celestial-mode-line-sunrise-sunset-alist '((sunrise . "☀↑") (sunset . "☀↓")))
+      :config
+      ;; add to end of global-mode-string
+      (if (null global-mode-string)
+          (setq global-mode-string '("" celestial-mode-line-string))
+        (add-to-list 'global-mode-string 'celestial-mode-line-string t))
+      (celestial-mode-line-start-timer)
+      )
+    :config
+    (defun mk/notmuch-open-unread-view()
+      "Open notmuch panel for unread mails."
+      (interactive)
+      (require 'notmuch)
+      (notmuch-search "tag:unread"))
+    (defun mk/notmuch-count-unread()
+      "Get the notmuch unread mail count if notmuch is loaded."
+      (if (fboundp 'notmuch-command-to-string)
+          (replace-regexp-in-string "\n" ""
+                                    (notmuch-command-to-string "count"
+                                                               "tag:unread"))
+        "?"))
+    (defun mk/mode-line-mail ()
+      "Show the unread mail count in the mode line."
+      )
+    (setq display-time-string-forms
+          '(" " (substring year -2) "/" month "/" day
+            " " 24-hours ":" minutes
+            ;; (if time-zone " (") time-zone (if time-zone ")")
+            (propertize
+              (format " [M:%s]" (mk/notmuch-count-unread))
+              'help-echo  "Unread!"
+              'keymap  (let ((map (make-sparse-keymap)))
+                        (define-key map [mouse-1]
+                                    #'mk/notmuch-open-unread-view)
+                        map))))
+    (display-time-mode 1))
+
+
   (use-package hemisu-theme
     :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
     :config
@@ -659,18 +676,49 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (setq modeline-alertcolor "#782a2f")
     (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 
-    (defun modeline-alert()
-      (custom-theme-set-faces
-       'user
-       `(mode-line ((t (:background ,modeline-alertcolor :font "Sarasa Mono SC-11"))))
-       `(mode-line-inactive ((t (:background "#c9cabf" :font "Sarasa Mono SC-11"))))))
-    (defun modeline-normal()
-      (custom-theme-set-faces
-       'user
-       `(mode-line ((t (:background ,modeline-bgcolor))))
-       `(mode-line-inactive ((t (:background "#c9cabf"))))))
-    (modeline-normal)
+    (setq window-divider-default-right-width 2)
+    (setq window-divider-default-bottom-width 2)
+    (setq window-divider-default-places t)
+    (window-divider-mode 1)
 
+    ;; mode line
+    (column-number-mode 1)
+    (set-face-attribute 'mode-line           nil :background "#CF3F1F")
+    (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+    (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+    (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+
+
+    ;; Thank https://emacs.stackexchange.com/a/37270/30542
+    (defun simple-mode-line-render (left right)
+      "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
+      (let ((available-width
+             (- (window-total-width)
+                (+ (length (format-mode-line left))
+                   (length (format-mode-line right))
+                   ))))
+        (append left
+                (list (format (format "%%%ds" available-width) ""))
+                right)))
+
+    (require 'uniquify)
+    (setq uniquify-buffer-name-style 'forward)
+
+    (setq-default mode-line-format
+                  '((:eval
+                     (simple-mode-line-render
+                      ;; Left.
+                      '("[%*]"
+                        evil-mode-line-tag
+                        mode-line-buffer-identification
+                        )
+                      ;; Right.
+                      '(" %e %l:%c "
+                        mode-line-frame-identification
+                        ;; mode-line-modes
+                        " %m "
+                        mode-line-misc-info
+                        " ")))))
     )
 #+END_SRC
 
@@ -679,17 +727,12 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
+    :delight
     :defer t
     :config
     (rainbow-mode t))
 #+END_SRC
 
-*** delight: altering mode appearences on mode line
-
-| diminish         |                                            |
-| delight (better) | https://elpa.gnu.org/packages/delight.html |
-
-But since we use the tray, we don't need the modeline anymore.
 
 *** Async
 
@@ -879,7 +922,7 @@ But since we use the tray, we don't need the modeline anymore.
     :init
     :mode ("\\.pdf\\'" . pdf-view-mode)
     :magic ("%PDF" . pdf-view-mode)
-    :bind (
+    :bind (:map pdf-view-mode-map
            ("<wheel-right>" . image-forward-hscroll)
            ("<wheel-left>" . image-backward-hscroll)
            ("<pinch>" . mk/pdf-tools-scale-pinch)
@@ -1057,15 +1100,17 @@ Alternatives (Check the selectrum repo README)
   ;; Ivy config from https://github.com/MatthewZMD/.emacs.d
   (use-package ivy
     :defer t
+    :delight
     :init
     (use-package amx :defer t)
-    (use-package counsel :defer t :config (counsel-mode 1))
+    (use-package counsel :delight :defer t :config (counsel-mode 1))
     (use-package swiper :defer t)
     (use-package all-the-icons-ivy-rich :config (all-the-icons-ivy-rich-mode 1))
     (use-package ivy-rich
       :after (all-the-icons-ivy-rich)
       :config (ivy-rich-mode 1))
     (use-package ivy-posframe
+      :delight
       :config
       (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
       (ivy-posframe-mode 1)
@@ -1822,6 +1867,7 @@ An example:
 #+BEGIN_SRC emacs-lisp
 
   (use-package jieba
+    :delight
     :after (evil)
     :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
     :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
@@ -2009,6 +2055,7 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
+    :delight
     :ensure t
     :after (org)
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
@@ -2540,12 +2587,14 @@ Interesting Colors:
 
  #+BEGIN_SRC emacs-lisp
    (use-package google-this
+     :delight
      :straight (:host github :repo "Malabarba/emacs-google-this")
      :config
      (google-this-mode 1))
  #+END_SRC
  #+BEGIN_SRC emacs-lisp
    (use-package volatile-highlights
+     :delight
      :straight (:host github :repo "k-talo/volatile-highlights.el")
      :config
      ;;-----------------------------------------------------------------------------
@@ -2557,3 +2606,4 @@ Interesting Colors:
      (volatile-highlights-mode t)
      )
  #+END_SRC
+
