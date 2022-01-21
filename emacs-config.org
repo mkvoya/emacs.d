@@ -225,7 +225,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     :config
     (setq cnfonts-personal-fontnames
           '(()
-            ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05")
+            ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05" "PingFang SC" "Yuanti SC")
             ()
             ("Apple Color Emoji")
             ))
@@ -259,9 +259,15 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :straight nil  ; built-in
+    :after (project)
     :defer t
-    :config
+    :init
     (setq magit-diff-refine-hunk t)
+    (use-package magit-extras
+      :straight nil
+      :init
+      (setq magit-bind-magit-project-status t)
+      )
     )
   (use-package git-link :defer t)
   (use-package forge :after (magit) :defer t)
@@ -356,12 +362,12 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   (use-package evil
     ;; :after (smart-mode-line)
     :straight t
-    :after (undo-tree)
+    :init
+    (use-package undo-fu)
     :config
     (setq evil-want-fine-undo t)
     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-    (global-undo-tree-mode)
-    (evil-set-undo-system 'undo-tree)
+    (evil-set-undo-system 'undo-fu)
     (use-package evil-numbers
       :demand t
       :config
@@ -387,6 +393,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (evil-set-initial-state 'notdeft-mode 'emacs)
     (evil-set-initial-state 'vterm-mode 'emacs)
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
+    (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
     (evil-mode 1))
 
       ;;; Easy motion
@@ -533,6 +540,8 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 #+BEGIN_SRC emacs-lisp
   (use-package awesome-tray
     :straight (:host github :repo "manateelazycat/awesome-tray")
+    :init
+    (provide 'battery)
     :config
     ;; (setq mode-line-format nil)
     (setq window-divider-default-right-width 2)
@@ -583,22 +592,20 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
 *** Undo-tree
 | undo-tree | built-in |
+| undo-fu   | |
 
 #+BEGIN_SRC emacs-lisp
   (use-package undo-tree
-    :delight
+    :disabled
     :config
-    (progn
-      (global-undo-tree-mode)
-      (setq undo-tree-visualizer-timestamps t)
-      (setq undo-tree-visualizer-diff t)))
+    (global-undo-tree-mode)
+    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-diff t))
 #+END_SRC
 
 *** Yasnippet: A template system for Emacs
 | yasnippet | https://github.com/joaotavora/yasnippet |
 
-#+BEGIN_SRC emacs-lisp
-#+END_SRC
 
 *** Beacon - A light that follows your cursor around so you don't lose it!
 | beacon | https://github.com/Malabarba/beacon |
@@ -777,6 +784,7 @@ But since we use the tray, we don't need the modeline anymore.
     (c-set-style "my-ycsb-c++-style"))        ; use my-style defined above
   (add-hook 'c++-mode-hook 'my-c++-mode-hook)
   (use-package modern-cpp-font-lock
+    :defer t
     :ensure t)
 #+END_SRC
 
@@ -902,19 +910,6 @@ But since we use the tray, we don't need the modeline anymore.
   ;;   (pdf-tools-install :no-query))
 #+END_SRC
 
-*** Projectile
-#+BEGIN_SRC emacs-lisp
-  (use-package projectile
-    ;; :delight '(:eval (concat "⎈[" (projectile-project-name) "]"))
-    :straight (:host github :repo "bbatsov/projectile" :files ("projectile.el"))
-    :delight projectile-mode
-    :config
-    (projectile-mode +1)
-    ;; (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
-    ;; (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
-    )
-#+END_SRC
-
 *** Dashboard
 #+BEGIN_SRC emacs-lisp
   (use-package xkcd :defer)
@@ -927,6 +922,7 @@ But since we use the tray, we don't need the modeline anymore.
     :config
     (setq dashboard-banner-logo-title "What a nice day!")
     ;;(setq dashboard-startup-banner "/path/to/image")
+    (setq dashboard-projects-backend 'project-el)
     (setq dashboard-items '((recents  . 10)
                             (bookmarks . 10)
                             ;; (agenda . 5)
@@ -1060,9 +1056,10 @@ Alternatives (Check the selectrum repo README)
 
   ;; Ivy config from https://github.com/MatthewZMD/.emacs.d
   (use-package ivy
+    :defer t
     :init
     (use-package amx :defer t)
-    (use-package counsel :config (counsel-mode 1))
+    (use-package counsel :defer t :config (counsel-mode 1))
     (use-package swiper :defer t)
     (use-package all-the-icons-ivy-rich :config (all-the-icons-ivy-rich-mode 1))
     (use-package ivy-rich
@@ -1077,16 +1074,16 @@ Alternatives (Check the selectrum repo README)
     (use-package ivy-prescient :after (counsel)
       :config
       (ivy-prescient-mode))
-    (ivy-mode 1)
     :config
     ;; Do not allow the cursor in the minibuffer prompt
     (setq minibuffer-prompt-properties
           '(read-only t cursor-intangible t face minibuffer-prompt))
     (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
     ;; Enable recursive minibuffers
-    (setq enable-recursive-minibuffers t)
+    (setq enable-recursive-minibuffers nil)
     (setq ivy-use-virtual-buffers t)
     (setq ivy-count-format "(%d/%d) ")
+    (ivy-mode 1)
     )
 
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
@@ -2034,13 +2031,7 @@ An example:
     (global-set-key (kbd "C-t") 'citre-jump-back)
     (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
     (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
-    :config
-    (setq
-     ;; Set this if readtags is not in your path.
-     ;; citre-readtags-program "/path/to/readtags"
-     ;; Set this if you use project management plugin like projectile.  It's
-     ;; only used to display paths relatively, and doesn't affect actual use.
-     citre-project-root-function #'projectile-project-root))
+    )
 #+END_SRC
 
 
@@ -2282,8 +2273,8 @@ An example:
   (setq tramp-verbose 1)
 
   ;; Projectile optimizations over Tramp.
-  (defadvice projectile-project-root (around ignore-remote first activate)
-    (unless (file-remote-p default-directory) ad-do-it))
+  ;; (defadvice projectile-project-root (around ignore-remote first activate)
+  ;;   (unless (file-remote-p default-directory) ad-do-it))
 
   (defun insert-datetime()
     "Insert the current date and time."
@@ -2477,7 +2468,7 @@ Interesting Colors:
     (defun mk/posframe-setup-click-callback ()
       (require 'buffer-focus-hook)
       (buffer-focus-in-callback 'mk/check-notification-click)
-      (message "setup")
+      ;; (message "setup")
       )
 
     (defun mk/posframe-notify ()
@@ -2546,37 +2537,23 @@ Interesting Colors:
          )))
  #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package project
-    :straight nil
-    :config
-    (dolist (sym '(project-search
-                   project-other-window-command
-                   project-vc-dir
-                   project-display-buffer
-                   project-dired
-                   project-execute-extended-command
-                   project-switch-to-buffer
-                   project-query-replace-regexp
-                   project-find-file
-                   project-kill-buffers
-                   project-forget-project
-                   project-eshell
-                   project-or-external-find-regexp
-                   project-other-frame-command
-                   project-other-tab-command
-                   project-shell
-                   project-find-dir
-                   project-async-shell-command
-                   project-compile
-                   project-switch-project
-                   project-shell-command
-                   project-forget-zombie-projects
-                   project-remember-projects-under
-                   project-forget-projects-under
-                   project-display-buffer-other-frame
-                   project-or-external-find-file
-                   project-find-regexp))
-      (put sym 'no-counsel-M-x #'ignore))
-    )
-#+END_SRC
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package google-this
+     :straight (:host github :repo "Malabarba/emacs-google-this")
+     :config
+     (google-this-mode 1))
+ #+END_SRC
+ #+BEGIN_SRC emacs-lisp
+   (use-package volatile-highlights
+     :straight (:host github :repo "k-talo/volatile-highlights.el")
+     :config
+     ;;-----------------------------------------------------------------------------
+     ;; Supporting evil-mode.
+     ;;-----------------------------------------------------------------------------
+     (vhl/define-extension 'evil 'evil-paste-after 'evil-paste-before
+                           'evil-paste-pop 'evil-move)
+     (vhl/install-extension 'evil)
+     (volatile-highlights-mode t)
+     )
+ #+END_SRC
