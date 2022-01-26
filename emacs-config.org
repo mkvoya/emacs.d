@@ -107,6 +107,10 @@ Also from https://github.com/sachac/.emacs.d
 ** Misc
 #+BEGIN_SRC emacs-lisp
   ;;; Get shell env from user shell.
+  ;; https://apple.stackexchange.com/questions/51677/how-to-set-path-for-finder-launched-applications
+  ;; sudo launchctl config user path /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+  ;; The above command works.
+  ;; We need to at least make the /usr/local/bin in the path so that imagemagick can use rsgv rather than its built-in svg renderer.
   (when (memq window-system '(mac ns x))
     (use-package exec-path-from-shell
       :config
@@ -376,7 +380,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   ;;  :config
   ;;  (spaceline-spacemacs-theme))
 
-      ;;; Better evil
+         ;;; Better evil
   (use-package evil
     :straight t
     :init
@@ -411,9 +415,19 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (evil-set-initial-state 'vterm-mode 'emacs)
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
+    (evil-set-initial-state 'Ilist-mode 'emacs)
+
+    (defun mk/switch-to-english-input (&rest r)
+      "Switch to the english ABC input method."
+      (unless (evil-normal-state-p)
+        (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
+      r
+      )
+    (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
+
     (evil-mode 1))
 
-      ;;; Easy motion
+         ;;; Easy motion
   ;; Options includes:
   ;; - https://github.com/abo-abo/avy
   ;; - https://github.com/PythonNut/evil-easymotion
@@ -426,7 +440,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 
     (defun avy-goto-char (char &optional arg)
       "Jump to the currently visible CHAR.
-    The window scope is determined by `avy-all-windows' (ARG negates it)."
+       The window scope is determined by `avy-all-windows' (ARG negates it)."
       (interactive (list (read-char "char: " t)
                          current-prefix-arg))
       (if (= ?  char)
@@ -1398,6 +1412,7 @@ LSP, emmm... who use LSP?
     ;;org-odd-levels-only t
 
     (use-package org-contrib :disabled)
+    (use-package org-inline-pdf :defer t)
     )
 #+END_SRC
 
@@ -1414,8 +1429,6 @@ An example:
     [ ] item2
       [X] item 3
     [X] item3
-
-- Currently we need to replace the svg-tag-mode's ~font-lock-flush~ with ~font-lock-update~ to enable the svg checkboxs.
 
 #+BEGIN_SRC emacs-lisp
   (use-package svg-lib :demand t)
@@ -1460,7 +1473,8 @@ An example:
                    (replace-match "[X]")))
                 ))))
     (setq svg-tag-tags
-          '(("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+          '(
+            ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
                                          (svg-tag-make tag :beg 2))))
             ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
                                            (svg-tag-make tag :beg 2 :end -1))))
@@ -1469,8 +1483,8 @@ An example:
                           "Click to toggle."
                           ))
             ("\\(\\[[Xx]\\]\\)" . ((lambda (_tag) (mk/svg-checkbox-filled))
-                          (lambda () (interactive) (mk/svg-checkbox-toggle))
-                          "Click to toggle."))
+                                   (lambda () (interactive) (mk/svg-checkbox-toggle))
+                                   "Click to toggle."))
             ))
     )
 #+END_SRC
@@ -1631,17 +1645,61 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-ref
-    :disabled
-    :ensure nil
-    :after (org)
+    :after (org ivy)
     :defer t
+    :init
+    (use-package ivy-bibtex)
     :config
-    (let* ((note-dir "~/Dropbox/Dreams/Research/Papers/Notes/")
+
+    (let* ((base-dir "~/Dropbox/Dreams/Research/OrgRef/")
+           (note-dir (concat base-dir "Notes/"))
+           (pdf-dir (concat base-dir "PDFs/"))
            (note-file (concat note-dir "Notes.org"))
-           (bib-file "~/Dropbox/Dreams/Research/Papers/Main.bib")
-           (pdf-dir "~/Dropbox/Dreams/Research/Papers"))
+           (bib-file (concat base-dir "Main.bib")))
+      (setq bibtex-completion-bibliography `(,bib-file)
+            bibtex-completion-library-path `(,pdf-dir)
+            bibtex-completion-notes-path note-dir
+            bibtex-completion-notes-template-multiple-files "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
+            bibtex-completion-additional-search-fields '(keywords)
+            bibtex-completion-display-formats
+            '((article       . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${journal:40}")
+              (inbook        . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} Chapter ${chapter:32}")
+              (incollection  . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+              (inproceedings . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+              (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}"))
+            bibtex-completion-pdf-open-function
+            (lambda (fpath)
+              (call-process "open" nil 0 nil fpath)))
+
+      (require 'bibtex)
+
+      (setq bibtex-autokey-year-length 4
+            bibtex-autokey-name-year-separator "-"
+            bibtex-autokey-year-title-separator "-"
+            bibtex-autokey-titleword-separator "-"
+            bibtex-autokey-titlewords 2
+            bibtex-autokey-titlewords-stretch 1
+            bibtex-autokey-titleword-length 5
+            org-ref-bibtex-hydra-key-binding (kbd "H-b"))
+
+      (define-key bibtex-mode-map (kbd "H-b") 'org-ref-bibtex-hydra/body)
+
+      (require 'org-ref-ivy)
+
+      (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
+            org-ref-insert-cite-function 'org-ref-cite-insert-ivy
+            org-ref-insert-label-function 'org-ref-insert-label-link
+            org-ref-insert-ref-function 'org-ref-insert-ref-link
+            org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
+
+      (setq org-latex-pdf-process (list "latexmk -shell-escape -bibtex -f -pdf %f"))
+
       (setq reftex-default-bibliography bib-file)
-      ))
+      )
+    :bind (:map org-mode-map
+                ("C-c ]" . org-ref-insert-link)
+                ("s-[" . org-ref-insert-link-hydra/body))
+    )
 #+END_SRC
 
 *** Calender sync
@@ -2607,3 +2665,16 @@ Interesting Colors:
      )
  #+END_SRC
 
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package imenu-list
+     :after (org)
+     :demand
+     :bind (
+            ("C-\"" . #'imenu-list-smart-toggle))
+     :config
+     (setq imenu-list-auto-resize nil)
+     (setq imenu-list-position 'left)
+     )
+   (use-package org-sidebar :defer t)
+ #+END_SRC
