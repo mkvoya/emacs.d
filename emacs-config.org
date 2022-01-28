@@ -982,7 +982,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (setq dashboard-projects-backend 'project-el)
     (setq dashboard-items '((recents  . 10)
                             (bookmarks . 10)
-                            ;; (agenda . 5)
+                            (agenda . 5)
                             (projects . 5)
                             (registers . 5)))
     (setq dashboard-set-heading-icons t)
@@ -1293,13 +1293,6 @@ LSP, emmm... who use LSP?
       :straight nil  ; built-in with org-mode
       :hook (org-mode . org-num-mode))
     :config
-
-    ;; Org agenda is loaded, add it back to the dashboard
-    (setq dashboard-items '((recents  . 10)
-                            (bookmarks . 10)
-                            (agenda . 5)
-                            (projects . 5)
-                            (registers . 5)))
 
     (setq org-display-remote-inline-images 'download)
 
@@ -2588,28 +2581,6 @@ Interesting Colors:
                        :timeout 2
                        :border-width 1
                        :poshandler 'posframe-poshandler-frame-top-center)))
-    )
-
-  (use-package emacs
-    :defer t
-    :ensure nil
-    :after (org posframe dashboard)
-    :config
-    (with-current-buffer (get-buffer-create " *Notifications*")
-      (erase-buffer)
-      (dashboard-insert-agenda 5)
-      )
-    (when (posframe-workable-p)
-      (posframe-show " *Notifications*"
-                     :position '(1, 1)
-                     :background-color "wheat"
-                     ;; :accept-focus t
-                     :initialize #'mk/posframe-setup-click-callback
-                     :border-color "grey"
-                     :timeout 3
-                     :border-width 1
-                     :poshandler 'posframe-poshandler-frame-top-center))
-    (let ((dashboard-force-refresh t)) (dashboard-insert-startupify-lists))
     )
 
 #+END_SRC
