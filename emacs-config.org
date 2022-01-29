@@ -9,11 +9,10 @@ Also from https://github.com/sachac/.emacs.d
 * Env
 
 #+BEGIN_SRC emacs-lisp
-
   (setq native-comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
   (setq .org "~/.emacs.d/emacs-config.org")
   (setq .el (concat (file-name-sans-extension .org) ".el"))
-  (defun mkvoya/sync-emacs-config()
+  (defun mk/sync-emacs-config()
     "Synchronize config from org to el and compile to elc."
     (interactive)
     ;; Avoid running hooks when tangling. From https://delta.re/emacs-config-org/
@@ -38,7 +37,7 @@ Also from https://github.com/sachac/.emacs.d
   (add-hook 'after-save-hook
             (lambda ()
               (if (equal (buffer-file-name) (expand-file-name .org))
-                  (mkvoya/sync-emacs-config))))
+                  (mk/sync-emacs-config))))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -745,6 +744,8 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     :defer t
     :config
     (rainbow-mode t))
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 
@@ -798,11 +799,29 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 #+END_SRC
 ** Languages
 *** Programming mode
+
+Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f56659338ff1fdf8f8089a7a6f66beed2/init.el#L796-L800
+
 #+BEGIN_SRC emacs-lisp
   (defun make-underscore-part-of-words () (modify-syntax-entry ?_ "w"))
   (add-hook 'prog-mode-hook #'make-underscore-part-of-words)
-  (add-hook 'prog-mode-hook 'linum-mode)
+
+  (use-package display-line-numbers
+    :straight nil
+    :hook (prog-mode . display-line-numbers-mode)
+    :config
+    ;; (setq-default display-line-numbers-width 3)
+    )
+
+  (use-package emacs
+    :straight nil
+    :config
+    (global-prettify-symbols-mode)
+    (setq-default indicate-buffer-boundaries 'left)
+    )
 #+END_SRC
+
+
 *** PostScript/ps
 #+BEGIN_SRC emacs-lisp
   ;; (add-hook 'ps-mode-hook 'doc-view-toggle-display)
@@ -1018,54 +1037,26 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
       "-o ControlPath=/Volumes/ramfs/ssh-ControlPath-%%r@%%h:%%p "
       "-o ControlMaster=auto -o ControlPersist=yes"))
     )
+#+END_SRC
 
-  (setq alert-default-style 'libnotify)
-  (setq org-alert-headline-regexp "\\(SCHEDULED:.+\\|DEADLINE:.+\\)")
 
+#+BEGIN_SRC emacs-lisp
   (modify-syntax-entry ?_ "w")
-
-        ;;; ========== Charset and Unicode and Emoji =============
-  ;; UTF-8
-  (prefer-coding-system 'utf-8)
-  (when (display-graphic-p)
-    (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
-
-  ;; Emoji
-  (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+#+END_SRC
 
 
-  ;; Unicode
-  (defmacro my/insert-unicode (unicode-name)
-    `(lambda () (interactive)
-       (insert-char (cdr (assoc-string, unicode-name (ucs-names))))))
-  (bind-key "C-x 8 s" (my/insert-unicode "ZERO WIDTH SPACE"))
-  (bind-key "C-x 8 S" (my/insert-unicode "SNOWMAN"))
-  (set-language-environment "UTF-8")
-  (set-default-coding-systems 'utf-8)
+Built in packages.
 
-  ;; (use-package emojify
-  ;;   :hook (after-init . global-emojify-mode))
+Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
-  ;; (use-package unicode-fonts
-  ;;   :disabled t
-  ;;   :config
-  ;;   (setq unicode-fonts-skip-font-groups
-  ;;         '(chinese-simplified chinese-traditional
-  ;;                              chinese-hanja chinese-kanji chinese-nom
-  ;;                              multicolor decorative low-quality-glyphs))
-  ;;   ;; This breaks the Sarasa font
-  ;;   ;; (unicode-fonts-setup)
-  ;;   )
-
-       ;;; =========== Some builtin modes =============
-       ;;; https://emacs-china.org/t/emacs-builtin-mode/11937
-
+#+BEGIN_SRC emacs-lisp
   (use-package paren
     :defer t
-    :hook (after-init . show-paren-mode)
     :config
     (setq show-paren-when-point-inside-paren t
-          show-paren-when-point-in-periphery t))
+          show-paren-when-point-in-periphery t)
+    (show-paren-mode)
+    )
   (use-package so-long
     :defer t
     :config (global-so-long-mode 1))
@@ -1080,7 +1071,6 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
                           (setq word-wrap nil)
                           )))
 
-         ;;; ========== End of Some builtin modes ===========
 #+END_SRC
 
 ** Completion
@@ -1394,7 +1384,7 @@ LSP, emmm... who use LSP?
                 ;; (add-to-list 'write-file-functions 'delete-trailing-whitespace)
                 (electric-indent-local-mode -1)
                 (mkvoya/better-wrap)
-                (prettify-symbols-mode)
+                ;; (prettify-symbols-mode)
                 ;; (org-hide-properties)
                 ))
 
@@ -2412,6 +2402,7 @@ Interesting Colors:
     )
   (defun get-floating-frame()
     (car (filtered-frame-list #'is-floating-frame)))
+
   (defun toggle-floating-frame ()
     "Make/Delete a frame that is floating."
     (interactive)
@@ -2428,6 +2419,7 @@ Interesting Colors:
                               (name . "*Floating*")))))
       (if (frame-visible-p f)
           (progn
+            ;; (keyboard-quit)
             (make-frame-invisible f))
         (progn
           (set-frame-position f 0 0)
@@ -2435,6 +2427,7 @@ Interesting Colors:
           (make-frame-visible f)
           (select-frame f)
           (select-frame-set-input-focus f)
+          (switch-to-buffer "*scratch*")
           (call-interactively (global-key-binding "\M-x")))
         )))
 
@@ -2475,12 +2468,12 @@ Interesting Colors:
     )
 
   (use-package hl-line
-    :defer t
     :config
-    (global-hl-line-mode t)
     (set-face-background 'hl-line "#d0fed0")
     (set-face-foreground 'hl-line nil)
-    (set-face-foreground 'highlight nil))
+    (set-face-foreground 'highlight nil)
+    ;; (global-hl-line-mode t)
+    )
 
 #+END_SRC
 
@@ -2649,3 +2642,14 @@ Interesting Colors:
      )
    (use-package org-sidebar :defer t)
  #+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  ;; Thank https://github.com/Eason0210/emacs.d
+  (use-package symbol-overlay
+    :hook ((prog-mode html-mode yaml-mode conf-mode) . symbol-overlay-mode)
+    :bind (:map symbol-overlay-mode-map
+                ("M-i" . symbol-overlay-put)
+                ("M-n" . symbol-overlay-jump-next)
+                ("M-p" . symbol-overlay-jump-prev)))
+#+END_SRC

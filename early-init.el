@@ -40,4 +40,22 @@
 
 ;; (when window-system (set-frame-size (selected-frame) 100 80))
 
+
+;;; Thank https://github.com/Eason0210/emacs.d/blob/master/early-init.el
+(setq load-prefer-newer t)
+(setq package-enable-at-startup nil)
+;; Resizing the Emacs frame can be a terribly expensive part of changing the
+;; font. By inhibiting this, we easily halve startup times with fonts that are
+;; larger than the system default.
+(setq frame-inhibit-implied-resize t)
+
+;; UTF-8
+(prefer-coding-system 'utf-8)
+(when (display-graphic-p)
+  (setq x-select-request-type '(UTF8_STRING COMPUND_TEXT TEXT STRING)))
+;; Unicode
+(set-language-environment "UTF-8")
+(set-default-coding-systems 'utf-8)
+
+
 ;;; early-init.el ends here
