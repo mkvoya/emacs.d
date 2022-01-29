@@ -6,10 +6,10 @@
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 Also from https://github.com/sachac/.emacs.d
 
-* Env
+* Core
+** Env
 
 #+BEGIN_SRC emacs-lisp
-  (setq native-comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
   (setq .org "~/.emacs.d/emacs-config.org")
   (setq .el (concat (file-name-sans-extension .org) ".el"))
   (defun mk/sync-emacs-config()
@@ -40,22 +40,24 @@ Also from https://github.com/sachac/.emacs.d
                   (mk/sync-emacs-config))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-;;  (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-#+END_SRC
+** Bootstrap
 
-* Bootstrap
-
-** Custom Files
+*** Custom Files
 
 #+BEGIN_SRC emacs-lisp
   (setq custom-file "~/.emacs.d/customs.el")
   (load custom-file t)
 #+END_SRC
 
-** Packages
-*** straight.el replacing package.el
+*** Packages
+
+**** straight.el replacing package.el
+
 | straight.el        | https://github.com/raxod502/straight.el      |
+| package.el         | built-in package system                      |
+| quelpa             | https://github.com/quelpa/quelpa             |
+| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
+| paradox            | A modern interface for package.el            |
 
 #+BEGIN_SRC emacs-lisp
   (defvar bootstrap-version)
@@ -72,21 +74,19 @@ Also from https://github.com/sachac/.emacs.d
     (load bootstrap-file nil 'nomessage))
 #+END_SRC
 
-*** use-package: A use-package declaration for simplifying your .emacs
+**** use-package: A use-package declaration for simplifying your .emacs
+
 | use-package | https://github.com/jwiegley/use-package |
+
 #+BEGIN_SRC emacs-lisp
   (setq use-package-compute-statistics t)
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t) ; Ensure :straight t
 #+END_SRC
 
-*** Other alternatives
-| package.el         | built-in package system                      |
-| quelpa             | https://github.com/quelpa/quelpa             |
-| quelpa-use-package | https://github.com/quelpa/quelpa-use-package |
-| paradox            | A modern interface for package.el            |
 
 ** Benchmarks
+
 #+BEGIN_SRC emacs-lisp
   (cl-letf (((symbol-function 'define-obsolete-function-alias) #'defalias))
     (use-package benchmark-init
@@ -103,39 +103,49 @@ Also from https://github.com/sachac/.emacs.d
   (unless (server-running-p) (server-start))
 #+END_SRC
 
-** Misc
+** Native Compilation
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/native-compilation-config ()
+    "Basic setups for native compilation."
+    (when (and (fboundp 'native-comp-available-p)
+               (native-comp-available-p))
+      (setq native-comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
+      ;; (message "Native comp is available")
+      ;; Using Emacs.app/Contents/MacOS/bin since it was compiled with
+      ;; ./configure --prefix="$PWD/nextstep/Emacs.app/Contents/MacOS"
+      (add-to-list 'exec-path (concat invocation-directory "bin") t)
+      (setenv "LIBRARY_PATH" (concat (getenv "LIBRARY_PATH")
+                                     (when (getenv "LIBRARY_PATH")
+                                       ":")
+                                     ;; This is where Homebrew puts gcc libraries.
+                                     (car (file-expand-wildcards
+                                           (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
+      (setenv "DYLD_LIBRARY_PATH" (concat (getenv "DYLD_LIBRARY_PATH")
+                                          (when (getenv "DYLD_LIBRARY_PATH") ":")
+                                          ;; This is where Homebrew puts gcc libraries.
+                                          (car (file-expand-wildcards
+                                                (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
+      ;; Only set after LIBRARY_PATH can find gcc libraries.
+      (setq comp-deferred-compilation t))
+    )
+#+END_SRC
+
+
 #+BEGIN_SRC emacs-lisp
   ;;; Get shell env from user shell.
   ;; https://apple.stackexchange.com/questions/51677/how-to-set-path-for-finder-launched-applications
-  ;; sudo launchctl config user path /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-  ;; The above command works.
+  ;; $ sudo launchctl config user path /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
   ;; We need to at least make the /usr/local/bin in the path so that imagemagick can use rsgv rather than its built-in svg renderer.
-  (when (memq window-system '(mac ns x))
-    (use-package exec-path-from-shell
-      :config
-      (exec-path-from-shell-initialize)
-      (if (and (fboundp 'native-comp-available-p)
-               (native-comp-available-p))
-          (progn
-            (message "Native comp is available")
-            ;; Using Emacs.app/Contents/MacOS/bin since it was compiled with
-            ;; ./configure --prefix="$PWD/nextstep/Emacs.app/Contents/MacOS"
-            (add-to-list 'exec-path (concat invocation-directory "bin") t)
-            (setenv "LIBRARY_PATH" (concat (getenv "LIBRARY_PATH")
-                                           (when (getenv "LIBRARY_PATH")
-                                             ":")
-                                           ;; This is where Homebrew puts gcc libraries.
-                                           (car (file-expand-wildcards
-                                                 (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
-            (setenv "DYLD_LIBRARY_PATH" (concat (getenv "DYLD_LIBRARY_PATH")
-                                                (when (getenv "DYLD_LIBRARY_PATH") ":")
-                                                ;; This is where Homebrew puts gcc libraries.
-                                                (car (file-expand-wildcards
-                                                      (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
-            ;; Only set after LIBRARY_PATH can find gcc libraries.
-            (setq comp-deferred-compilation t)))))
+  ;; The above command works.
+  (use-package exec-path-from-shell
+    :config
+    (exec-path-from-shell-initialize)
+    (mk/native-compilation-config))
 #+END_SRC
-** Configs
+
+* SETQs
+
 #+BEGIN_SRC emacs-lisp
   (setq
    ;; Backups
@@ -177,155 +187,48 @@ Also from https://github.com/sachac/.emacs.d
       (setq word-wrap nil)
       ))
 
-
-  ;; lazy answer
-  (fset 'yes-or-no-p 'y-or-n-p)
-
-  ;; Sentence
-  (setq sentence-end-double-space nil) ; Use only one space to end a sentence
-
 #+END_SRC
 
-*** delight: altering mode appearences on mode line
 
-| diminish         |                                            |
-| delight (better) | https://elpa.gnu.org/packages/delight.html |
 #+BEGIN_SRC emacs-lisp
-  (use-package delight
+  (blink-cursor-mode 0)
+#+END_SRC
+
+#+begin_src emacs-lisp
+  (use-package ns-win
+    :straight nil
     :config
-    (delight '((org-indent-mode)
-               (visual-line-mode)
-               (company-posframe-mode)))
-    )
-#+END_SRC
+    (setq mac-right-command-modifier 'control))
+#+end_src
 
-*** Scroll bar
+* Completion & Correction
 
-| nyan-mode   | https://github.com/TeMPOraL/nyan-mode/     |
-| yascroll.el | https://github.com/emacsorphanage/yascroll |
+** Yasnippet: A template system for Emacs
 
-This package is disabled since it conflicts with dashboard and the result is vertico/selectrum's ~M-x~ will cause bugs when there are multiple frames.
-
-We now use a small SVG scroll indicator shown in the awesome-tray.
+| yasnippet | https://github.com/joaotavora/yasnippet |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package yascroll
-    :delight
-    :config
-    ;; (advice-add :after 'pixel-scroll-up 'run-window-scroll-functions)
-    ;; (advice-add :after 'pixel-scroll-down 'run-window-scroll-functions)
-    (global-yascroll-bar-mode 1)
-    )
-  ;; Don't use nyan-mode unless mode-line is enabled.
-  ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
+  (use-package yasnippet
+    :ensure
+    :demand
+    :config (yas-global-mode 1))
+  (use-package yasnippet-snippets
+    :after yasnippet)
 #+END_SRC
 
+** Company: Modular in-buffer completion framework for Emacs
 
-*** Window System
-#+BEGIN_SRC emacs-lisp
-  ;; We already hide the whole titlebar via an Emacs patch.
-  (use-package ns-auto-titlebar
-    :disabled t  ; We used a better patch.
-    :config
-    (when (eq system-type 'darwin) (ns-auto-titlebar-mode)))
-  ;; (setq ns-use-proxy-icon nil)  ; What is this for?
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package bind-key :defer t)
-#+END_SRC
-
-*** Fonts
-
-#+BEGIN_SRC emacs-lisp
-  (use-package cnfonts
-    :config
-    (setq cnfonts-personal-fontnames
-          '(()
-            ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05" "PingFang SC" "Yuanti SC")
-            ()
-            ("Apple Color Emoji")
-            ))
-    (setq cnfonts-profiles
-          '("general" "code" "org-mode" "read-book"))
-    (setq cnfonts-use-system-type t)
-    (setq cnfonts-use-face-font-rescale t)
-    (defun set-apple-emoji-font(fontsizes-list)
-      (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend))
-    (add-hook 'cnfonts-set-font-finish-hook #'set-apple-emoji-font)
-    ;; 让 cnfonts 在 Emacs 启动时自动生效。
-    (cnfonts-mode 1)
-    ;; 添加两个字号增大缩小的快捷键
-    (define-key cnfonts-mode-map (kbd "C--") #'cnfonts-decrease-fontsize)
-    (define-key cnfonts-mode-map (kbd "C-=") #'cnfonts-increase-fontsize)
-    )
-#+END_SRC
-
-*** diff-hl: Emacs package for highlighting uncommitted changes
-| diff-hl | https://github.com/dgutov/diff-hl |
-#+BEGIN_SRC emacs-lisp
-  (use-package diff-hl
-    :defer t
-    :after (magit)
-    :config
-    (global-diff-hl-mode)
-    (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
-    (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package magit
-    :straight nil  ; built-in
-    :after (project)
-    :defer t
-    :init
-    (setq magit-diff-refine-hunk t)
-    (use-package magit-extras
-      :straight nil
-      :init
-      (setq magit-bind-magit-project-status t)
-      )
-    )
-  (use-package git-link :defer t)
-  (use-package forge :after (magit) :defer t)
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; Winner mode
-  (use-package winner :defer t :config (winner-mode 1))
-
-  ;;minibuffer editing
-  ;;(use-package miniedit
-  ;;  :defer t
-  ;;  :commands minibuffer-edit
-  ;;  :init (miniedit-install))
-#+END_SRC
-
-*** Company: Modular in-buffer completion framework for Emacs
 | company-mode | https://github.com/company-mode/company-mode |
+
 #+BEGIN_SRC emacs-lisp
   ;; Autocomplete
   (use-package company
-    ;; :defer t
-    :delight
+    :after (yasnippet-snippets)
     :init
     (setq company-dabbrev-downcase nil
           company-show-numbers t
           company-minimum-prefix-length 2
           company-tooltip-flip-when-above t)
-
-    (use-package yasnippet
-      :ensure
-      :delight
-      :demand
-      :config
-      (yas-global-mode 1)
-      )
-    (use-package yasnippet-snippets
-       :delight
-       :after yasnippet)
 
     (use-package company-emoji :ensure t :defer nil)
     (setq company-backends
@@ -364,100 +267,92 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     )
 
   (use-package company-posframe
-    :delight
     :after company
     :config
     (company-posframe-mode 1))
 #+END_SRC
 
-*** Evil
+** Ivy
+
+Alternatives (Check the selectrum repo README)
+
+| Ido        |                                          |                                                  |
+| Helm       |                                          |                                                  |
+| Ivy        |                                          |                                                  |
+| Icomplete  |                                          |                                                  |
+| Icicles    |                                          |                                                  |
+| Snallet    |                                          |                                                  |
+| Raven      |                                          |                                                  |
+| Swiper     |                                          |                                                  |
+| Selectrum  | https://github.com/raxod502/selectrum    |                                                  |
+| vertico    | https://github.com/minad/vertico         |                                                  |
+| Snails     | https://github.com/manateelazycat/snails |                                                  |
+|------------+------------------------------------------+--------------------------------------------------|
+|            | For Selectrum/vertico                    |                                                  |
+| consult    | https://github.com/minad/consult         |                                                  |
+|------------+------------------------------------------+--------------------------------------------------|
+| marginalia | https://github.com/minad/marginalia      | Alternative to ivy-rich                          |
+| Embark     | https://github.com/oantolin/embark/      | Minibuffer actions (ivy has builtin alternative) |
+|            |                                          |                                                  |
+
+这里面最初用的 selectrum，之后用的 vertico，这两个都是尽量使用 emacs 自带的机制，因而会更轻量级，并且与 Emacs 结合的可能更好一些。
+但是后来发现它们与 awesome-tray-mode 使用 message 机制冲突，具体原因表现在多个 frame 的时候，在后面创建出的 frame 上进行 M-x 会导致首个 frame 上的 minibuffer 也变大，并且 M-x 除了的 minibuffer 会发生闪烁。
+鼓捣了一会儿，发现应该是机制问题，现有的知识量并不好解决。
+尝试换到 snails，但是无奈配不起来（T-T），最后换到 ivy 。
+
+
 #+BEGIN_SRC emacs-lisp
-  (setq linum-format "%d ")
-  ;; (global-linum-mode t)
-
-  ;;(use-package spaceline-config
-  ;;  :config
-  ;;  (spaceline-spacemacs-theme))
-
-         ;;; Better evil
-  (use-package evil
-    :straight t
+  ;; Ivy config from https://github.com/MatthewZMD/.emacs.d
+  (use-package ivy
+    :defer t
+    :delight
     :init
-    (use-package undo-fu)
-    :config
-    (setq evil-want-fine-undo t)
-    (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-    (evil-set-undo-system 'undo-fu)
-    (use-package evil-numbers
-      :demand t
+    (use-package amx :defer t)
+    (use-package counsel :delight :defer t :config (counsel-mode 1))
+    (use-package swiper :defer t)
+    (use-package all-the-icons-ivy-rich :config (all-the-icons-ivy-rich-mode 1))
+    (use-package ivy-rich
+      :after (all-the-icons-ivy-rich)
+      :config (ivy-rich-mode 1))
+    (use-package ivy-posframe
+      :delight
       :config
-      (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
-      (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt))
-    ;; Evil rebind
-    ;; :q should kill the current buffer rather than quitting emacs entirely
-    (defun mkvoya/ex-quit ()
-      "Evil ex quit."
-      (interactive)
-      (if (one-window-p "visible")
-          (kill-this-buffer)
-        (evil-window-delete)))
-    (evil-ex-define-cmd "q" #'mkvoya/ex-quit)
-    ;; (evil-ex-define-cmd "q" 'mkvoya/betterq)
-    ;; Need to type out :quit to close emacs
-    (evil-ex-define-cmd "quit" 'evil-quit)
-    ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
-    ;; (setq evil-emacs-state-cursor '(hollow))
-    (setq evil-emacs-state-cursor '(bar . 3))
-    ;; Disable Evil in snails-mode
-    (evil-set-initial-state 'snails-mode 'emacs)
-    (evil-set-initial-state 'notdeft-mode 'emacs)
-    (evil-set-initial-state 'vterm-mode 'emacs)
-    (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
-    (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
-    (evil-set-initial-state 'Ilist-mode 'emacs)
-
-    (defun mk/switch-to-english-input (&rest r)
-      "Switch to the english ABC input method."
-      (unless (evil-normal-state-p)
-        (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
-      r
+      (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
+      (ivy-posframe-mode 1)
       )
-    (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
-
-    (evil-mode 1))
-
-         ;;; Easy motion
-  ;; Options includes:
-  ;; - https://github.com/abo-abo/avy
-  ;; - https://github.com/PythonNut/evil-easymotion
-  ;; - https://github.com/hlissner/evil-snipe <= This is chosen by now.
-  (use-package evil-easymotion
-    :after (evil)
-    :demand t
+    (use-package prescient :defer t)
+    (use-package ivy-prescient :after (counsel)
+      :config
+      (ivy-prescient-mode))
     :config
-    (evilem-default-keybindings "SPC")
+    ;; Do not allow the cursor in the minibuffer prompt
+    (setq minibuffer-prompt-properties
+          '(read-only t cursor-intangible t face minibuffer-prompt))
+    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
+    ;; Enable recursive minibuffers
+    (setq enable-recursive-minibuffers nil)
+    (setq ivy-use-virtual-buffers t)
+    (setq ivy-count-format "(%d/%d) ")
+    (ivy-mode 1)
+    )
 
-    (defun avy-goto-char (char &optional arg)
-      "Jump to the currently visible CHAR.
-       The window scope is determined by `avy-all-windows' (ARG negates it)."
-      (interactive (list (read-char "char: " t)
-                         current-prefix-arg))
-      (if (= ?  char)
-          (counsel-M-x)
-        (avy-with avy-goto-char
-          (avy-jump
-           (if (= 13 char)
-               "\n"
-             (regexp-quote (string char)))
-           :window-flip arg))))
-    (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
+#+END_SRC
 
-  (use-package neotree :defer t)
+** LSP
 
-  ;; (use-package perspective
-  ;;   :defer t)
-  ;; (persp-mode)
+| lsp-mode | https://github.com/emacs-lsp/lsp-mode |
+| elgot    |                                       |
+| nox      |                                       |
 
+LSP, emmm... who use LSP?
+
+** Language and checking
+
+*** Flycheck
+
+Better than flymake?
+
+#+BEGIN_SRC emacs-lisp
   (use-package flycheck
     :delight
     :defer t
@@ -486,6 +381,251 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (add-to-list 'flycheck-checkers 'proselint)
     )
 
+#+END_SRC
+
+*** Flycheck Peripherals
+
+| flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
+| flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
+| lsp-ltex              | https://github.com/emacs-languagetool/lsp-ltex/             |
+| languagetool          | https://github.com/PillFall/Emacs-LanguageTool.el           |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck-languagetool
+    :hook (text-mode . (lambda ()
+                         (require 'flycheck-languagetool)))
+    :init
+    (setq flycheck-languagetool-server-jar
+          "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
+    (setq flycheck-languagetool-language "en-US")
+    )
+  (use-package flycheck-grammarly
+    ;; :hook (text-mode . (lambda ()
+    ;;                      (require 'flycheck-languagetool)))
+    :disabled t
+    :config
+    (setq flycheck-grammarly-check-time 0.8)
+    )
+#+END_SRC
+
+
+** Citre: Tag jumps
+
+#+BEGIN_SRC emacs-lisp
+  (use-package citre
+    :defer t
+    :after (evil)
+    :init
+    ;; This is needed in `:init' block for lazy load to work.
+    (require 'citre-config)
+    ;; Bind your frequently used commands.
+    (global-set-key (kbd "C-x c j") 'citre-jump)
+    (global-set-key (kbd "C-x c J") 'citre-jump-back)
+    (global-set-key (kbd "C-x c p") 'citre-ace-peek)
+    (global-set-key (kbd "C-]") 'citre-jump)
+    (global-set-key (kbd "C-t") 'citre-jump-back)
+    (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
+    (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
+    )
+#+END_SRC
+
+* Config
+
+** Save hist
+
+#+BEGIN_SRC emacs-lisp
+  ;; Persist history over Emacs restarts. Vertico sorts by history position.
+  (use-package savehist
+    :straight nil
+    :config
+    (savehist-mode))
+#+END_SRC
+
+** delight: altering mode appearences on mode line
+
+| diminish         |                                            |
+| delight (better) | https://elpa.gnu.org/packages/delight.html |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package delight)  ; Actually, we don't even show minor modes in the modeline.
+#+END_SRC
+
+** Scroll bar
+
+| nyan-mode   | https://github.com/TeMPOraL/nyan-mode/     |
+| yascroll.el | https://github.com/emacsorphanage/yascroll |
+
+Currently, yascroll won't show upon mouse-triggerred scrolling.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yascroll
+    :delight
+    :config
+    ;; (advice-add :after 'pixel-scroll-up 'run-window-scroll-functions)
+    ;; (advice-add :after 'pixel-scroll-down 'run-window-scroll-functions)
+    (global-yascroll-bar-mode 1)
+    )
+  ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
+#+END_SRC
+
+** ns-auto-titlebar
+
+#+BEGIN_SRC emacs-lisp
+  ;; We already hide the whole titlebar via an Emacs patch.
+  (use-package ns-auto-titlebar
+    :disabled t  ; We used a better patch.
+    :config
+    (when (eq system-type 'darwin) (ns-auto-titlebar-mode)))
+  ;; (setq ns-use-proxy-icon nil)  ; What is this for?
+#+END_SRC
+
+** Bind key
+#+BEGIN_SRC emacs-lisp
+  (use-package bind-key :defer t)
+#+END_SRC
+
+** Magit
+
+| diff-hl | Hightlight uncommitted changes | https://github.com/dgutov/diff-hl |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package magit
+    :straight nil  ; built-in
+    :after (project)
+    :defer t
+    :init
+    (setq magit-diff-refine-hunk t)
+    :config
+    (use-package magit-extras
+      :straight nil
+      :init
+      (setq magit-bind-magit-project-status t)
+      )
+    )
+  (use-package git-link :defer t)
+  (use-package forge :after (magit) :defer t)
+
+  (use-package diff-hl
+    :defer t
+    :after (magit)
+    :config
+    (global-diff-hl-mode)
+    (add-hook 'magit-pre-refresh-hook 'diff-hl-magit-pre-refresh)
+    (add-hook 'magit-post-refresh-hook 'diff-hl-magit-post-refresh))
+
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+
+  ;; Winner mode
+  (use-package winner :defer t :config (winner-mode 1))
+
+  ;;minibuffer editing
+  ;;(use-package miniedit
+  ;;  :defer t
+  ;;  :commands minibuffer-edit
+  ;;  :init (miniedit-install))
+#+END_SRC
+
+** Undo
+
+| undo-tree | built-in |
+| undo-fu   |          |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package undo-fu :ensure t)
+  (use-package undo-tree
+    :disabled
+    :config
+    (setq undo-tree-visualizer-timestamps t)
+    (setq undo-tree-visualizer-diff t)
+    (global-undo-tree-mode))
+#+END_SRC
+
+** Evil
+
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :straight t
+    :after (undo-fu)
+    :init
+    :config
+    (setq evil-want-fine-undo t)
+    (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
+    (evil-set-undo-system 'undo-fu)
+    (use-package evil-numbers
+      :demand t
+      :config
+      (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
+      (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt))
+    ;; Evil rebind
+    ;; :q should kill the current buffer rather than quitting emacs entirely
+    (defun mk/ex-quit ()
+      "Evil ex quit."
+      (interactive)
+      (if (one-window-p "visible")
+          (kill-this-buffer)
+        (evil-window-delete)))
+    (evil-ex-define-cmd "q" #'mk/ex-quit)
+    ;; Need to type out :quit to close emacs
+    (evil-ex-define-cmd "quit" 'evil-quit)
+    ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
+    ;; (setq evil-emacs-state-cursor '(hollow))
+    (setq evil-emacs-state-cursor '(bar . 3))
+    ;; Disable Evil in snails-mode
+    (evil-set-initial-state 'snails-mode 'emacs)
+    (evil-set-initial-state 'notdeft-mode 'emacs)
+    (evil-set-initial-state 'vterm-mode 'emacs)
+    (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
+    (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
+    (evil-set-initial-state 'Ilist-mode 'emacs)
+
+    (defun mk/switch-to-english-input (&rest r)
+      "Switch to the english ABC input method."
+      (unless (evil-normal-state-p)
+        (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
+      r
+      )
+    (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
+
+    (evil-mode 1))
+
+#+END_SRC
+
+*** Evil: Easy Motion
+
+| evil-easymotion | https://github.com/PythonNut/evil-easymotion |
+| evil-snipe      | https://github.com/hlissner/evil-snipe       |
+| avy             | https://github.com/abo-abo/avy               |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package evil-easymotion
+    :after (evil)
+    :demand t
+    :config
+    (evilem-default-keybindings "SPC")
+
+    (defun avy-goto-char (char &optional arg)
+      "Jump to the currently visible CHAR.
+       The window scope is determined by `avy-all-windows' (ARG negates it)."
+      (interactive (list (read-char "char: " t)
+                         current-prefix-arg))
+      (if (= ?  char)
+          (counsel-M-x)
+        (avy-with avy-goto-char
+          (avy-jump
+           (if (= 13 char)
+               "\n"
+             (regexp-quote (string char)))
+           :window-flip arg))))
+    (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
+#+END_SRC
+
+*** Evil: Magit
+
+#+BEGIN_SRC emacs-lisp
   ;; optional: this is the evil state that evil-magit will use
   ;; (setq evil-magit-state 'normal)
   ;; optional: disable additional bindings for yanking text
@@ -493,12 +633,19 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
   (use-package evil-magit
     :after (evil magit)
     :defer t)
-
-  (setq confirm-kill-emacs 'y-or-n-p)
-
 #+END_SRC
 
-*** Ctrl-f
+** Dir
+
+#+BEGIN_SRC emacs-lisp
+  (use-package neotree :defer t)
+  ;; (use-package perspective
+  ;;   :config
+  ;;   (persp-mode))
+#+END_SRC
+
+
+** Ctrl-f
 #+BEGIN_SRC emacs-lisp
   (use-package ctrlf
     :defer t
@@ -506,7 +653,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (ctrlf-mode +1))
 #+END_SRC
 
-*** smart-tab
+** smart-tab
 #+BEGIN_SRC emacs-lisp
   ;;; Smart Tab
   (use-package smart-tab
@@ -516,7 +663,7 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (smart-tabs-insinuate 'c 'javascript))
 #+END_SRC
 
-*** Cheatsheet
+** Cheatsheet
 
 #+BEGIN_SRC emacs-lisp
   ;;; MK's cheatsheet
@@ -543,62 +690,10 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
 #+END_SRC
 
 
-*** Smooth scrolling
-
-| sublimity        |   |
-| smooth-scrolling |   |
-| good-scroll      |   |
 
 
-#+BEGIN_SRC emacs-lisp
-  ;; (use-package etags-select)  ; What is this for?
 
-  ;;;; Mouse scrolling in terminal emacs
-  (unless (display-graphic-p)
-    ;; activate mouse-based scrolling
-    ;; ensure mouse
-    (xterm-mouse-mode t)
-    (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
-    (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
-
-#+END_SRC
-
-
-*** Modeline
-| doom-modeline   |   |
-| smart-mode-line |   |
-| awesome-tray    |   |
-
-*** Undo-tree
-| undo-tree | built-in |
-| undo-fu   | |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package undo-tree
-    :disabled
-    :config
-    (global-undo-tree-mode)
-    (setq undo-tree-visualizer-timestamps t)
-    (setq undo-tree-visualizer-diff t))
-#+END_SRC
-
-*** Yasnippet: A template system for Emacs
-| yasnippet | https://github.com/joaotavora/yasnippet |
-
-
-*** Beacon - A light that follows your cursor around so you don't lose it!
-| beacon | https://github.com/Malabarba/beacon |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package beacon
-    :defer t
-    :config
-    (setq beacon-color "#00ff00")
-    ;; (setq beacon-size 40)
-    (beacon-mode 1))
-#+END_SRC
-
-*** Which-Key: Emacs package that displays available keybindings in popup
+** Which-Key: Emacs package that displays available keybindings in popup
 | which-key | https://github.com/justbur/emacs-which-key |
 
 #+BEGIN_SRC emacs-lisp
@@ -619,18 +714,8 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (which-key-setup-minibuffer))
 #+END_SRC
 
-*** Themes
-| monokai-them     |   |
-| grandshell-theme |   |
-| alect-themes     |   |
-| airline-themes   |   |
-| manoj-light      |   |
-| doom-one-light   |   |
-| hemisu-light     |   |
+** Calendar
 
-#+BEGIN_SRC emacs-lisp
-
-#+END_SRC
 #+BEGIN_SRC emacs-lisp
   (use-package calendar
     :init
@@ -678,78 +763,21 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
                                     #'mk/notmuch-open-unread-view)
                         map))))
     (display-time-mode 1))
-
-
-  (use-package hemisu-theme
-    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
-    :config
-    (load-theme 'hemisu-light t)
-    (setq modeline-bgcolor "#281a0f")
-    (setq modeline-alertcolor "#c82a2f")
-    (setq modeline-alertcolor "#782a2f")
-    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-
-    (setq window-divider-default-right-width 2)
-    (setq window-divider-default-bottom-width 2)
-    (setq window-divider-default-places t)
-    (window-divider-mode 1)
-
-    ;; mode line
-    (column-number-mode 1)
-    (set-face-attribute 'mode-line           nil :background "#CF3F1F")
-    (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-    (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-    (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
-
-
-    ;; Thank https://emacs.stackexchange.com/a/37270/30542
-    (defun simple-mode-line-render (left right)
-      "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
-      (let ((available-width
-             (- (window-total-width)
-                (+ (length (format-mode-line left))
-                   (length (format-mode-line right))
-                   ))))
-        (append left
-                (list (format (format "%%%ds" available-width) ""))
-                right)))
-
-    (require 'uniquify)
-    (setq uniquify-buffer-name-style 'forward)
-
-    (setq-default mode-line-format
-                  '((:eval
-                     (simple-mode-line-render
-                      ;; Left.
-                      '("[%*]"
-                        evil-mode-line-tag
-                        mode-line-buffer-identification
-                        )
-                      ;; Right.
-                      '(" %e %l:%c "
-                        mode-line-frame-identification
-                        ;; mode-line-modes
-                        " %m "
-                        mode-line-misc-info
-                        " ")))))
-    )
 #+END_SRC
 
 
-*** Rainbow
+** Rainbow
 
 #+BEGIN_SRC emacs-lisp
   (use-package rainbow-mode
-    :delight
     :defer t
-    :config
-    (rainbow-mode t))
+    :config (rainbow-mode t))
   (use-package rainbow-delimiters
     :hook (prog-mode . rainbow-delimiters-mode))
 #+END_SRC
 
 
-*** Async
+** Async
 
 #+BEGIN_SRC emacs-lisp
   (use-package async :defer t)
@@ -797,8 +825,295 @@ We now use a small SVG scroll indicator shown in the awesome-tray.
     (add-hook 'prog-mode-hook 'whitespace-mode)
     )
 #+END_SRC
-** Languages
-*** Programming mode
+
+* Chinese Optimizations
+** CN Fonts
+
+#+BEGIN_SRC emacs-lisp
+  (use-package cnfonts
+    :config
+    (setq cnfonts-personal-fontnames
+          '(()
+            ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05" "PingFang SC" "Yuanti SC")
+            ()
+            ("Apple Color Emoji")
+            ))
+    (setq cnfonts-profiles
+          '("general" "code" "org-mode" "read-book"))
+    (setq cnfonts-use-system-type t)
+    (setq cnfonts-use-face-font-rescale t)
+    (defun set-apple-emoji-font(fontsizes-list)
+      (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend))
+    (add-hook 'cnfonts-set-font-finish-hook #'set-apple-emoji-font)
+    (cnfonts-mode 1)
+    (define-key cnfonts-mode-map (kbd "C--") #'cnfonts-decrease-fontsize)
+    (define-key cnfonts-mode-map (kbd "C-=") #'cnfonts-increase-fontsize)
+    )
+#+END_SRC
+
+** CN word jump
+
+#+BEGIN_SRC emacs-lisp
+  (use-package jieba
+    :delight
+    :after (evil)
+    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
+    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
+    (jieba-mode)
+    (defun mk/forward-word()
+      "mk's better forward-word."
+      (interactive)
+      (let ((char (char-after)))
+        (if (memq char (string-to-list " \n\r\\"))
+            (re-search-forward "\\\s+")
+          (jieba-forward-word))))
+    ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+    ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
+
+    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
+    )
+
+#+END_SRC
+
+** Word count
+#+BEGIN_SRC emacs-lisp
+  (defvar wc-regexp-chinese-char-and-punc
+    (rx (category chinese)))
+  (defvar wc-regexp-chinese-punc
+    "[。，！？；：「」『』（）、【】《》〈〉※—]")
+  (defvar wc-regexp-english-word
+    "[a-zA-Z0-9-]+")
+
+  (defun wc ()
+    "「較精確地」統計中/日/英文字數。
+  - 文章中的註解不算在字數內。
+  - 平假名與片假名亦包含在「中日文字數」內，每個平/片假名都算單獨一個字（但片假
+    名不含連音「ー」）。
+  - 英文只計算「單字數」，不含標點。
+  - 韓文不包含在內。
+
+  ※計算標準太多種了，例如英文標點是否算入、以及可能有不太常用的標點符號沒算入等
+  。且中日文標點的計算標準要看 Emacs 如何定義特殊標點符號如ヴァランタン・アルカン
+  中間的點也被 Emacs 算為一個字而不是標點符號。"
+    (interactive)
+    (let* ((v-buffer-string
+            (progn
+              (if (eq major-mode 'org-mode) ; 去掉 org 文件的 OPTIONS（以#+開頭）
+                  (setq v-buffer-string (replace-regexp-in-string "^#\\+.+" ""
+                                                                  (buffer-substring-no-properties (point-min) (point-max))))
+                (setq v-buffer-string (buffer-substring-no-properties (point-min) (point-max))))
+              (replace-regexp-in-string (format "^ *%s *.+" comment-start) "" v-buffer-string)))
+                                          ; 把註解行刪掉（不把註解算進字數）。
+           (chinese-char-and-punc 0)
+           (chinese-punc 0)
+           (english-word 0)
+           (chinese-char 0))
+      (with-temp-buffer
+        (insert v-buffer-string)
+        (goto-char (point-min))
+        ;; 中文（含標點、片假名）
+        (while (re-search-forward wc-regexp-chinese-char-and-punc nil :no-error)
+          (setq chinese-char-and-punc (1+ chinese-char-and-punc)))
+        ;; 中文標點符號
+        (goto-char (point-min))
+        (while (re-search-forward wc-regexp-chinese-punc nil :no-error)
+          (setq chinese-punc (1+ chinese-punc)))
+        ;; 英文字數（不含標點）
+        (goto-char (point-min))
+        (while (re-search-forward wc-regexp-english-word nil :no-error)
+          (setq english-word (1+ english-word))))
+      (setq chinese-char (- chinese-char-and-punc chinese-punc))
+      (message
+       (format "中日文字數（不含標點）：%s
+  中日文字數（包含標點）：%s
+  英文字數（不含標點）：%s
+  =======================
+  中英文合計（不含標點）：%s"
+               chinese-char chinese-char-and-punc english-word
+               (+ chinese-char english-word)))))
+#+END_SRC
+
+* Appearance
+
+#+BEGIN_SRC emacs-lisp
+  (use-package emacs
+    :straight nil
+    :config
+    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "λ")  ; previously ✎
+                                           ("#+END_SRC" . "□")
+                                           ("#+begin_src" . "λ")
+                                           ("#+end_src" . "□")
+                                           ("#+begin_quote" . ?»)
+                                           ("#+end_quote" . ?«)
+                                           ("#+BEGIN_QUOTE" . ?»)
+                                           ("#+END_QUOTE" . ?«)
+                                           ))
+    (global-prettify-symbols-mode)
+    (setq-default indicate-buffer-boundaries 'left)
+    )
+#+END_SRC
+
+** Theme and modeline
+
+| monokai-theme    |   |
+| grandshell-theme |   |
+| alect-themes     |   |
+| airline-themes   |   |
+| manoj-light      |   |
+| doom-one-light   |   |
+| hemisu-light     |   |
+| doom-modeline    |   |
+| smart-mode-line  |   |
+| awesome-tray     |   |
+| spaceline        |   |
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package emacs
+    :straight nil
+    :config
+    (setq window-divider-default-right-width 2)
+    (setq window-divider-default-bottom-width 2)
+    (setq window-divider-default-places t)
+    (window-divider-mode 1))
+
+  (defun mk/modeline-setup ()
+    "Setup my modeline."
+    (progn
+      ;; mode line
+      (column-number-mode 1)
+      (set-face-attribute 'mode-line           nil :background "#CF3F1F")
+      (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+      (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+      (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+
+      ;; Thank https://emacs.stackexchange.com/a/37270/30542
+      (defun simple-mode-line-render (left right)
+        "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
+        (let ((available-width (- (window-total-width)
+                                  (+ (length (format-mode-line left))
+                                     (length (format-mode-line right))
+                                     ))))
+          (append left
+                  (list (format (format "%%%ds" available-width) ""))
+                  right)))
+
+      (require 'uniquify)
+      (setq uniquify-buffer-name-style 'forward)
+
+      (setq-default mode-line-format
+                    '((:eval
+                       (simple-mode-line-render
+                        ;; Left.
+                        '("[%*]"
+                          evil-mode-line-tag
+                          mode-line-buffer-identification
+                          )
+                        ;; Right.
+                        '(" %e %l:%c "
+                          mode-line-frame-identification
+                          ;; mode-line-modes
+                          " %m "
+                          mode-line-misc-info
+                          " ")))))
+      ))
+
+  (use-package hemisu-theme
+    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
+    :config
+    (load-theme 'hemisu-light t)
+    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
+    (mk/modeline-setup)
+    )
+#+END_SRC
+
+** Beacon - A light that follows your cursor around so you don't lose it!
+| beacon | https://github.com/Malabarba/beacon |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package beacon
+    :defer t
+    :config
+    (setq beacon-color "#00ff00")
+    ;; (setq beacon-size 40)
+    (beacon-mode 1))
+#+END_SRC
+
+** Smooth scrolling
+
+| sublimity        |   |
+| smooth-scrolling |   |
+| good-scroll      |   |
+
+
+#+BEGIN_SRC emacs-lisp
+  ;; Mouse scrolling in terminal emacs
+  (unless (display-graphic-p)
+    ;; activate mouse-based scrolling
+    ;; ensure mouse
+    (xterm-mouse-mode t)
+    (global-set-key (kbd "<mouse-4>") 'scroll-down-line)
+    (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
+#+END_SRC
+
+** Dashboard
+#+BEGIN_SRC emacs-lisp
+  (use-package xkcd :defer)
+  (use-package all-the-icons
+    :if (display-graphic-p))
+  (use-package dashboard
+    :diminish dashboard-mode
+    :init
+    (use-package page-break-lines :ensure t :defer nil)
+    :config
+    (setq dashboard-banner-logo-title "What a nice day!")
+    ;;(setq dashboard-startup-banner "/path/to/image")
+    (setq dashboard-projects-backend 'project-el)
+    (setq dashboard-items '((recents  . 10)
+                            (bookmarks . 10)
+                            (agenda . 5)
+                            (projects . 5)
+                            (registers . 5)))
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
+    (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
+    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+    (dashboard-setup-startup-hook))
+#+END_SRC
+
+** Symbol Overlay
+
+#+BEGIN_SRC emacs-lisp
+  ;; Thank https://github.com/Eason0210/emacs.d
+  (use-package symbol-overlay
+    :hook ((prog-mode html-mode yaml-mode conf-mode) . symbol-overlay-mode)
+    :bind (:map symbol-overlay-mode-map
+                ("M-i" . symbol-overlay-put)
+                ("M-n" . symbol-overlay-jump-next)
+                ("M-p" . symbol-overlay-jump-prev)))
+#+END_SRC
+
+** Volatile highlights
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package volatile-highlights
+     :delight
+     :straight (:host github :repo "k-talo/volatile-highlights.el")
+     :config
+     ;;-----------------------------------------------------------------------------
+     ;; Supporting evil-mode.
+     ;;-----------------------------------------------------------------------------
+     (vhl/define-extension 'evil 'evil-paste-after 'evil-paste-before
+                           'evil-paste-pop 'evil-move)
+     (vhl/install-extension 'evil)
+     (volatile-highlights-mode t)
+     )
+ #+END_SRC
+
+* Languages
+
+** Programming mode
 
 Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f56659338ff1fdf8f8089a7a6f66beed2/init.el#L796-L800
 
@@ -813,20 +1128,9 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     ;; (setq-default display-line-numbers-width 3)
     )
 
-  (use-package emacs
-    :straight nil
-    :config
-    (global-prettify-symbols-mode)
-    (setq-default indicate-buffer-boundaries 'left)
-    )
 #+END_SRC
 
-
-*** PostScript/ps
-#+BEGIN_SRC emacs-lisp
-  ;; (add-hook 'ps-mode-hook 'doc-view-toggle-display)
-#+END_SRC
-*** C
+** C
 #+BEGIN_SRC emacs-lisp
   (add-hook 'c-mode-hook
             (lambda() (setq tab-width 8
@@ -834,7 +1138,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
                             c-basic-offset 8
                             c-indent-tabs-mode t)))
 #+END_SRC
-*** C++
+** C++
 #+BEGIN_SRC emacs-lisp
   (add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
   ;; style I want to use in c++ mode
@@ -864,7 +1168,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :ensure t)
 #+END_SRC
 
-*** Markdown
+** Markdown
 #+BEGIN_SRC emacs-lisp
   (use-package markdown-mode
     :defer t
@@ -885,7 +1189,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 
 ** LaTeX
 #+BEGIN_SRC emacs-lisp
-       ;;; AucTex
   (use-package tex
     :straight auctex
     :defer t
@@ -924,7 +1227,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     ;;   )
     ;; (add-hook 'after-save-hook #'mkvoya/tex-try-auto-compile)
 
-  (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
+    (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
     (use-package company-auctex
       :defer t
@@ -949,6 +1252,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 #+END_SRC
 
 
+** PDF Tools
 #+BEGIN_SRC emacs-lisp
 
   (use-package pdf-tools :defer t
@@ -986,30 +1290,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
   ;;   (pdf-tools-install :no-query))
 #+END_SRC
 
-*** Dashboard
-#+BEGIN_SRC emacs-lisp
-  (use-package xkcd :defer)
-  (use-package all-the-icons
-    :if (display-graphic-p))
-  (use-package dashboard
-    :diminish dashboard-mode
-    :init
-    (use-package page-break-lines :ensure t :defer nil)
-    :config
-    (setq dashboard-banner-logo-title "What a nice day!")
-    ;;(setq dashboard-startup-banner "/path/to/image")
-    (setq dashboard-projects-backend 'project-el)
-    (setq dashboard-items '((recents  . 10)
-                            (bookmarks . 10)
-                            (agenda . 5)
-                            (projects . 5)
-                            (registers . 5)))
-    (setq dashboard-set-heading-icons t)
-    (setq dashboard-set-file-icons t)
-    (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
-    (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
-    (dashboard-setup-startup-hook))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   ;; https://emacs.stackexchange.com/questions/45546/per-mode-value-for-fill-column
@@ -1020,8 +1300,38 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 #+END_SRC
 
 
+** Python & Web
 
-*** Tramp
+#+BEGIN_SRC emacs-lisp
+  ;; Python Support
+  (use-package elpy :defer t)
+  (use-package py-autopep8
+    :defer t
+    :config
+    (setq py-autopep8-options '("--max-line-length=120")))
+  (use-package blacken
+    :defer t
+    :config
+    (setq blacken-line-length 120))
+  (use-package ein :defer t)
+  (use-package live-py-mode :defer t)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
+  (use-package vue-mode :mode "\\.vue\\'" :defer t)
+#+END_SRC
+
+** Asciidoc
+
+#+BEGIN_SRC emacs-lisp
+  (use-package adoc-mode
+    :defer t
+    :straight (:host github :repo "sensorflo/adoc-mode"))
+#+END_SRC
+
+
+** Tramp
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
     :straight nil
@@ -1036,6 +1346,14 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
      (concat
       "-o ControlPath=/Volumes/ramfs/ssh-ControlPath-%%r@%%h:%%p "
       "-o ControlMaster=auto -o ControlPersist=yes"))
+
+    ;; Speedup the C++ file over Tramp.
+    (setq remote-file-name-inhibit-cache nil)
+    (setq vc-ignore-dir-regexp
+          (format "%s\\|%s"
+                  vc-ignore-dir-regexp
+                  tramp-file-name-regexp))
+    (setq tramp-verbose 1)
     )
 #+END_SRC
 
@@ -1044,8 +1362,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
   (modify-syntax-entry ?_ "w")
 #+END_SRC
 
-
-Built in packages.
+** Built in packages
 
 Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
@@ -1073,154 +1390,6 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 #+END_SRC
 
-** Completion
-*** Main Completion
-| vertico | https://github.com/minad/vertico |
-
-Alternatives (Check the selectrum repo README)
-| Ido       |                                          |
-| Helm      |                                          |
-| Ivy       |                                          |
-| Icomplete |                                          |
-| Icicles   |                                          |
-| Snallet   |                                          |
-| Raven     |                                          |
-| Swiper    |                                          |
-| Selectrum | https://github.com/raxod502/selectrum    |
-| vertico   | https://github.com/minad/vertico         |
-| Snails    | https://github.com/manateelazycat/snails |
-|-----------+------------------------------------------|
-|           | For Selectrum/vertico                    |
-| consult   | https://github.com/minad/consult         |
-
-这里面最初用的 selectrum，之后用的 vertico，这两个都是尽量使用 emacs 自带的机制，因而会更轻量级，并且与 Emacs 结合的可能更好一些。
-但是后来发现它们与 awesome-tray-mode 使用 message 机制冲突，具体原因表现在多个 frame 的时候，在后面创建出的 frame 上进行 M-x 会导致首个 frame 上的 minibuffer 也变大，并且 M-x 除了的 minibuffer 会发生闪烁。
-鼓捣了一会儿，发现应该是机制问题，现有的知识量并不好解决。
-尝试换到 snails，但是无奈配不起来（T-T），最后换到 ivy 。
-
-
-#+BEGIN_SRC emacs-lisp
-
-  ;; Ivy config from https://github.com/MatthewZMD/.emacs.d
-  (use-package ivy
-    :defer t
-    :delight
-    :init
-    (use-package amx :defer t)
-    (use-package counsel :delight :defer t :config (counsel-mode 1))
-    (use-package swiper :defer t)
-    (use-package all-the-icons-ivy-rich :config (all-the-icons-ivy-rich-mode 1))
-    (use-package ivy-rich
-      :after (all-the-icons-ivy-rich)
-      :config (ivy-rich-mode 1))
-    (use-package ivy-posframe
-      :delight
-      :config
-      (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
-      (ivy-posframe-mode 1)
-      )
-    (use-package prescient :defer t)
-    (use-package ivy-prescient :after (counsel)
-      :config
-      (ivy-prescient-mode))
-    :config
-    ;; Do not allow the cursor in the minibuffer prompt
-    (setq minibuffer-prompt-properties
-          '(read-only t cursor-intangible t face minibuffer-prompt))
-    (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-    ;; Enable recursive minibuffers
-    (setq enable-recursive-minibuffers nil)
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-count-format "(%d/%d) ")
-    (ivy-mode 1)
-    )
-
-  ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist
-    :ensure nil
-    :config
-    (savehist-mode))
-
-#+END_SRC
-
-*** Very Large File
-#+BEGIN_SRC emacs-lisp
-  ;;; View Large Files
-  (use-package vlf :defer t)
-#+END_SRC
-
-
-*** marginalia.el -- Marginalia in the minibuffer
-
-| marginalia | https://github.com/minad/marginalia |
-
-Ivy-rich also has this feature.
-#+BEGIN_SRC emacs-lisp
-  ;; Enable richer annotations using the Marginalia package
-  (use-package marginalia
-    :disabled t
-    :defer t
-    ;; The :init configuration is always executed (Not lazy!)
-    :init
-    ;; Must be in the :init section of use-package such that the mode gets
-    ;; enabled right away. Note that this forces loading the package.
-    (marginalia-mode)
-    ;; Prefer richer, more heavy, annotations over the lighter default variant.
-    ;; E.g. M-x will show the documentation string additional to the keybinding.
-    ;; By default only the keybinding is shown as annotation.
-    ;; Note that there is the command `marginalia-cycle-annotators` to
-    ;; switch between the annotators.
-    :config
-    (setq marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light))
-    )
-#+END_SRC
-
-*** Embark: Emacs Mini-Buffer Actions Rooted in Keymaps
-
-| Embark | https://github.com/oantolin/embark/ |
-
-Ivy has most of the features built-in.
-
-#+BEGIN_SRC emacs-lisp
-  (use-package embark
-    :disabled t
-    :bind (:map minibuffer-local-map
-                ("C-o" . embark-act)
-                ("C-S-o" . embark-act-noexit)
-                :map embark-file-map
-                ("j" . dired-jump)))
-#+END_SRC
-
-** LSP
-| nox      |                                       |
-| lsp-mode | https://github.com/emacs-lsp/lsp-mode |
-| elgot    |                                       |
-
-LSP, emmm... who use LSP?
-
-** Language and checking
-| flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
-| flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
-| lsp-ltex              | https://github.com/emacs-languagetool/lsp-ltex/             |
-| languagetool          | https://github.com/PillFall/Emacs-LanguageTool.el           |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package flycheck-languagetool
-    :hook (text-mode . (lambda ()
-                         (require 'flycheck-languagetool)))
-    :init
-    (setq flycheck-languagetool-server-jar
-          "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
-    (setq flycheck-languagetool-language "en-US")
-    )
-  (use-package flycheck-grammarly
-    ;; :hook (text-mode . (lambda ()
-    ;;                      (require 'flycheck-languagetool)))
-    :disabled t
-    :config
-    (setq flycheck-grammarly-check-time 0.8)
-    )
-#+END_SRC
 
 ** Mail Client
 | notmuch    |   |
@@ -1252,9 +1421,8 @@ LSP, emmm... who use LSP?
     )
 #+END_SRC
 
-** Org-mode
-*** Org
-
+* Org-mode
+** Org
 
 #+BEGIN_SRC emacs-lisp
 
@@ -1349,17 +1517,6 @@ LSP, emmm... who use LSP?
     ;; Always redisplay inline images after executing SRC block
     (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
-    ;; Better blocks
-    (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "λ")  ; previously ✎
-                                           ("#+END_SRC" . "□")
-                                           ("#+begin_src" . "λ")
-                                           ("#+end_src" . "□")
-                                           ("#+begin_quote" . ?»)
-                                           ("#+end_quote" . ?«)
-                                           ("#+BEGIN_QUOTE" . ?»)
-                                           ("#+END_QUOTE" . ?«)
-                                           ;; ("PROPERTIES" . "⚙")
-                                           ))
 
     (require 'color)
     (set-face-attribute 'org-block nil :background
@@ -1384,7 +1541,7 @@ LSP, emmm... who use LSP?
                 ;; (add-to-list 'write-file-functions 'delete-trailing-whitespace)
                 (electric-indent-local-mode -1)
                 (mkvoya/better-wrap)
-                ;; (prettify-symbols-mode)
+                (prettify-symbols-mode)
                 ;; (org-hide-properties)
                 ))
 
@@ -1400,7 +1557,7 @@ LSP, emmm... who use LSP?
 #+END_SRC
 
 
-*** SVG checkboxs
+** SVG checkboxs
 
 Add svg checkbox that can be clicked.
 
@@ -1685,7 +1842,7 @@ An example:
     )
 #+END_SRC
 
-*** Calender sync
+** Calender sync
 #+BEGIN_SRC emacs-lisp
   ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
@@ -1719,36 +1876,8 @@ An example:
     (setq org-icalendar-timezone "Asia/Shanghai")
     )
 #+END_SRC
-*** Org publish
-#+BEGIN_SRC emacs-lisp
-  ;;; Org Publish
-  (use-package ox-publish
-    :defer t
-    :straight nil
-    :after (org)
-    :config
-    (setq org-publish-project-alist
-          '(
-            ("org-notes"
-             :base-directory "~/Dropbox/Dreams/Org/Public"
-             :base-extension "org"
-             :publishing-directory "/Volumes/ramfs/public_html/"
-             :recursive t
-             :publishing-function org-html-publish-to-html
-             :headline-levels 4             ; Just the default for this project.
-             :auto-preamble t
-             )
-            ("org-static"
-             :base-directory "~/Dropbox/Dreams/Org/Public"
-             :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf"
-             :publishing-directory "/Volumes/ramfs/public_html/"
-             :recursive t
-             :publishing-function org-publish-attachment
-             )
-            ("org" :components ("org-notes" "org-static"))
-            )))
-#+END_SRC
-*** Capture
+
+** Capture
 #+BEGIN_SRC emacs-lisp
   (defun mkvoya/create-capture-file()
     "Create org file on-the-fly."
@@ -1787,7 +1916,7 @@ An example:
     ;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
     )
 #+END_SRC
-*** OrgRoam
+** OrgRoam
 #+BEGIN_SRC emacs-lisp
   (setq org-roam-v2-ack t)
   (use-package org-roam
@@ -1810,7 +1939,7 @@ An example:
     ;; If using org-roam-protocol
     (require 'org-roam-protocol))
 #+END_SRC
-*** OrgRoam-Server
+** OrgRoam-Server
 # org-roam-server does not support org-roam v2, use org-roam-ui instead.
 #+BEGIN_SRC emacs-lisp
   (use-package websocket :defer t)
@@ -1837,7 +1966,7 @@ An example:
     :straight nil
     :after (org-protocol org-roam))
 #+END_SRC
-*** Org-Mindmap
+** Org-Mindmap
 #+BEGIN_SRC emacs-lisp
   ;; This is an Emacs package that creates graphviz directed graphs from
   ;; the headings of an org file
@@ -1870,14 +1999,14 @@ An example:
     )
 #+END_SRC
 
-*** org-roam-bibtex
+** org-roam-bibtex
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-bibtex
     :defer t
     :after (org-roam org-ref))
 #+END_SRC
 
-*** Org-transclusion
+** Org-transclusion
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
@@ -1886,7 +2015,7 @@ An example:
   ;; :bind (("<f12>" . #'org-transclusion-add))
   ;; ("C-n t" . #'org-transclusion-mode)
 #+END_SRC
-*** NotDeft
+** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
     :defer t
@@ -1898,201 +2027,9 @@ An example:
     (setq notdeft-allow-org-property-drawers t)
     )
 #+END_SRC
-** Others
-*** Input Method
-| pyim | https://github.com/tumashu/pyim |
-#+BEGIN_SRC emacs-lisp
 
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-
-  (use-package jieba
-    :delight
-    :after (evil)
-    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
-    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
-    (jieba-mode)
-    (defun mk/forward-word()
-      "mk's better forward-word."
-      (interactive)
-      (let ((char (char-after)))
-        (if (memq char (string-to-list " \n\r\\"))
-            (re-search-forward "\\\s+")
-          (jieba-forward-word))))
-    ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
-
-    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
-    )
-
-#+END_SRC
-
-
-*** Sis
-
-*** Custom key-bindings
-#+BEGIN_SRC emacs-lisp
-  ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
-  (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
-  (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
-  (global-set-key (kbd "M-s-<left>") 'tab-previous)
-  (global-set-key (kbd "M-s-<right>") 'tab-next)
-  (global-set-key (kbd "M-s-n") 'tab-new)
-  (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
-  ;; Open ibuffer upon "C-c i"
-  (global-set-key (kbd "C-c i") 'ibuffer)
-  ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
-  ;; (global-unset-key [mouse-3])
-  ;; (global-set-key [down-mouse-3]
-  ;;                 `(menu-item ,(purecopy "Menu Bar") ignore
-  ;;                             :filter (lambda (_)
-  ;;                                       (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
-  ;;                                           (mouse-menu-bar-map)
-  ;;                                         (mouse-menu-major-mode-map)))))
-#+END_SRC
-*** Custom functions
-
-#+BEGIN_SRC emacs-lisp
-  ;; From https://emacs.stackexchange.com/questions/47627/identify-buffer-by-part-of-its-name
-  (defun switch-to-existing-buffer-other-window (part)
-    "Switch to buffer with PART in its name."
-    (interactive
-     (list (read-buffer-to-switch "Switch to buffer in other window: ")))
-    (let ((candidates
-           (cl-remove
-            nil
-            (mapcar (lambda (buf)
-                      (let ((pos (string-match part (buffer-name buf))))
-                        (when pos
-                          (cons pos buf))))
-                    (buffer-list)))))
-      (unless candidates
-        (user-error "There is no buffers with %S in its name." part))
-      (setq candidates (cl-sort candidates #'< :key 'car))
-      (switch-to-buffer-other-window (cdr (car candidates)))))
-
-  (defun mkvoya/open-orgroam-panel()
-    "Open the Org-roam client at [http://127.0.0.1:8001]."
-    (interactive)
-    (progn
-      ;; Ensure the server is running.
-      (unless (org-roam-server-mode)
-        (org-roam-server-mode 1))
-      ;; Ensure the session is running.
-      (xwidget-webkit-browse-url "http://127.0.0.1:8001" nil)
-      ;; Switch to the buffer
-      (switch-to-existing-buffer-other-window "Roam Server")
-      ))
-#+END_SRC
-** EL
-
-
-* 3rd-party
-** Word count
-#+BEGIN_SRC emacs-lisp
-  (defvar wc-regexp-chinese-char-and-punc
-    (rx (category chinese)))
-  (defvar wc-regexp-chinese-punc
-    "[。，！？；：「」『』（）、【】《》〈〉※—]")
-  (defvar wc-regexp-english-word
-    "[a-zA-Z0-9-]+")
-
-  (defun wc ()
-    "「較精確地」統計中/日/英文字數。
-  - 文章中的註解不算在字數內。
-  - 平假名與片假名亦包含在「中日文字數」內，每個平/片假名都算單獨一個字（但片假
-    名不含連音「ー」）。
-  - 英文只計算「單字數」，不含標點。
-  - 韓文不包含在內。
-
-  ※計算標準太多種了，例如英文標點是否算入、以及可能有不太常用的標點符號沒算入等
-  。且中日文標點的計算標準要看 Emacs 如何定義特殊標點符號如ヴァランタン・アルカン
-  中間的點也被 Emacs 算為一個字而不是標點符號。"
-    (interactive)
-    (let* ((v-buffer-string
-            (progn
-              (if (eq major-mode 'org-mode) ; 去掉 org 文件的 OPTIONS（以#+開頭）
-                  (setq v-buffer-string (replace-regexp-in-string "^#\\+.+" ""
-                                                                  (buffer-substring-no-properties (point-min) (point-max))))
-                (setq v-buffer-string (buffer-substring-no-properties (point-min) (point-max))))
-              (replace-regexp-in-string (format "^ *%s *.+" comment-start) "" v-buffer-string)))
-                                          ; 把註解行刪掉（不把註解算進字數）。
-           (chinese-char-and-punc 0)
-           (chinese-punc 0)
-           (english-word 0)
-           (chinese-char 0))
-      (with-temp-buffer
-        (insert v-buffer-string)
-        (goto-char (point-min))
-        ;; 中文（含標點、片假名）
-        (while (re-search-forward wc-regexp-chinese-char-and-punc nil :no-error)
-          (setq chinese-char-and-punc (1+ chinese-char-and-punc)))
-        ;; 中文標點符號
-        (goto-char (point-min))
-        (while (re-search-forward wc-regexp-chinese-punc nil :no-error)
-          (setq chinese-punc (1+ chinese-punc)))
-        ;; 英文字數（不含標點）
-        (goto-char (point-min))
-        (while (re-search-forward wc-regexp-english-word nil :no-error)
-          (setq english-word (1+ english-word))))
-      (setq chinese-char (- chinese-char-and-punc chinese-punc))
-      (message
-       (format "中日文字數（不含標點）：%s
-  中日文字數（包含標點）：%s
-  英文字數（不含標點）：%s
-  =======================
-  中英文合計（不含標點）：%s"
-               chinese-char chinese-char-and-punc english-word
-               (+ chinese-char english-word)))))
-#+END_SRC
-** Posts & Blogs
-#+BEGIN_SRC emacs-lisp
-  (use-package org-static-blog
-    :defer t
-    :config
-
-    (setq org-static-blog-publish-title "Mika, Mika, Mika!")
-    (setq org-static-blog-publish-url "https://blog.dong.mk/")
-    (setq org-static-blog-publish-directory "~/Dropbox/Dreams/Org/Blog/Publish/")
-    (setq org-static-blog-posts-directory "~/Dropbox/Dreams/Org/Blog/Posts/")
-    (setq org-static-blog-drafts-directory "~/Dropbox/Dreams/Org/Blog/Drafts/")
-    (setq org-static-blog-use-preview t) ; enable preview
-
-    ;; Use “#+filetags: τ₁ τ₂ … τₙ”
-    (setq org-static-blog-enable-tags t)
-
-    ;; I'd like to have tocs and numbered headings
-    (setq org-export-with-toc t)
-    (setq org-export-with-section-numbers t)
-
-    (setq org-static-blog-page-header
-          "<meta name=\"author\" content=\"Mingkai Dong\">
-               <meta name=\"referrer\" content=\"no-referrer\">
-               <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
-               <link rel=\"icon\" href=\"static/favicon.ico\">")
-
-    (setq org-static-blog-page-preamble
-          "<div class=\"header\">
-            <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
-          </div>")
-
-    (setq org-static-blog-page-postamble
-          "<div id=\"archive\">
-       <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
-     </div>
-     <center></center>")
-
-    (setq org-static-blog-index-front-matter
-          "<h1> Hey it is </h1>\n")
-    )
-#+END_SRC
 
 * MISC
-#+BEGIN_SRC emacs-lisp
-  (use-package marquee-header :defer t) ;; This is really an interesting package.
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
@@ -2105,39 +2042,11 @@ An example:
     (add-hook 'org-mode-hook (lambda () (image-click-mode))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package citre
-    :defer t
-    :init
-    ;; This is needed in `:init' block for lazy load to work.
-    (require 'citre-config)
-    ;; Bind your frequently used commands.
-    (global-set-key (kbd "C-x c j") 'citre-jump)
-    (global-set-key (kbd "C-x c J") 'citre-jump-back)
-    (global-set-key (kbd "C-x c p") 'citre-ace-peek)
-    (global-set-key (kbd "C-]") 'citre-jump)
-    (global-set-key (kbd "C-t") 'citre-jump-back)
-    (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
-    (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
-    )
-#+END_SRC
-
 
 #+BEGIN_SRC emacs-lisp
-  ;;  (set-fontset-font t 'unicode (font-spec :family "Cascadia Code PL" :size 14))
   (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
-  ;; (defun set-fonts ()
-  ;;   (interactive)
-  ;;   (set-face-attribute 'default nil :font (font-spec :family "Cascadia Code PL" :size 14))
-  ;;   (set-fontset-font t 'unicode (font-spec :family "Apple Color Emoji" :size 14))
-  ;;   (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "Sarasa Mono Slab SC" :size 14))
-  ;;   )
-  ;; (add-hook window-setup-hook 'set-fonts)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package chronos :defer t)
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package telega
@@ -2151,13 +2060,11 @@ An example:
   ;; goood
 #+END_SRC
 
-* Emacs
 
-#+BEGIN_SRC emacs-lisp
-  (blink-cursor-mode 0)
-#+END_SRC
+* Freex
 
-* A mode to embed one buffer in another buffer and keep them in sync
+A mode to embed one buffer in another buffer and keep them in sync
+
 #+BEGIN_SRC emacs-lisp
   (use-package freex
     :disabled t
@@ -2166,40 +2073,6 @@ An example:
                            :repo "gregdetre/emacs-freex")
     )
 #+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  ;; (set-face-attribute 'default nil :font "Sarasa Mono SC-14")
-  ;; (set-face-attribute 'fixed-pitch nil :font "Sarasa Mono SC-14")
-  ;; (set-face-attribute 'variable-pitch nil :font "Sarasa Mono SC-14")
-
-  ;; (dolist (face '(default fixed-pitch))
-  ;;   (set-face-attribute `,face nil :font "Sarasa Mono SC-14"))
-#+END_SRC
-
-#+begin_src emacs-lisp
-  (use-package ns-win
-    :straight nil
-    :config
-    (setq mac-right-command-modifier 'control))
-#+end_src
-
-#+begin_src emacs-lisp
-  (use-package read-aloud
-    :defer t
-    :config
-    (setq read-aloud-engine "say"))
-#+end_src
-
-
-#+BEGIN_SRC emacs-lisp
-
-  (use-package emacs-badge
-    :defer t
-    :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
-    )
-
-#+END_SRC
-
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2218,9 +2091,6 @@ An example:
 
 * A Gantt Chart (Calendar) for Org Mode
 #+begin_src emacs-lisp
-  (use-package dash :defer t)
-  (use-package ts :defer t)
-  (use-package s :defer t)
   (use-package org-ql
     :defer t
     :after (ts))
@@ -2231,81 +2101,6 @@ An example:
     )
 #+end_src
 
-
-#+BEGIN_SRC emacs-lisp
-  ;; My source code for bib
-  (setq paper-root-dir "~/Dropbox/Dreams/Research/Papers")
-  (defun paper-add()
-    "Add a paper to your Dreamland."
-    (interactive)
-    (let* ((base-dir paper-root-dir)
-           (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
-           (title (string-trim (read-string "The paper title: ")))
-           (filename (replace-regexp-in-string ":" "," title))
-           (filepath (concat base-dir "/" conf "/" filename)))
-      (make-directory filepath t)
-      (find-file filepath)
-      )
-    )
-
-  (defun paper-root()
-    "Open the paper root."
-    (interactive)
-    (find-file paper-root-dir))
-
-  (defun topic-root()
-    "Open the research topic root."
-    (interactive)
-    (find-file "~/Dropbox/Dreams/Research/ByTopic"))
-
-  (defun paper-find (&optional initial)
-    "Search a paper in your Dreamland, by title, with INITIAL input."
-    (interactive "P")
-    (counsel-require-program find-program)
-    (let ((default-directory paper-root-dir))
-      (ivy-read "Dreamland's Paper Find: "
-                (counsel--find-return-list counsel-file-jump-args)
-                :matcher #'counsel--find-file-matcher
-                :initial-input (or initial "")
-                :action #'find-file
-                :preselect (counsel--preselect-file)
-                :require-match 'confirm-after-completion
-                :history 'file-name-history
-                :keymap counsel-file-jump-map
-                :caller 'counsel-file-jump)))
-
-  (defun paper-open ()
-    "Open the file in PDF Expert. Code borrowed from the crux package."
-    (interactive)
-    (let ((current-file-name
-           (if (eq major-mode 'dired-mode)
-               (dired-get-file-for-visit)
-             buffer-file-name)))
-      (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
-    )
-
-  ;;; Automatically choose the file to link with according to the selected text.
-  (defvar autolink-directory "~/Dropbox/Dreams")
-  (defun autolink--get-candidates (text)
-    "Search for the file name with TEXT."
-    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
-           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
-      (completing-read "Choose the one to link: " candidates)))
-  (defun paper-link (start end)
-    "Try to guess the file to link according to the region between START and END."
-    (interactive "r") ; The "r" here will fill the start and end automatically.
-    (let* ((text (buffer-substring start end))
-           (file (autolink--get-candidates text)))
-      (goto-char end)
-      (insert "]]")
-      (goto-char start)
-      (insert (concat "[[" file "]["))))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package reveal-in-osx-finder :defer t)
-  (use-package crux :defer t)
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package vterm
@@ -2329,45 +2124,8 @@ An example:
     )
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package ranger :defer t)  ; ranger mode
-  (use-package peep-dired :disabled t)  ; Preview files in dired, but we use ranger instead.
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package eaf :disabled t
-    :straight (:type git :host gitlab :repo "emacs-eaf/emacs-application-framework" :files ("*")))
-  (use-package maple-explorer :disabled t)
-  (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
-  (use-package org-brain :disabled t)
-  (use-package deft :disabled t)
-  (use-package zettledeft :disabled t)
-  (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
-  (use-package explain-pause-mode :disabled t)
-  (use-package keystrokes :disabled t
-    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
-  (use-package netease-cloud-music :disabled t
-    :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  ;; Speedup the C++ file over Tramp.
-  (setq remote-file-name-inhibit-cache nil)
-  (setq vc-ignore-dir-regexp
-        (format "%s\\|%s"
-                vc-ignore-dir-regexp
-                tramp-file-name-regexp))
-  (setq tramp-verbose 1)
-
-  ;; Projectile optimizations over Tramp.
-  ;; (defadvice projectile-project-root (around ignore-remote first activate)
-  ;;   (unless (file-remote-p default-directory) ad-do-it))
-
-  (defun insert-datetime()
-    "Insert the current date and time."
-    (interactive)
-    (insert (format-time-string "%F %T")))
 
 #+END_SRC
 
@@ -2379,65 +2137,6 @@ Interesting Colors:
 "#609C3C" "#4E9D5B" "#3C9F79" "#A1EFE4" "#299BA6" "#2896B5" "#2790C3" "#66D9EF"
 "#99aaff"))
 
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package adoc-mode
-    :defer t
-    :straight (:host github :repo "sensorflo/adoc-mode"))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (defun make-frame-undecorated ()
-    "Make a frame that is undecorated (borderless)."
-    (interactive)
-    (make-frame '((undecorated . 1)))
-    )
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (defun is-floating-frame(f)
-    (equal (frame-parameter f 'name) "*Floating*")
-    )
-  (defun get-floating-frame()
-    (car (filtered-frame-list #'is-floating-frame)))
-
-  (defun toggle-floating-frame ()
-    "Make/Delete a frame that is floating."
-    (interactive)
-    ;; ((w (display-pixel-width))
-    ;; (h (/ (display-pixel-height) 2)))
-    (let* ((geo (cdr (assq 'geometry (car (display-monitor-attributes-list)))))
-           (x (nth 0 geo))
-           (y (nth 1 geo))
-           (w (nth 2 geo))
-           (h (nth 3 geo))
-           (f (get-floating-frame)))
-      (unless f
-        (setq f (make-frame '((undecorated . 1)
-                              (name . "*Floating*")))))
-      (if (frame-visible-p f)
-          (progn
-            ;; (keyboard-quit)
-            (make-frame-invisible f))
-        (progn
-          (set-frame-position f 0 0)
-          (set-frame-size f w (/ h 2) t)
-          (make-frame-visible f)
-          (select-frame f)
-          (select-frame-set-input-focus f)
-          (switch-to-buffer "*scratch*")
-          (call-interactively (global-key-binding "\M-x")))
-        )))
-
-  (use-package popwin
-    :disabled t
-    :config
-    (popwin-mode 1)
-    )
-
-#+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2475,26 +2174,6 @@ Interesting Colors:
     ;; (global-hl-line-mode t)
     )
 
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  ;; Python Support
-  (use-package elpy :defer t)
-  (use-package py-autopep8
-    :defer t
-    :config
-    (setq py-autopep8-options '("--max-line-length=120")))
-  (use-package blacken
-    :defer t
-    :config
-    (setq blacken-line-length 120))
-  (use-package ein :defer t)
-  (use-package live-py-mode :defer t)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
-  (use-package vue-mode :mode "\\.vue\\'" :defer t)
 #+END_SRC
 
 
@@ -2578,13 +2257,155 @@ Interesting Colors:
 
 #+END_SRC
 
-:TAD:
-
- :TODO:
-
- :TAG:SDFS:
-
  (insert-image (mk/svg-checkbox-empty))
+
+
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package google-this
+     :delight
+     :straight (:host github :repo "Malabarba/emacs-google-this")
+     :config
+     (google-this-mode 1))
+ #+END_SRC
+
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package imenu-list
+     :after (org)
+     :demand
+     :bind (
+            ("C-\"" . #'imenu-list-smart-toggle))
+     :config
+     (setq imenu-list-auto-resize nil)
+     (setq imenu-list-position 'left)
+     )
+   (use-package org-sidebar :defer t)
+ #+END_SRC
+
+
+* A
+
+| pyim | Emacs input method | https://github.com/tumashu/pyim |
+| sis  | Smart input source |                                 |
+
+* Custom functions
+
+** Interactive Utilities
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/insert-datetime()
+    "Insert the current date and time."
+    (interactive)
+    (insert (format-time-string "%F %T")))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  ;; From https://emacs.stackexchange.com/questions/47627/identify-buffer-by-part-of-its-name
+  (defun switch-to-existing-buffer-other-window (part)
+    "Switch to buffer with PART in its name."
+    (interactive
+     (list (read-buffer-to-switch "Switch to buffer in other window: ")))
+    (let ((candidates
+           (cl-remove
+            nil
+            (mapcar (lambda (buf)
+                      (let ((pos (string-match part (buffer-name buf))))
+                        (when pos
+                          (cons pos buf))))
+                    (buffer-list)))))
+      (unless candidates
+        (user-error "There is no buffers with %S in its name." part))
+      (setq candidates (cl-sort candidates #'< :key 'car))
+      (switch-to-buffer-other-window (cdr (car candidates)))))
+
+  (defun mk/open-orgroam-panel()
+    "Open the Org-roam client at [http://127.0.0.1:8001]."
+    (interactive)
+    (progn
+      ;; Ensure the server is running.
+      (unless (org-roam-server-mode)
+        (org-roam-server-mode 1))
+      ;; Ensure the session is running.
+      (xwidget-webkit-browse-url "http://127.0.0.1:8001" nil)
+      ;; Switch to the buffer
+      (switch-to-existing-buffer-other-window "Roam Server")
+      ))
+#+END_SRC
+
+** Paper and Research
+
+#+BEGIN_SRC emacs-lisp
+  ;; My source code for bib
+  (setq paper-root-dir "~/Dropbox/Dreams/Research/Papers")
+  (defun paper-add()
+    "Add a paper to your Dreamland."
+    (interactive)
+    (let* ((base-dir paper-root-dir)
+           (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
+           (title (string-trim (read-string "The paper title: ")))
+           (filename (replace-regexp-in-string ":" "," title))
+           (filepath (concat base-dir "/" conf "/" filename)))
+      (make-directory filepath t)
+      (find-file filepath)
+      )
+    )
+
+  (defun paper-root()
+    "Open the paper root."
+    (interactive)
+    (find-file paper-root-dir))
+
+  (defun topic-root()
+    "Open the research topic root."
+    (interactive)
+    (find-file "~/Dropbox/Dreams/Research/ByTopic"))
+
+  (defun paper-find (&optional initial)
+    "Search a paper in your Dreamland, by title, with INITIAL input."
+    (interactive "P")
+    (counsel-require-program find-program)
+    (let ((default-directory paper-root-dir))
+      (ivy-read "Dreamland's Paper Find: "
+                (counsel--find-return-list counsel-file-jump-args)
+                :matcher #'counsel--find-file-matcher
+                :initial-input (or initial "")
+                :action #'find-file
+                :preselect (counsel--preselect-file)
+                :require-match 'confirm-after-completion
+                :history 'file-name-history
+                :keymap counsel-file-jump-map
+                :caller 'counsel-file-jump)))
+
+  (defun paper-open ()
+    "Open the file in PDF Expert. Code borrowed from the crux package."
+    (interactive)
+    (let ((current-file-name
+           (if (eq major-mode 'dired-mode)
+               (dired-get-file-for-visit)
+             buffer-file-name)))
+      (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
+    )
+
+  ;;; Automatically choose the file to link with according to the selected text.
+  (defvar autolink-directory "~/Dropbox/Dreams")
+  (defun autolink--get-candidates (text)
+    "Search for the file name with TEXT."
+    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
+           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
+      (completing-read "Choose the one to link: " candidates)))
+  (defun paper-link (start end)
+    "Try to guess the file to link according to the region between START and END."
+    (interactive "r") ; The "r" here will fill the start and end automatically.
+    (let* ((text (buffer-substring start end))
+           (file (autolink--get-candidates text)))
+      (goto-char end)
+      (insert "]]")
+      (goto-char start)
+      (insert (concat "[[" file "]["))))
+#+END_SRC
+
+** Notionify
 
  #+BEGIN_SRC emacs-lisp
    (defun mk/notionify-turn-to-page (@begin @end)
@@ -2606,50 +2427,225 @@ Interesting Colors:
          )))
  #+END_SRC
 
+** Launcher
 
- #+BEGIN_SRC emacs-lisp
-   (use-package google-this
-     :delight
-     :straight (:host github :repo "Malabarba/emacs-google-this")
-     :config
-     (google-this-mode 1))
- #+END_SRC
- #+BEGIN_SRC emacs-lisp
-   (use-package volatile-highlights
-     :delight
-     :straight (:host github :repo "k-talo/volatile-highlights.el")
-     :config
-     ;;-----------------------------------------------------------------------------
-     ;; Supporting evil-mode.
-     ;;-----------------------------------------------------------------------------
-     (vhl/define-extension 'evil 'evil-paste-after 'evil-paste-before
-                           'evil-paste-pop 'evil-move)
-     (vhl/install-extension 'evil)
-     (volatile-highlights-mode t)
-     )
- #+END_SRC
+#+BEGIN_SRC emacs-lisp
+  (defun make-frame-undecorated ()
+    "Make a frame that is undecorated (borderless)."
+    (interactive)
+    (make-frame '((undecorated . 1)))
+    )
+
+  (defun is-floating-frame(f)
+    (equal (frame-parameter f 'name) "*Floating*")
+    )
+  (defun get-floating-frame()
+    (car (filtered-frame-list #'is-floating-frame)))
+
+  (defun toggle-floating-frame ()
+    "Make/Delete a frame that is floating."
+    (interactive)
+    ;; ((w (display-pixel-width))
+    ;; (h (/ (display-pixel-height) 2)))
+    (let* ((geo (cdr (assq 'geometry (car (display-monitor-attributes-list)))))
+           (x (nth 0 geo))
+           (y (nth 1 geo))
+           (w (nth 2 geo))
+           (h (nth 3 geo))
+           (f (get-floating-frame)))
+      (unless f
+        (setq f (make-frame '((undecorated . 1)
+                              (name . "*Floating*")))))
+      (if (frame-visible-p f)
+          (progn
+            ;; (keyboard-quit)
+            (make-frame-invisible f))
+        (progn
+          (set-frame-position f 0 0)
+          (set-frame-size f w (/ h 2) t)
+          (make-frame-visible f)
+          (select-frame f)
+          (select-frame-set-input-focus f)
+          (switch-to-buffer "*scratch*")
+          (call-interactively (global-key-binding "\M-x")))
+        )))
+
+  (use-package popwin
+    :disabled t
+    :config
+    (popwin-mode 1)
+    )
+
+#+END_SRC
 
 
- #+BEGIN_SRC emacs-lisp
-   (use-package imenu-list
-     :after (org)
-     :demand
-     :bind (
-            ("C-\"" . #'imenu-list-smart-toggle))
-     :config
-     (setq imenu-list-auto-resize nil)
-     (setq imenu-list-position 'left)
-     )
-   (use-package org-sidebar :defer t)
- #+END_SRC
+** Custom key-bindings
+
+#+BEGIN_SRC emacs-lisp
+  ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
+  (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
+  (global-set-key (kbd "M-s-<left>") 'tab-previous)
+  (global-set-key (kbd "M-s-<right>") 'tab-next)
+  (global-set-key (kbd "M-s-n") 'tab-new)
+  (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
+  ;; Open ibuffer upon "C-c i"
+  (global-set-key (kbd "C-c i") 'ibuffer)
+  ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
+  ;; (global-unset-key [mouse-3])
+  ;; (global-set-key [down-mouse-3]
+  ;;                 `(menu-item ,(purecopy "Menu Bar") ignore
+  ;;                             :filter (lambda (_)
+  ;;                                       (if (zerop (or (frame-parameter nil 'menu-bar-lines) 0))
+  ;;                                           (mouse-menu-bar-map)
+  ;;                                         (mouse-menu-major-mode-map)))))
+#+END_SRC
+
+
+* Publish & Blog
+
+
+** Org-based Blog
+#+BEGIN_SRC emacs-lisp
+  (use-package org-static-blog
+    :defer t
+    :config
+
+    (setq org-static-blog-publish-title "Mika, Mika, Mika!")
+    (setq org-static-blog-publish-url "https://blog.dong.mk/")
+    (setq org-static-blog-publish-directory "~/Dropbox/Dreams/Org/Blog/Publish/")
+    (setq org-static-blog-posts-directory "~/Dropbox/Dreams/Org/Blog/Posts/")
+    (setq org-static-blog-drafts-directory "~/Dropbox/Dreams/Org/Blog/Drafts/")
+    (setq org-static-blog-use-preview t) ; enable preview
+
+    ;; Use “#+filetags: τ₁ τ₂ … τₙ”
+    (setq org-static-blog-enable-tags t)
+
+    ;; I'd like to have tocs and numbered headings
+    (setq org-export-with-toc t)
+    (setq org-export-with-section-numbers t)
+
+    (setq org-static-blog-page-header
+          "<meta name=\"author\" content=\"Mingkai Dong\">
+               <meta name=\"referrer\" content=\"no-referrer\">
+               <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
+               <link rel=\"icon\" href=\"static/favicon.ico\">")
+
+    (setq org-static-blog-page-preamble
+          "<div class=\"header\">
+            <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
+          </div>")
+
+    (setq org-static-blog-page-postamble
+          "<div id=\"archive\">
+       <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
+     </div>
+     <center></center>")
+
+    (setq org-static-blog-index-front-matter
+          "<h1> Hey it is </h1>\n")
+    )
+#+END_SRC
+
+
+** Org Publish
+
+Do we still use this?
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-publish
+    :defer t
+    :straight nil
+    :after (org)
+    :config
+    (setq org-publish-project-alist
+          '(
+            ("org-notes"
+             :base-directory "~/Dropbox/Dreams/Org/Public"
+             :base-extension "org"
+             :publishing-directory "/Volumes/ramfs/public_html/"
+             :recursive t
+             :publishing-function org-html-publish-to-html
+             :headline-levels 4             ; Just the default for this project.
+             :auto-preamble t
+             )
+            ("org-static"
+             :base-directory "~/Dropbox/Dreams/Org/Public"
+             :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf"
+             :publishing-directory "/Volumes/ramfs/public_html/"
+             :recursive t
+             :publishing-function org-publish-attachment
+             )
+            ("org" :components ("org-notes" "org-static"))
+            )))
+#+END_SRC
+
+
+* Disabled Pool
 
 
 #+BEGIN_SRC emacs-lisp
-  ;; Thank https://github.com/Eason0210/emacs.d
-  (use-package symbol-overlay
-    :hook ((prog-mode html-mode yaml-mode conf-mode) . symbol-overlay-mode)
-    :bind (:map symbol-overlay-mode-map
-                ("M-i" . symbol-overlay-put)
-                ("M-n" . symbol-overlay-jump-next)
-                ("M-p" . symbol-overlay-jump-prev)))
+  (use-package eaf :disabled t
+    :straight (:type git :host gitlab :repo "emacs-eaf/emacs-application-framework" :files ("*")))
+  (use-package maple-explorer :disabled t)
+  (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
+  (use-package org-brain :disabled t)
+  (use-package deft :disabled t)
+  (use-package zettledeft :disabled t)
+  (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
+  (use-package explain-pause-mode :disabled t)
+  (use-package keystrokes :disabled t
+    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
+  (use-package netease-cloud-music :disabled t
+    :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
+  (use-package peep-dired :disabled t)  ; Preview files in dired, but we use ranger instead.
+#+END_SRC
+
+
+* Fancy Libraries 
+
+** Small yet useful
+#+BEGIN_SRC emacs-lisp
+  (use-package marquee-header :defer t)  ; This is really an interesting package.
+  (use-package dash :defer t)
+  (use-package ts :defer t)
+  (use-package s :defer t)
+  (use-package reveal-in-osx-finder :defer t)
+  (use-package crux :defer t)
+  (use-package ranger :defer t)  ; The ranger mode
+  (use-package vlf :defer t)  ; View large files
+#+END_SRC
+
+** Less (if ever) used
+
+#+BEGIN_SRC emacs-lisp
+  (use-package chronos :defer t)
+#+END_SRC
+
+
+#+begin_src emacs-lisp
+  (use-package read-aloud
+    :defer t
+    :config
+    (setq read-aloud-engine "say"))
+#+end_src
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package emacs-badge
+    :defer t
+    :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
+    )
+#+END_SRC
+
+
+A mode to embed one buffer in another buffer and keep them in sync
+
+#+BEGIN_SRC emacs-lisp
+  (use-package freex
+    :disabled t
+    :defer t
+    :straight (emacs-freex :host github
+                           :repo "gregdetre/emacs-freex")
+    )
 #+END_SRC

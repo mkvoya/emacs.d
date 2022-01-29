@@ -57,5 +57,12 @@
 (set-language-environment "UTF-8")
 (set-default-coding-systems 'utf-8)
 
+;; lazy answer
+(fset 'yes-or-no-p 'y-or-n-p)
+
+(setq confirm-kill-emacs 'y-or-n-p)
+
+;; Sentence
+(setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
 ;;; early-init.el ends here
