@@ -1205,6 +1205,15 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     ;; Guess/Ask for the master file.
     (setq-default TeX-master nil)
 
+
+    ;; Thank https://tex.stackexchange.com/a/167097/122482
+    (defun mk/shadow-iffalse-block ()
+      (font-lock-add-keywords
+       'latex-mode
+       '(("\\\\iffalse\\(\\(.\\|\n\\)*\\)\\\\fi" 0 'font-lock-comment-face append))
+      t))
+    (add-hook 'latex-mode-hook #'mk/shadow-iffalse-block)
+
     (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "Make")))
     (add-hook 'LaTeX-mode-hook (lambda()
                                  (mkvoya/better-wrap)
@@ -2263,7 +2272,7 @@ Interesting Colors:
 
  #+BEGIN_SRC emacs-lisp
    (use-package google-this
-     :delight
+     :demand
      :straight (:host github :repo "Malabarba/emacs-google-this")
      :config
      (google-this-mode 1))
@@ -2509,6 +2518,8 @@ Interesting Colors:
 #+BEGIN_SRC emacs-lisp
   (use-package org-static-blog
     :defer t
+    :init
+    (use-package htmlize)
     :config
 
     (setq org-static-blog-publish-title "Mika, Mika, Mika!")
@@ -2516,7 +2527,7 @@ Interesting Colors:
     (setq org-static-blog-publish-directory "~/Dropbox/Dreams/Org/Blog/Publish/")
     (setq org-static-blog-posts-directory "~/Dropbox/Dreams/Org/Blog/Posts/")
     (setq org-static-blog-drafts-directory "~/Dropbox/Dreams/Org/Blog/Drafts/")
-    (setq org-static-blog-use-preview t) ; enable preview
+    (setq org-static-blog-use-preview t)  ; enable preview
 
     ;; Use “#+filetags: τ₁ τ₂ … τₙ”
     (setq org-static-blog-enable-tags t)
@@ -2527,20 +2538,20 @@ Interesting Colors:
 
     (setq org-static-blog-page-header
           "<meta name=\"author\" content=\"Mingkai Dong\">
-               <meta name=\"referrer\" content=\"no-referrer\">
-               <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
-               <link rel=\"icon\" href=\"static/favicon.ico\">")
+                  <meta name=\"referrer\" content=\"no-referrer\">
+                  <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
+                  <link rel=\"icon\" href=\"static/favicon.ico\">")
 
     (setq org-static-blog-page-preamble
           "<div class=\"header\">
-            <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
-          </div>")
+               <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
+             </div>")
 
     (setq org-static-blog-page-postamble
           "<div id=\"archive\">
-       <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
-     </div>
-     <center></center>")
+          <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
+        </div>
+        <center></center>")
 
     (setq org-static-blog-index-front-matter
           "<h1> Hey it is </h1>\n")
@@ -2649,3 +2660,4 @@ A mode to embed one buffer in another buffer and keep them in sync
                            :repo "gregdetre/emacs-freex")
     )
 #+END_SRC
+
