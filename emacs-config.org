@@ -272,7 +272,7 @@ Also from https://github.com/sachac/.emacs.d
     (company-posframe-mode 1))
 #+END_SRC
 
-** Ivy
+** Vertico
 
 Alternatives (Check the selectrum repo README)
 
@@ -368,13 +368,40 @@ Alternatives (Check the selectrum repo README)
   ;;   (mini-popup-mode 1))
   (use-package mini-frame
     :custom
+    (mini-frame-internal-border-color "blue")
     (mini-frame-show-parameters
      '((top . 50)
        (width . 0.9)
-       (left . 0.5)))
+       (left . 0.5)
+       (background-color . "ivory")
+       ))
     :init
     (mini-frame-mode 1)
     )
+
+  (use-package embark
+    :bind
+    (("C-." . embark-act)         ;; pick some comfortable binding
+     ("C-;" . embark-dwim)        ;; good alternative: M-.
+     ("C-h B" . embark-bindings)) ;; alternative for `describe-bindings'
+    :init
+    ;; Optionally replace the key help with a completing-read interface
+    (setq prefix-help-command #'embark-prefix-help-command)
+    :config
+    ;; Hide the mode line of the Embark live/completions buffers
+    (add-to-list 'display-buffer-alist
+                 '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                   nil
+                   (window-parameters (mode-line-format . none)))))
+
+  ;; Consult users will also want the embark-consult package.
+  (use-package embark-consult
+    :after (embark consult)
+    :demand t ; only necessary if you have the hook below
+    ;; if you want to have consult previews as you move around an
+    ;; auto-updating embark collect buffer
+    :hook
+    (embark-collect-mode . consult-preview-at-point-mode))
 
 #+END_SRC
 
@@ -2062,41 +2089,62 @@ An example:
     )
 #+END_SRC
 
-** Ebib
+** Ebib & Citar
+
+| Ebib    |                                     |                        |
+| Org-ref | https://github.com/jkitchin/org-ref |                        |
+| Citar   | https://github.com/bdarcus/citar    | Alternative to org-ref |
 
 #+BEGIN_SRC emacs-lisp
-  (let* ((base-dir "~/Dropbox/Dreams/Research/OrgRef/")
-         (note-dir (concat base-dir "Notes/"))
-         (pdf-dir (concat base-dir "PDFs/"))
-         (note-file (concat note-dir "Notes.org"))
-         (bib-file (concat base-dir "Main.bib"))
-         (bib-file2 "~/Dropbox/Dreams/Research/Papers/Papers.bib"))
+  (setq mk/bib-base-dir "~/Dropbox/Dreams/Research/OrgRef/")
+  (setq mk/bib-pdf-dir (concat mk/bib-base-dir "PDFs/"))
+  (setq mk/bib-note-dir (concat mk/bib-base-dir "Notes/"))
+  (setq mk/bib-main-file (concat mk/bib-base-dir "Main.bib"))
+  (setq mk/bib-clean-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
 
-    (setq bibtex-completion-bibliography `(,bib-file)
-          bibtex-completion-library-path `(,pdf-dir)
-          bibtex-completion-notes-path note-dir)
-    (setq reftex-default-bibliography bib-file)
+  (setq bibtex-completion-bibliography `(,mk/bib-main-file)
+        bibtex-completion-library-path `(,mk/bib-pdf-dir)
+        bibtex-completion-notes-path mk/bib-note-dir)
+  (setq reftex-default-bibliography mk/bib-main-file)
 
-    (use-package ebib
-      :custom
-      (ebib-uniquify-keys t)
-      (ebib-bibtex-dialect 'biblatex "biblatex is better than xxx.")
-      (ebib-index-window-size 10)
-      (ebib-preload-bib-files `(,bib-file ,bib-file2))
-      (ebib-notes-use-single-file note-file)
-      (ebib-file-search-dirs `(,pdf-dir))
-      ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
-      ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
-      (ebib-keywords-field-keep-sorted t)
-      (ebib-keywords-file-save-on-exit 'always)
-      ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
-      (ebib-use-timestamp t "recording the time that entries are added")
-      (ebib-index-columns '(("Entry Key" 20 t)
-                            ("Author/Editor" 40 nil)
-                            ("Year" 6 t)
-                            ("Title" 50 t)))
-      (ebib-index-default-sort '("timestamp" . descend))
-      )
+  ;; citar
+  (use-package citar
+    :straight (:host github :repo "bdarcus/citar")
+    :bind (("C-c b" . citar-insert-citation)
+           :map minibuffer-local-map
+           ("M-b" . citar-insert-preset))
+    :custom
+    (org-cite-global-bibliography `(,mk/bib-main-file))
+    (org-cite-insert-processor 'citar)
+    (org-cite-follow-processor 'citar)
+    (org-cite-activate-processor 'citar)
+    (citar-bibliography org-cite-global-bibliography)
+    :init
+    (setq citar-symbols
+          `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
+            (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
+            (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
+    (setq citar-symbol-separator "  ")
+    )
+
+  (use-package ebib
+    :custom
+    (ebib-uniquify-keys t)
+    (ebib-bibtex-dialect 'biblatex "biblatex is better than xxx.")
+    (ebib-index-window-size 10)
+    (ebib-preload-bib-files `(,mk/bib-main-file ,mk/bib-clean-file))
+    (ebib-file-search-dirs `(,mk/bib-pdf-dir))
+    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
+    ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
+    (ebib-keywords-field-keep-sorted t)
+    (ebib-keywords-file-save-on-exit 'always)
+    ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
+    (ebib-use-timestamp t "recording the time that entries are added")
+    (ebib-index-columns '(("Entry Key" 20 t)
+                          ("Author/Editor" 40 nil)
+                          ("Year" 6 t)
+                          ("Title" 50 t)))
+    (ebib-index-default-sort '("timestamp" . descend))
     )
 #+END_SRC
 
@@ -2122,43 +2170,12 @@ An example:
     )
 #+END_SRC
 
-** Org-ref
-#+BEGIN_SRC emacs-lisp
-  (use-package org-ref
-    :after (org ivy)
-    :defer t
-    :init
-    (use-package ivy-bibtex)
-    :config
-
-    (require 'bibtex)
-    (setq org-ref-bibtex-hydra-key-binding (kbd "H-b"))
-
-    (define-key bibtex-mode-map (kbd "H-b") 'org-ref-bibtex-hydra/body)
-
-    (require 'org-ref-ivy)
-
-    (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
-          org-ref-insert-cite-function 'org-ref-cite-insert-ivy
-          org-ref-insert-label-function 'org-ref-insert-label-link
-          org-ref-insert-ref-function 'org-ref-insert-ref-link
-          org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
-
-    (setq org-latex-pdf-process (list "latexmk -shell-escape -bibtex -f -pdf %f"))
-
-  :bind (:map org-mode-map
-              ("C-c ]" . org-ref-insert-link)
-              ("s-[" . org-ref-insert-link-hydra/body))
-  )
-#+END_SRC
 
 ** Org Roam Bibtex
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-bibtex
-    :after org-roam
-    :config
-    (require 'org-ref))
+    :after org-roam)
 #+END_SRC
 
 * MISC
