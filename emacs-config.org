@@ -1270,6 +1270,11 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
   (use-package tex
     :straight auctex
     :defer t
+    :custom
+    (TeX-source-correlate-method 'synctex)
+    (TeX-source-correlate-mode t)
+    (TeX-source-correlate-start-server t)
+
     :config
     ;; make latexmk available via C-c C-c
     ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
@@ -1289,7 +1294,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
       (font-lock-add-keywords
        'latex-mode
        '(("\\\\iffalse\\(\\(.\\|\n\\)*\\)\\\\fi" 0 'font-lock-comment-face append))
-      t))
+       t))
     (add-hook 'latex-mode-hook #'mk/shadow-iffalse-block)
 
     (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "Make")))
