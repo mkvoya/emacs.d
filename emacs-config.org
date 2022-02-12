@@ -318,6 +318,17 @@ Alternatives (Check the selectrum repo README)
       :delight
       :config
       (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
+      (defun ivy-posframe-get-size ()
+        "The default functon used by `ivy-posframe-size-function'."
+        (list
+         :height ivy-posframe-height
+         :width ivy-posframe-width
+         :min-height (or ivy-posframe-min-height
+                         (let ((height (+ ivy-height 1)))
+                           (min height (or ivy-posframe-height height))))
+         :min-width (or ivy-posframe-min-width
+                        (let ((width (round (* (frame-width) 0.82))))
+                          (min width (or ivy-posframe-width width))))))
       (ivy-posframe-mode 1)
       )
     (use-package prescient :defer t)
@@ -552,6 +563,13 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (undo-fu)
     :init
     :config
+    ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
+    ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
+    (evil-define-motion evil-lookup ()
+      "Look up the keyword at point.
+  Calls `evil-lookup-func'."
+      (call-interactively #'man))
+
     (setq evil-want-fine-undo t)
     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
     (evil-set-undo-system 'undo-fu)
@@ -581,6 +599,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
     (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
     (evil-set-initial-state 'Ilist-mode 'emacs)
+    (evil-set-initial-state 'TeX-output-mode 'emacs)
+    (evil-set-initial-state 'ebib-index-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
       "Switch to the english ABC input method."
@@ -1440,8 +1460,18 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :defer 2
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
-           ("C-c c" . #'org-capture))
+           ("C-c c" . #'org-capture)
+           ("C-{" . #'mk/org-ref-cite)
+           ("C-}" . #'doi-utils-add-entry-from-crossref-query)
+           )
+    :custom
+    (org-support-shift-select t "Use shift to select region when possible.")
+    (org-clock-idle-time 10 "Clock will prompt to stop after 10 min of idle.")
     :init
+    (defun mk/org-ref-cite()
+      (interactive)
+      (unless (featurep 'org-ref) (require 'org-ref))
+      (org-ref-insert-cite-link))
     ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
     (defun org-syntax-table-modify ()
       "Modify `org-mode-syntax-table' for the current org buffer."
@@ -1792,64 +1822,6 @@ An example:
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp
-  (use-package org-ref
-    :after (org ivy)
-    :defer t
-    :init
-    (use-package ivy-bibtex)
-    :config
-
-    (let* ((base-dir "~/Dropbox/Dreams/Research/OrgRef/")
-           (note-dir (concat base-dir "Notes/"))
-           (pdf-dir (concat base-dir "PDFs/"))
-           (note-file (concat note-dir "Notes.org"))
-           (bib-file (concat base-dir "Main.bib")))
-      (setq bibtex-completion-bibliography `(,bib-file)
-            bibtex-completion-library-path `(,pdf-dir)
-            bibtex-completion-notes-path note-dir
-            bibtex-completion-notes-template-multiple-files "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
-            bibtex-completion-additional-search-fields '(keywords)
-            bibtex-completion-display-formats
-            '((article       . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${journal:40}")
-              (inbook        . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} Chapter ${chapter:32}")
-              (incollection  . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
-              (inproceedings . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
-              (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}"))
-            bibtex-completion-pdf-open-function
-            (lambda (fpath)
-              (call-process "open" nil 0 nil fpath)))
-
-      (require 'bibtex)
-
-      (setq bibtex-autokey-year-length 4
-            bibtex-autokey-name-year-separator "-"
-            bibtex-autokey-year-title-separator "-"
-            bibtex-autokey-titleword-separator "-"
-            bibtex-autokey-titlewords 2
-            bibtex-autokey-titlewords-stretch 1
-            bibtex-autokey-titleword-length 5
-            org-ref-bibtex-hydra-key-binding (kbd "H-b"))
-
-      (define-key bibtex-mode-map (kbd "H-b") 'org-ref-bibtex-hydra/body)
-
-      (require 'org-ref-ivy)
-
-      (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
-            org-ref-insert-cite-function 'org-ref-cite-insert-ivy
-            org-ref-insert-label-function 'org-ref-insert-label-link
-            org-ref-insert-ref-function 'org-ref-insert-ref-link
-            org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
-
-      (setq org-latex-pdf-process (list "latexmk -shell-escape -bibtex -f -pdf %f"))
-
-      (setq reftex-default-bibliography bib-file)
-      )
-    :bind (:map org-mode-map
-                ("C-c ]" . org-ref-insert-link)
-                ("s-[" . org-ref-insert-link-hydra/body))
-    )
-#+END_SRC
 
 ** Calender sync
 #+BEGIN_SRC emacs-lisp
@@ -2008,12 +1980,6 @@ An example:
     )
 #+END_SRC
 
-** org-roam-bibtex
-#+BEGIN_SRC emacs-lisp
-  (use-package org-roam-bibtex
-    :defer t
-    :after (org-roam org-ref))
-#+END_SRC
 
 ** Org-transclusion
 
@@ -2037,6 +2003,132 @@ An example:
     )
 #+END_SRC
 
+* Bibliography
+
+#+BEGIN_SRC emacs-lisp
+  (use-package bibtex
+    :straight nil  ; built in
+    :init
+    (setq bibtex-dialect 'biblatex
+          bibtex-autokey-year-length 4
+          bibtex-autokey-name-year-separator "-"
+          bibtex-autokey-year-title-separator "-"
+          bibtex-autokey-titleword-separator "-"
+          bibtex-autokey-titlewords 2
+          bibtex-autokey-titlewords-stretch 1
+          bibtex-autokey-titleword-length 5)
+    (setq bibtex-completion-notes-template-multiple-files
+          "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
+          bibtex-completion-additional-search-fields '(keywords)
+          bibtex-completion-display-formats
+          '((article       . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${journal:40}")
+            (inbook        . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} Chapter ${chapter:32}")
+            (incollection  . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+            (inproceedings . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*} ${booktitle:40}")
+            (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}")))
+    (setq bibtex-completion-pdf-open-function
+          (lambda (fpath) (call-process "open" nil 0 nil fpath)))
+    )
+#+END_SRC
+
+** Ebib
+
+#+BEGIN_SRC emacs-lisp
+  (let* ((base-dir "~/Dropbox/Dreams/Research/OrgRef/")
+         (note-dir (concat base-dir "Notes/"))
+         (pdf-dir (concat base-dir "PDFs/"))
+         (note-file (concat note-dir "Notes.org"))
+         (bib-file (concat base-dir "Main.bib"))
+         (bib-file2 "~/Dropbox/Dreams/Research/Papers/Papers.bib"))
+
+    (setq bibtex-completion-bibliography `(,bib-file)
+          bibtex-completion-library-path `(,pdf-dir)
+          bibtex-completion-notes-path note-dir)
+    (setq reftex-default-bibliography bib-file)
+
+    (use-package ebib
+      :custom
+      (ebib-uniquify-keys t)
+      (ebib-bibtex-dialect 'biblatex "biblatex is better than xxx.")
+      (ebib-index-window-size 10)
+      (ebib-preload-bib-files `(,bib-file ,bib-file2))
+      (ebib-notes-use-single-file note-file)
+      (ebib-file-search-dirs `(,pdf-dir))
+      ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
+      ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
+      (ebib-keywords-field-keep-sorted t)
+      (ebib-keywords-file-save-on-exit 'always)
+      ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
+      (ebib-use-timestamp t "recording the time that entries are added")
+      (ebib-index-columns '(("Entry Key" 20 t)
+                            ("Author/Editor" 40 nil)
+                            ("Year" 6 t)
+                            ("Title" 50 t)))
+      (ebib-index-default-sort '("timestamp" . descend))
+      )
+    )
+#+END_SRC
+
+** Biblio
+
+#+BEGIN_SRC emacs-lisp
+  (use-package biblio
+    :defer t
+    :ensure t
+    :custom
+    (biblio-arxiv-bibtex-header "misc")  ; custom-set-variable is slightly different from setq due to initializers
+    :bind
+    (:map biblio-selection-mode-map
+          ("C-i" . biblio-to-ebib-and-quit))
+    :init
+    ;; This links biblio to ebib
+    (defun biblio-to-ebib-and-quit ()
+      (interactive)
+      (biblio--selection-forward-bibtex
+       (lambda (entry metadata)
+         (ebib-capture-raw-bibtex entry))
+       t))
+    )
+#+END_SRC
+
+** Org-ref
+#+BEGIN_SRC emacs-lisp
+  (use-package org-ref
+    :after (org ivy)
+    :defer t
+    :init
+    (use-package ivy-bibtex)
+    :config
+
+    (require 'bibtex)
+    (setq org-ref-bibtex-hydra-key-binding (kbd "H-b"))
+
+    (define-key bibtex-mode-map (kbd "H-b") 'org-ref-bibtex-hydra/body)
+
+    (require 'org-ref-ivy)
+
+    (setq org-ref-insert-link-function 'org-ref-insert-link-hydra/body
+          org-ref-insert-cite-function 'org-ref-cite-insert-ivy
+          org-ref-insert-label-function 'org-ref-insert-label-link
+          org-ref-insert-ref-function 'org-ref-insert-ref-link
+          org-ref-cite-onclick-function (lambda (_) (org-ref-citation-hydra/body)))
+
+    (setq org-latex-pdf-process (list "latexmk -shell-escape -bibtex -f -pdf %f"))
+
+  :bind (:map org-mode-map
+              ("C-c ]" . org-ref-insert-link)
+              ("s-[" . org-ref-insert-link-hydra/body))
+  )
+#+END_SRC
+
+** Org Roam Bibtex
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam-bibtex
+    :after org-roam
+    :config
+    (require 'org-ref))
+#+END_SRC
 
 * MISC
 
@@ -2083,6 +2175,7 @@ A mode to embed one buffer in another buffer and keep them in sync
     )
 #+END_SRC
 
+* Popweb
 
 #+BEGIN_SRC emacs-lisp
   (use-package popweb
@@ -2288,6 +2381,7 @@ Interesting Colors:
      :config
      (setq imenu-list-auto-resize nil)
      (setq imenu-list-position 'left)
+     (setq org-imenu-depth 5)
      )
    (use-package org-sidebar :defer t)
  #+END_SRC
@@ -2329,17 +2423,15 @@ Interesting Colors:
       (switch-to-buffer-other-window (cdr (car candidates)))))
 
   (defun mk/open-orgroam-panel()
-    "Open the Org-roam client at [http://127.0.0.1:8001]."
+    "Open the Org-roam client at [http://127.0.0.1:35901]."
     (interactive)
-    (progn
-      ;; Ensure the server is running.
-      (unless (org-roam-server-mode)
-        (org-roam-server-mode 1))
-      ;; Ensure the session is running.
-      (xwidget-webkit-browse-url "http://127.0.0.1:8001" nil)
-      ;; Switch to the buffer
-      (switch-to-existing-buffer-other-window "Roam Server")
-      ))
+    ;; Ensure the server is running.
+    (unless org-roam-ui-mode (org-roam-ui-mode))
+    ;; Ensure the session is running.
+    (xwidget-webkit-browse-url "http://127.0.0.1:35901" nil)
+    ;; Switch to the buffer
+    (switch-to-existing-buffer-other-window "Roam Server")
+    )
 #+END_SRC
 
 ** Paper and Research
@@ -2659,5 +2751,11 @@ A mode to embed one buffer in another buffer and keep them in sync
     :straight (emacs-freex :host github
                            :repo "gregdetre/emacs-freex")
     )
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package elquery)
 #+END_SRC
 
