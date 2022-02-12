@@ -295,59 +295,89 @@ Alternatives (Check the selectrum repo README)
 | Embark     | https://github.com/oantolin/embark/      | Minibuffer actions (ivy has builtin alternative) |
 |            |                                          |                                                  |
 
-这里面最初用的 selectrum，之后用的 vertico，这两个都是尽量使用 emacs 自带的机制，因而会更轻量级，并且与 Emacs 结合的可能更好一些。
-但是后来发现它们与 awesome-tray-mode 使用 message 机制冲突，具体原因表现在多个 frame 的时候，在后面创建出的 frame 上进行 M-x 会导致首个 frame 上的 minibuffer 也变大，并且 M-x 除了的 minibuffer 会发生闪烁。
-鼓捣了一会儿，发现应该是机制问题，现有的知识量并不好解决。
-尝试换到 snails，但是无奈配不起来（T-T），最后换到 ivy 。
-
-
 #+BEGIN_SRC emacs-lisp
-  ;; Ivy config from https://github.com/MatthewZMD/.emacs.d
-  (use-package ivy
-    :defer t
-    :delight
+
+  (use-package vertico
+    :custom
+    (vertico-scroll-margin 0)
+    (vertico-count 20 "Show more candidates.")
+    (vertico-resize nil "Do NOT grow and shrink the Vertico minibuffer.")
+    (vertico-cycle t "Cycling the candidates. E.g., the next to the last is the first.")
     :init
-    (use-package amx :defer t)
-    (use-package counsel :delight :defer t :config (counsel-mode 1))
-    (use-package swiper :defer t)
-    (use-package all-the-icons-ivy-rich :config (all-the-icons-ivy-rich-mode 1))
-    (use-package ivy-rich
-      :after (all-the-icons-ivy-rich)
-      :config (ivy-rich-mode 1))
-    (use-package ivy-posframe
-      :delight
-      :config
-      (setq ivy-posframe-display-functions-alist '((t . ivy-posframe-display)))
-      (defun ivy-posframe-get-size ()
-        "The default functon used by `ivy-posframe-size-function'."
-        (list
-         :height ivy-posframe-height
-         :width ivy-posframe-width
-         :min-height (or ivy-posframe-min-height
-                         (let ((height (+ ivy-height 1)))
-                           (min height (or ivy-posframe-height height))))
-         :min-width (or ivy-posframe-min-width
-                        (let ((width (round (* (frame-width) 0.82))))
-                          (min width (or ivy-posframe-width width))))))
-      (ivy-posframe-mode 1)
-      )
-    (use-package prescient :defer t)
-    (use-package ivy-prescient :after (counsel)
-      :config
-      (ivy-prescient-mode))
-    :config
+
     ;; Do not allow the cursor in the minibuffer prompt
     (setq minibuffer-prompt-properties
           '(read-only t cursor-intangible t face minibuffer-prompt))
     (add-hook 'minibuffer-setup-hook #'cursor-intangible-mode)
-    ;; Enable recursive minibuffers
+
     (setq enable-recursive-minibuffers nil)
-    (setq ivy-use-virtual-buffers t)
-    (setq ivy-count-format "(%d/%d) ")
-    (ivy-mode 1)
+    (vertico-mode)
+    )
+  (use-package orderless
+    :custom
+    (completion-styles '(orderless))
+    (completion-category-defaults nil)
+    (completion-category-overrides '((file (styles partial-completion))))
+    )
+  (use-package marginalia
+    :init
+    (marginalia-mode))
+
+  (use-package consult
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+    :custom
+    ;; Configure the register formatting
+    (register-preview-delay 0)
+    (register-preview-function #'consult-register-format)
+    ;; Use Consult to select xref locations with preview
+    (xref-show-xrefs-function #'consult-xref)
+    (xref-show-definitions-function #'consult-xref)
+    :init
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+    ;; Optionally replace `completing-read-multiple' with an enhanced version.
+    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
+    )
+
+  (use-package all-the-icons-completion
+    :after (all-the-icons marginalia)
+    :config
+    (all-the-icons-completion-mode)
+    (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
+
+  ;; (use-package mini-popup
+  ;;   :straight (:host github :repo "minad/mini-popup")
+  ;;   :config
+  ;;   ;; Configure a height function (Example for Vertico)
+  ;;   (defun mini-popup-height-resize ()
+  ;;     (* (1+ (min vertico--total vertico-count)) (default-line-height)))
+  ;;   (defun mini-popup-height-fixed ()
+  ;;     (* (1+ (if vertico--input vertico-count 0)) (default-line-height)))
+  ;;   (setq mini-popup--height-function #'mini-popup-height-fixed)
+
+  ;;   ;; Disable the minibuffer resizing of Vertico (HACK)
+  ;;   (advice-add #'vertico--resize-window :around
+  ;;               (lambda (&rest args)
+  ;;                 (unless mini-popup-mode
+  ;;                   (apply args))))
+
+  ;;   ;; Ensure that the popup is updated after refresh (Consult-specific)
+  ;;   (add-hook 'consult--completion-refresh-hook
+  ;;             (lambda (&rest _) (mini-popup--setup)) 99)
+  ;;   (mini-popup-mode 1))
+  (use-package mini-frame
+    :custom
+    (mini-frame-show-parameters
+     '((top . 50)
+       (width . 0.9)
+       (left . 0.5)))
+    :init
+    (mini-frame-mode 1)
     )
 
 #+END_SRC
+
 
 ** LSP
 
@@ -601,6 +631,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'Ilist-mode 'emacs)
     (evil-set-initial-state 'TeX-output-mode 'emacs)
     (evil-set-initial-state 'ebib-index-mode 'emacs)
+    (evil-set-initial-state 'minibuffer-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
       "Switch to the english ABC input method."
@@ -2584,6 +2615,7 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
+  (global-set-key (kbd "C-h c") #'describe-char)
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
   (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
   (global-set-key (kbd "M-s-<left>") 'tab-previous)
