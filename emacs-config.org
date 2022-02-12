@@ -2160,6 +2160,12 @@ An example:
     (:map biblio-selection-mode-map
           ("C-i" . biblio-to-ebib-and-quit))
     :init
+
+    (defun biblio--completing-read-function ()
+      "Override to always return the defualt one"
+        completing-read-function)
+
+
     ;; This links biblio to ebib
     (defun biblio-to-ebib-and-quit ()
       (interactive)
@@ -2167,6 +2173,25 @@ An example:
        (lambda (entry metadata)
          (ebib-capture-raw-bibtex entry))
        t))
+
+    (defun my/biblio--selection-insert-at-end-of-bibfile-callback (bibtex entry)
+      "Add BIBTEX (from ENTRY) to end of a user-specified bibtex file."
+      (with-current-buffer (find-file-noselect mk/bib-main-file)
+        (goto-char (point-max))
+        (insert bibtex))
+      (message "Inserted bibtex entry for %S."
+               (biblio--prepare-title (biblio-alist-get 'title entry))))
+
+    (defun ans/biblio-selection-insert-end-of-bibfile ()
+      "Insert BibTeX of current entry at the end of user-specified bibtex file."
+      (interactive)
+      (biblio--selection-forward-bibtex #'my/biblio--selection-insert-at-end-of-bibfile-callback))
+
+    :config
+
+    (setq biblio-selection-mode-actions-alist
+          '(("Append to Main bib" .
+             ans/biblio-selection-insert-end-of-bibfile)))
     )
 #+END_SRC
 
