@@ -1542,6 +1542,16 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
       (modify-syntax-entry ?> "." org-mode-syntax-table))
     (add-hook 'org-mode-hook #'org-syntax-table-modify)
 
+    ;; Thank https://emacs-china.org/t/org-link-echo-area-link/19927/2
+    (defun org-show-link-when-idle()
+      ;; 在echo area中显示链接详情
+      (require 'help-at-pt)
+      (setq help-at-pt-display-when-idle t) ;; 不会立即生效
+      (setq help-at-pt-timer-delay 0.5)
+      (help-at-pt-set-timer) ;; 调用才会生效
+      )
+    (add-hook 'org-mode-hook #'org-show-link-when-idle)
+
     (setq org-modules '(ol-doi
                         ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
                         ol-bibtex
@@ -1962,12 +1972,11 @@ An example:
 #+END_SRC
 ** OrgRoam
 #+BEGIN_SRC emacs-lisp
-  (setq org-roam-v2-ack t)
   (use-package org-roam
     :after (org)
     :defer t
     :custom
-    (org-roam-directory "~/Dropbox/Dreams/Org/")
+    (org-roam-directory "~/Dropbox/Dreams/")
     (org-roam-link-file-path-type 'relative)
     (org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
     :bind (("C-c n l" . org-roam-buffer-toggle)
@@ -1978,7 +1987,10 @@ An example:
            ;; Dailies
            ("C-c n j" . org-roam-dailies-capture-today))
     :config
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
     (setq org-roam-rename-file-on-title-change nil)
+    (setq org-roam-dailies-directory "Daily/")
     (org-roam-db-autosync-mode)
     ;; If using org-roam-protocol
     (require 'org-roam-protocol))
@@ -2166,9 +2178,6 @@ An example:
           ("C-i" . biblio-to-ebib-and-quit))
     :init
 
-    (defun biblio--completing-read-function ()
-      "Override to always return the defualt one"
-        completing-read-function)
 
 
     ;; This links biblio to ebib
@@ -2197,6 +2206,11 @@ An example:
     (setq biblio-selection-mode-actions-alist
           '(("Append to Main bib" .
              ans/biblio-selection-insert-end-of-bibfile)))
+
+    ;; Override
+    (defun biblio--completing-read-function ()
+      "Override to always return the defualt one"
+        completing-read-function)
     )
 #+END_SRC
 

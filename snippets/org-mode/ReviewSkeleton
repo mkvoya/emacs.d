@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: Review Skeleton
+# key: <review>
+# --
+
+* Review
+** Overall
+$0
+** Summary
+
+** Strength
+
+** Weakness
+
+** Comments
