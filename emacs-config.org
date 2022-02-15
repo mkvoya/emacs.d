@@ -2572,18 +2572,11 @@ Interesting Colors:
   (defun paper-find (&optional initial)
     "Search a paper in your Dreamland, by title, with INITIAL input."
     (interactive "P")
-    (counsel-require-program find-program)
-    (let ((default-directory paper-root-dir))
-      (ivy-read "Dreamland's Paper Find: "
-                (counsel--find-return-list counsel-file-jump-args)
-                :matcher #'counsel--find-file-matcher
-                :initial-input (or initial "")
-                :action #'find-file
-                :preselect (counsel--preselect-file)
-                :require-match 'confirm-after-completion
-                :history 'file-name-history
-                :keymap counsel-file-jump-map
-                :caller 'counsel-file-jump)))
+    (let ((consult-find-args (concat
+                              "/Users/mksegv/.emacs.d/bin/paperfind.sh "
+                              "/Users/mksegv/Dropbox/Dreams/Research/Papers "
+                              )))
+      (find-file (consult--find "Dreamland's Paper Find: " #'consult--find-builder initial))))
 
   (defun paper-open ()
     "Open the file in PDF Expert. Code borrowed from the crux package."
@@ -2595,7 +2588,7 @@ Interesting Colors:
       (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
     )
 
-  ;;; Automatically choose the file to link with according to the selected text.
+  ;; Automatically choose the file to link with according to the selected text.
   (defvar autolink-directory "~/Dropbox/Dreams")
   (defun autolink--get-candidates (text)
     "Search for the file name with TEXT."
