@@ -662,9 +662,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
     (defun mk/switch-to-english-input (&rest r)
       "Switch to the english ABC input method."
-      (unless (evil-normal-state-p)
+      (unless (or (evil-normal-state-p) (not (file-exists-p default-directory)))
         (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
-      r
       )
     (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
 
@@ -777,7 +776,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 #+BEGIN_SRC emacs-lisp
   ;; which-key is a fork of guide-key
   (use-package which-key
-    :defer t
     :bind (
            ("C-h ,m" . which-key-show-major-mode)
            ("C-h ,t" . which-key-show-top-level)
@@ -788,8 +786,9 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
     (setq which-key-idle-delay 1)
     (setq which-key-sort-order 'which-key-prefix-then-key-order)
+    (which-key-setup-minibuffer)
     (which-key-mode)
-    (which-key-setup-minibuffer))
+    )
 #+END_SRC
 
 ** Calendar
@@ -1974,9 +1973,8 @@ An example:
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
     :after (org)
-    :defer t
     :custom
-    (org-roam-directory "~/Dropbox/Dreams/")
+    (org-roam-directory "~/Dropbox/Dreams/OrgRoam/")
     (org-roam-link-file-path-type 'relative)
     (org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
     :bind (("C-c n l" . org-roam-buffer-toggle)
@@ -1992,6 +1990,23 @@ An example:
     (setq org-roam-rename-file-on-title-change nil)
     (setq org-roam-dailies-directory "Daily/")
     (org-roam-db-autosync-mode)
+    (setq org-roam-capture-templates
+          '(("d" "default" plain "%?"
+             :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n")
+             :unnarrowed t)
+            ("l" "LWN" plain "%?"
+             :target (file+head "LWNs/%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n#+link: \n")
+             :unnarrowed t
+             )
+            ("p" "Paper Notes" plain "%?"
+             :target (file+head "PaperNotes/%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+TITLE: Notes on /${title}/\n#+DATE: %<%FT%T%z>\n%[~/.emacs.d/snippets/plain/PaperNotes]")
+             :unnarrowed t
+             )
+            ))
+
     ;; If using org-roam-protocol
     (require 'org-roam-protocol))
 #+END_SRC
