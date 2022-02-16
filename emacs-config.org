@@ -139,7 +139,7 @@ Also from https://github.com/sachac/.emacs.d
   ;; We need to at least make the /usr/local/bin in the path so that imagemagick can use rsgv rather than its built-in svg renderer.
   ;; The above command works.
   (use-package exec-path-from-shell
-    :config
+    :init
     (exec-path-from-shell-initialize)
     (mk/native-compilation-config))
 #+END_SRC
@@ -197,7 +197,7 @@ Also from https://github.com/sachac/.emacs.d
 #+begin_src emacs-lisp
   (use-package ns-win
     :straight nil
-    :config
+    :init
     (setq mac-right-command-modifier 'control))
 #+end_src
 
@@ -209,9 +209,7 @@ Also from https://github.com/sachac/.emacs.d
 
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
-    :ensure
-    :demand
-    :config (yas-global-mode 1))
+    :init (yas-global-mode 1))
   (use-package yasnippet-snippets
     :after yasnippet)
 #+END_SRC
@@ -230,7 +228,7 @@ Also from https://github.com/sachac/.emacs.d
           company-minimum-prefix-length 2
           company-tooltip-flip-when-above t)
 
-    (use-package company-emoji :ensure t :defer nil)
+    (use-package company-emoji :defer nil)
     (setq company-backends
           '((company-files
              company-keywords
@@ -241,29 +239,28 @@ Also from https://github.com/sachac/.emacs.d
             ;; company-lsp
             (company-abbrev company-dabbrev)))
 
-    :config
     (add-hook 'prog-mode-hook 'company-mode)
-    ;; (company-statistics-mode 1)
     (global-company-mode 1)
+
+    :config
+    ;; (company-statistics-mode 1)
     ;; (setq company-frontends '(company-pseudo-tooltip-frontend
     ;;                           company-echo-metadata-frontend))
-    (with-eval-after-load 'company
-      (define-key company-active-map (kbd "\C-n") #'company-select-next)
-      (define-key company-active-map (kbd "\C-p") #'company-select-previous)
-      (define-key company-active-map (kbd "M-n") nil)
-      (define-key company-active-map (kbd "M-p") nil)
-      (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
-      (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
-      (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
-      (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
-      (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
-      (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
-      )
+    (define-key company-active-map (kbd "\C-n") #'company-select-next)
+    (define-key company-active-map (kbd "\C-p") #'company-select-previous)
+    (define-key company-active-map (kbd "M-n") nil)
+    (define-key company-active-map (kbd "M-p") nil)
+    (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
+    (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
+    (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
+    (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
+    (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
+    (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
+
     (advice-add 'company-complete-common :before (lambda ()
                                                    (setq my-company-point (point))))
     (advice-add 'company-complete-common :after (lambda ()
                                                   (when (equal my-company-point (point)) (yas-expand))))
-    (add-hook 'after-init-hook 'global-company-mode)
     )
 
   (use-package company-posframe
@@ -298,12 +295,12 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
 
   (use-package vertico
-    :custom
-    (vertico-scroll-margin 0)
-    (vertico-count 20 "Show more candidates.")
-    (vertico-resize nil "Do NOT grow and shrink the Vertico minibuffer.")
-    (vertico-cycle t "Cycling the candidates. E.g., the next to the last is the first.")
     :init
+
+    (setq vertico-scroll-margin 0)
+    (setq vertico-count 20)  ; Show more candidates.
+    (setq vertico-resize nil)  ; Do NOT grow and shrink the Vertico minibuffer.
+    (setq vertico-cycle t)  ; Cycling the candidates. E.g., the next to the last is the first.
 
     ;; Do not allow the cursor in the minibuffer prompt
     (setq minibuffer-prompt-properties
@@ -314,25 +311,56 @@ Alternatives (Check the selectrum repo README)
     (vertico-mode)
     )
   (use-package orderless
-    :custom
-    (completion-styles '(orderless))
-    (completion-category-defaults nil)
-    (completion-category-overrides '((file (styles partial-completion))))
+    :init
+    (setq completion-styles '(orderless))
+    (setq completion-category-defaults nil)
+    (setq completion-category-overrides '((file (styles partial-completion))))
     )
   (use-package marginalia
     :init
     (marginalia-mode))
 
   (use-package consult
+    :bind (
+           ;; C-x bindings (ctl-x-map)
+           ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+           ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+           ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+           ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+           ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+           ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+           ;; Custom M-# bindings for fast register access
+           ;; Other custom bindings
+           ("M-g i" . consult-imenu)
+           ("M-g I" . consult-imenu-multi)
+           ;; M-s bindings (search-map)
+           ("M-s d" . consult-find)
+           ("M-s D" . consult-locate)
+           ("M-s g" . consult-grep)
+           ("M-s G" . consult-git-grep)
+           ("M-s r" . consult-ripgrep)
+           ("M-s l" . consult-line)
+           ("M-s L" . consult-line-multi)
+           ("M-s m" . consult-multi-occur)
+           ("M-s k" . consult-keep-lines)
+           ("M-s u" . consult-focus-lines)
+           ;; Isearch integration
+           ("M-s e" . consult-isearch-history)
+           :map isearch-mode-map
+           ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+           ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+           ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+           ("M-s L" . consult-line-multi))           ;; needed by consult-line to detect isearch
+
     :hook (completion-list-mode . consult-preview-at-point-mode)
-    :custom
-    ;; Configure the register formatting
-    (register-preview-delay 0)
-    (register-preview-function #'consult-register-format)
-    ;; Use Consult to select xref locations with preview
-    (xref-show-xrefs-function #'consult-xref)
-    (xref-show-definitions-function #'consult-xref)
     :init
+    ;; Configure the register formatting
+    (setq register-preview-delay 0)
+    (setq register-preview-function #'consult-register-format)
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref)
+    (setq xref-show-definitions-function #'consult-xref)
+
     ;; Optionally tweak the register preview window.
     ;; This adds thin lines, sorting and hides the mode line of the window.
     (advice-add #'register-preview :override #'consult-register-window)
@@ -342,7 +370,7 @@ Alternatives (Check the selectrum repo README)
 
   (use-package all-the-icons-completion
     :after (all-the-icons marginalia)
-    :config
+    :init
     (all-the-icons-completion-mode)
     (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 
@@ -367,15 +395,14 @@ Alternatives (Check the selectrum repo README)
   ;;             (lambda (&rest _) (mini-popup--setup)) 99)
   ;;   (mini-popup-mode 1))
   (use-package mini-frame
-    :custom
-    (mini-frame-internal-border-color "blue")
-    (mini-frame-show-parameters
-     '((top . 50)
-       (width . 0.9)
-       (left . 0.5)
-       (background-color . "ivory")
-       ))
     :init
+    (setq mini-frame-internal-border-color "blue")
+    (setq mini-frame-show-parameters
+          '((top . 50)
+            (width . 0.9)
+            (left . 0.5)
+            (background-color . "ivory")
+            ))
     (mini-frame-mode 1)
     )
 
@@ -781,7 +808,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
            ("C-h ,t" . which-key-show-top-level)
            ("C-h ,n" . which-key-show-next-page)
            )
-    :config
+    :init
     (setq which-key-show-remaining-keys t)
 
     (setq which-key-idle-delay 1)
@@ -1269,10 +1296,10 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
   (use-package tex
     :straight auctex
     :defer t
-    :custom
-    (TeX-source-correlate-method 'synctex)
-    (TeX-source-correlate-mode t)
-    (TeX-source-correlate-start-server t)
+    :init
+    (setq TeX-source-correlate-method 'synctex)
+    (setq TeX-source-correlate-mode t)
+    (setq TeX-source-correlate-start-server t)
 
     :config
     ;; make latexmk available via C-c C-c
@@ -1428,15 +1455,15 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :straight nil
     :init
     (use-package tramp-sh :straight nil :defer t)
-    :defer t
-    :config
     ;; (setq tramp-debug-buffer t)
     (setq tramp-verbose 10)
-    (customize-set-variable
-     'tramp-ssh-controlmaster-options
-     (concat
-      "-o ControlPath=/Volumes/ramfs/ssh-ControlPath-%%r@%%h:%%p "
-      "-o ControlMaster=auto -o ControlPersist=yes"))
+    (setq tramp-ssh-controlmaster-options
+          (concat
+           "-o ControlPath=/Volumes/ramfs/ssh-ControlPath-%%r@%%h:%%p "
+           "-o ControlMaster=auto -o ControlPersist=yes"))
+
+    :defer t
+    :config
 
     ;; Speedup the C++ file over Tramp.
     (setq remote-file-name-inhibit-cache nil)
@@ -1526,10 +1553,9 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
            ("C-{" . #'mk/org-ref-cite)
            ("C-}" . #'doi-utils-add-entry-from-crossref-query)
            )
-    :custom
-    (org-support-shift-select t "Use shift to select region when possible.")
-    (org-clock-idle-time 10 "Clock will prompt to stop after 10 min of idle.")
     :init
+    (setq org-support-shift-select t)  ; Use shift to select region when possible.
+    (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
     (defun mk/org-ref-cite()
       (interactive)
       (unless (featurep 'org-ref) (require 'org-ref))
@@ -1973,10 +1999,10 @@ An example:
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
     :after (org)
-    :custom
-    (org-roam-directory "~/Dropbox/Dreams/OrgRoam/")
-    (org-roam-link-file-path-type 'relative)
-    (org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
+    :init
+    (setq org-roam-directory "~/Dropbox/Dreams/OrgRoam/")
+    (setq org-roam-link-file-path-type 'relative)
+    (setq org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
     :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n g" . org-roam-graph)
@@ -2096,6 +2122,22 @@ An example:
 * Bibliography
 
 #+BEGIN_SRC emacs-lisp
+  ;; Common
+  (setq mk/bib-base-dir "~/Dropbox/Dreams/Research/OrgRef/")
+  (setq mk/bib-pdf-dir (concat mk/bib-base-dir "PDFs/"))
+  (setq mk/bib-note-dir (concat mk/bib-base-dir "Notes/"))
+  (setq mk/bib-main-file (concat mk/bib-base-dir "Main.bib"))
+  (setq mk/bib-clean-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
+
+  (setq bibtex-completion-bibliography `(,mk/bib-main-file)
+        bibtex-completion-library-path `(,mk/bib-pdf-dir)
+        bibtex-completion-notes-path mk/bib-note-dir)
+  (setq reftex-default-bibliography mk/bib-main-file)
+#+END_SRC
+
+** Bibtex
+
+#+BEGIN_SRC emacs-lisp
   (use-package bibtex
     :straight nil  ; built in
     :init
@@ -2121,37 +2163,83 @@ An example:
     )
 #+END_SRC
 
-** Ebib & Citar
 
-| Ebib    |                                     |                        |
+** Biblio
+
+| biblio | https://github.com/cpitclaudel/biblio.el | Lookup & import bib |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package biblio
+    :init
+
+    (setq biblio-arxiv-bibtex-header "misc")
+    (setq biblio-bibtex-use-autokey t)
+
+    ;; Override
+    (defun biblio--completing-read-function ()
+      "Override to always return the defualt one"
+      completing-read-function)
+
+    ;; Some backends fail upon async queries.
+    (setq biblio-synchronous t)
+
+    )
+#+END_SRC
+
+
+** Ebib
+
+| Ebib | https://github.com/joostkremers/ebib | Bib Manager |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ebib
+    :after (biblio)
+    :init
+    (setq ebib-uniquify-keys t)
+    (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
+    (setq ebib-index-window-size 10)
+    (setq ebib-preload-bib-files `(,mk/bib-main-file ,mk/bib-clean-file))
+    (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
+    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
+    ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
+    (setq ebib-keywords-field-keep-sorted t)
+    (setq ebib-keywords-file-save-on-exit 'always)
+    ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
+    (setq ebib-use-timestamp t)  ; recording the time that entries are added
+    (setq ebib-index-columns '(("Entry Key" 20 t)
+                               ("Author/Editor" 40 nil)
+                               ("Year" 6 t)
+                               ("Title" 50 t)))
+    (setq ebib-index-default-sort '("timestamp" . descend))
+    )
+
+  (use-package ebib-biblio
+    :after (ebib biblio)
+    :straight nil
+    :demand
+    :bind (:map biblio-selection-mode-map
+                ("e" . ebib-biblio-selection-import)))
+#+END_SRC
+
+
+** Citar
+
 | Org-ref | https://github.com/jkitchin/org-ref |                        |
 | Citar   | https://github.com/bdarcus/citar    | Alternative to org-ref |
 
 #+BEGIN_SRC emacs-lisp
-  (setq mk/bib-base-dir "~/Dropbox/Dreams/Research/OrgRef/")
-  (setq mk/bib-pdf-dir (concat mk/bib-base-dir "PDFs/"))
-  (setq mk/bib-note-dir (concat mk/bib-base-dir "Notes/"))
-  (setq mk/bib-main-file (concat mk/bib-base-dir "Main.bib"))
-  (setq mk/bib-clean-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
-
-  (setq bibtex-completion-bibliography `(,mk/bib-main-file)
-        bibtex-completion-library-path `(,mk/bib-pdf-dir)
-        bibtex-completion-notes-path mk/bib-note-dir)
-  (setq reftex-default-bibliography mk/bib-main-file)
-
   ;; citar
   (use-package citar
     :straight (:host github :repo "bdarcus/citar")
     :bind (("C-c b" . citar-insert-citation)
            :map minibuffer-local-map
            ("M-b" . citar-insert-preset))
-    :custom
-    (org-cite-global-bibliography `(,mk/bib-main-file))
-    (org-cite-insert-processor 'citar)
-    (org-cite-follow-processor 'citar)
-    (org-cite-activate-processor 'citar)
-    (citar-bibliography org-cite-global-bibliography)
     :init
+    (setq org-cite-global-bibliography `(,mk/bib-main-file))
+    (setq org-cite-insert-processor 'citar)
+    (setq org-cite-follow-processor 'citar)
+    (setq org-cite-activate-processor 'citar)
+    (setq citar-bibliography org-cite-global-bibliography)
     (setq citar-symbols
           `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
             (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
@@ -2159,77 +2247,7 @@ An example:
     (setq citar-symbol-separator "  ")
     )
 
-  (use-package ebib
-    :custom
-    (ebib-uniquify-keys t)
-    (ebib-bibtex-dialect 'biblatex "biblatex is better than xxx.")
-    (ebib-index-window-size 10)
-    (ebib-preload-bib-files `(,mk/bib-main-file ,mk/bib-clean-file))
-    (ebib-file-search-dirs `(,mk/bib-pdf-dir))
-    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
-    ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
-    (ebib-keywords-field-keep-sorted t)
-    (ebib-keywords-file-save-on-exit 'always)
-    ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
-    (ebib-use-timestamp t "recording the time that entries are added")
-    (ebib-index-columns '(("Entry Key" 20 t)
-                          ("Author/Editor" 40 nil)
-                          ("Year" 6 t)
-                          ("Title" 50 t)))
-    (ebib-index-default-sort '("timestamp" . descend))
-    )
 #+END_SRC
-
-** Biblio
-
-#+BEGIN_SRC emacs-lisp
-  (use-package biblio
-    :defer t
-    :ensure t
-    :custom
-    (biblio-arxiv-bibtex-header "misc")  ; custom-set-variable is slightly different from setq due to initializers
-    :bind
-    (:map biblio-selection-mode-map
-          ("C-i" . biblio-to-ebib-and-quit))
-    :init
-
-
-
-    ;; This links biblio to ebib
-    (defun biblio-to-ebib-and-quit ()
-      (interactive)
-      (biblio--selection-forward-bibtex
-       (lambda (entry metadata)
-         (ebib-capture-raw-bibtex entry))
-       t))
-
-    (defun my/biblio--selection-insert-at-end-of-bibfile-callback (bibtex entry)
-      "Add BIBTEX (from ENTRY) to end of a user-specified bibtex file."
-      (with-current-buffer (find-file-noselect mk/bib-main-file)
-        (goto-char (point-max))
-        (insert bibtex))
-      (message "Inserted bibtex entry for %S."
-               (biblio--prepare-title (biblio-alist-get 'title entry))))
-
-    (defun ans/biblio-selection-insert-end-of-bibfile ()
-      "Insert BibTeX of current entry at the end of user-specified bibtex file."
-      (interactive)
-      (biblio--selection-forward-bibtex #'my/biblio--selection-insert-at-end-of-bibfile-callback))
-
-    :config
-
-    (setq biblio-selection-mode-actions-alist
-          '(("Append to Main bib" .
-             ans/biblio-selection-insert-end-of-bibfile)))
-
-    ;; Override
-    (defun biblio--completing-read-function ()
-      "Override to always return the defualt one"
-        completing-read-function)
-    )
-#+END_SRC
-
-
 ** Org Roam Bibtex
 
 #+BEGIN_SRC emacs-lisp
