@@ -90,7 +90,7 @@ Also from https://github.com/sachac/.emacs.d
 #+BEGIN_SRC emacs-lisp
   (cl-letf (((symbol-function 'define-obsolete-function-alias) #'defalias))
     (use-package benchmark-init
-      :config
+      :init
       (require 'benchmark-init-modes) ; explicitly required
       ;; To disable collection of benchmark data after init is done.
       (add-hook 'after-init-hook #'benchmark-init/deactivate)))
@@ -513,6 +513,7 @@ Better than flymake?
     :init
     ;; This is needed in `:init' block for lazy load to work.
     (require 'citre-config)
+    :config
     ;; Bind your frequently used commands.
     (global-set-key (kbd "C-x c j") 'citre-jump)
     (global-set-key (kbd "C-x c J") 'citre-jump-back)
@@ -521,6 +522,8 @@ Better than flymake?
     (global-set-key (kbd "C-t") 'citre-jump-back)
     (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
     (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
+    (define-key evil-normal-state-map (kbd "C-]") 'citre-jump)
+    (define-key evil-normal-state-map (kbd "C-t") 'citre-jump-back)
     )
 #+END_SRC
 
@@ -1554,6 +1557,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
            ("C-}" . #'doi-utils-add-entry-from-crossref-query)
            )
     :init
+    (setq org-latex-create-formula-image-program 'dvisvgm)
     (setq org-support-shift-select t)  ; Use shift to select region when possible.
     (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
     (defun mk/org-ref-cite()
@@ -2031,6 +2035,11 @@ An example:
                                 "#+TITLE: Notes on /${title}/\n#+DATE: %<%FT%T%z>\n%[~/.emacs.d/snippets/plain/PaperNotes]")
              :unnarrowed t
              )
+            ("n" "News" plain "%?"
+             :target (file+head "News/%<%Y%m%d%H%M%S>-${slug}.org"
+                                "#+title: ${title}\n#+link: \n")
+             :unnarrowed t
+             )
             ))
 
     ;; If using org-roam-protocol
@@ -2175,14 +2184,15 @@ An example:
     (setq biblio-arxiv-bibtex-header "misc")
     (setq biblio-bibtex-use-autokey t)
 
+    ;; Some backends fail upon async queries.
+    (setq biblio-synchronous t)
+
+    :config
+
     ;; Override
     (defun biblio--completing-read-function ()
       "Override to always return the defualt one"
       completing-read-function)
-
-    ;; Some backends fail upon async queries.
-    (setq biblio-synchronous t)
-
     )
 #+END_SRC
 
@@ -2200,6 +2210,9 @@ An example:
     (setq ebib-index-window-size 10)
     (setq ebib-preload-bib-files `(,mk/bib-main-file ,mk/bib-clean-file))
     (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
+    (setq ebib-notes-storage 'one-file-per-note)
+    (setq ebib-reading-list-file "~/Dropbox/Dreams/OrgRoam/Ebib-ReadingList.org")
+    (setq ebib-notes-directory "~/Dropbox/Dreams/OrgRoam/PaperNotes/")
     ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
     ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
     (setq ebib-keywords-field-keep-sorted t)
@@ -2235,6 +2248,7 @@ An example:
            :map minibuffer-local-map
            ("M-b" . citar-insert-preset))
     :init
+    (setq citar-notes-paths '("~/Dropbox/Dreams/OrgRoam/PaperNotes"))
     (setq org-cite-global-bibliography `(,mk/bib-main-file))
     (setq org-cite-insert-processor 'citar)
     (setq org-cite-follow-processor 'citar)
@@ -2245,6 +2259,9 @@ An example:
             (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
             (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
     (setq citar-symbol-separator "  ")
+    :config
+    (require 'org-roam-bibtex)
+    (setq citar-open-note-function #'(lambda (key entry) (orb-edit-note key)))
     )
 
 #+END_SRC
@@ -2252,7 +2269,11 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-bibtex
-    :after org-roam)
+    :after org-roam
+    :config
+    (setq orb-roam-ref-format 'org-cite)
+    (setq orb-use-bibdesk-attachments 't)
+    )
 #+END_SRC
 
 * MISC
@@ -2563,14 +2584,15 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   ;; My source code for bib
-  (setq paper-root-dir "~/Dropbox/Dreams/Research/Papers")
+  (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
   (defun paper-add()
     "Add a paper to your Dreamland."
     (interactive)
     (let* ((base-dir paper-root-dir)
            (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
            (title (string-trim (read-string "The paper title: ")))
-           (filename (replace-regexp-in-string ":" "," title))
+           (filename (replace-regexp-in-string "/" ""
+                                               (replace-regexp-in-string ":" "," title)))
            (filepath (concat base-dir "/" conf "/" filename)))
       (make-directory filepath t)
       (find-file filepath)
@@ -2591,10 +2613,12 @@ Interesting Colors:
     "Search a paper in your Dreamland, by title, with INITIAL input."
     (interactive "P")
     (let ((consult-find-args (concat
-                              "/Users/mksegv/.emacs.d/bin/paperfind.sh "
-                              "/Users/mksegv/Dropbox/Dreams/Research/Papers "
-                              )))
-      (find-file (consult--find "Dreamland's Paper Find: " #'consult--find-builder initial))))
+                              (expand-file-name "~/.emacs.d/bin/paperfind.sh")
+                              " "
+                              paper-root-dir)))
+      (find-file (concat (file-name-as-directory paper-root-dir)
+                         (consult--find "Dreamland's Paper Find: "
+                                        #'consult--find-builder initial)))))
 
   (defun paper-open ()
     "Open the file in PDF Expert. Code borrowed from the crux package."
@@ -2878,3 +2902,7 @@ A mode to embed one buffer in another buffer and keep them in sync
 (use-package elquery)
 #+END_SRC
 
+
+#+BEGIN_SRC emacs-lisp
+  (use-package citeproc)
+#+END_SRC

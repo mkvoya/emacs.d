@@ -1,0 +1,22 @@
+#+TITLE: Notes on /${title}/
+#+AUTHOR: Mingkai Dong
+#+DATE: `(format-time-string "%FT%T%z" (current-time))`
+#+EMAIL: mk@dong.mk
+#+PROPERTY: type %^{entry-type}
+#+FILETAGS: %^{keywords}
+#+PROPERTY: authors %^{author}
+
+
+| Conference   | '22 |
+| Keywords     | %^{keywords} |
+| Authors      | %^{author} |
+| Affiliations |     |
+
+* Prologue
+
+* Brief
+
+* Details
+
+* Remarks
+
