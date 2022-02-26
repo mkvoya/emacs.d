@@ -688,6 +688,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'Ilist-mode 'emacs)
     (evil-set-initial-state 'TeX-output-mode 'emacs)
     (evil-set-initial-state 'ebib-index-mode 'emacs)
+    (evil-set-initial-state 'ebib-entry-mode 'emacs)
     (evil-set-initial-state 'minibuffer-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
@@ -2132,15 +2133,9 @@ An example:
 
 #+BEGIN_SRC emacs-lisp
   ;; Common
-  (setq mk/bib-base-dir "~/Dropbox/Dreams/Research/OrgRef/")
-  (setq mk/bib-pdf-dir (concat mk/bib-base-dir "PDFs/"))
-  (setq mk/bib-note-dir (concat mk/bib-base-dir "Notes/"))
-  (setq mk/bib-main-file (concat mk/bib-base-dir "Main.bib"))
-  (setq mk/bib-clean-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
+  (setq mk/bib-main-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
+  (setq mk/bib-pdf-dir "~/Dropbox/Dreams/Research/Papers/")
 
-  (setq bibtex-completion-bibliography `(,mk/bib-main-file)
-        bibtex-completion-library-path `(,mk/bib-pdf-dir)
-        bibtex-completion-notes-path mk/bib-note-dir)
   (setq reftex-default-bibliography mk/bib-main-file)
 #+END_SRC
 
@@ -2150,14 +2145,25 @@ An example:
   (use-package bibtex
     :straight nil  ; built in
     :init
-    (setq bibtex-dialect 'biblatex
-          bibtex-autokey-year-length 4
+    (setq bibtex-dialect 'biblatex)
+    ;; Bibtex autokey is used by Ebib.
+    (setq bibtex-autokey-year-length 4  ; Full year format
           bibtex-autokey-name-year-separator "-"
           bibtex-autokey-year-title-separator "-"
           bibtex-autokey-titleword-separator "-"
-          bibtex-autokey-titlewords 2
-          bibtex-autokey-titlewords-stretch 1
-          bibtex-autokey-titleword-length 5)
+          bibtex-autokey-titlewords 2  ; Use two words from the title
+          bibtex-autokey-titlewords-stretch 0
+          bibtex-autokey-titleword-length nil  ; Use whole word
+          )
+    (setq bibtex-autokey-titleword-ignore
+          '("A" "An" "On" "The" "Eine?" "Der" "Die" "Das"
+            "The" "on"
+            "a" "an"
+            "and" "the" "of" ".*[^[:upper:][:lower:]0-9].*"))
+
+    (setq bibtex-completion-bibliography `(,mk/bib-main-file)
+          bibtex-completion-library-path nil  ; TODO
+          bibtex-completion-notes-path nil)  ; TODO
     (setq bibtex-completion-notes-template-multiple-files
           "* ${author-or-editor}, ${title}, ${journal}, (${year}) :${=type=}: \n\nSee [[cite:&${=key=}]]\n"
           bibtex-completion-additional-search-fields '(keywords)
@@ -2170,68 +2176,6 @@ An example:
     (setq bibtex-completion-pdf-open-function
           (lambda (fpath) (call-process "open" nil 0 nil fpath)))
     )
-#+END_SRC
-
-
-** Biblio
-
-| biblio | https://github.com/cpitclaudel/biblio.el | Lookup & import bib |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package biblio
-    :init
-
-    (setq biblio-arxiv-bibtex-header "misc")
-    (setq biblio-bibtex-use-autokey t)
-
-    ;; Some backends fail upon async queries.
-    (setq biblio-synchronous t)
-
-    :config
-
-    ;; Override
-    (defun biblio--completing-read-function ()
-      "Override to always return the defualt one"
-      completing-read-function)
-    )
-#+END_SRC
-
-
-** Ebib
-
-| Ebib | https://github.com/joostkremers/ebib | Bib Manager |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ebib
-    :after (biblio)
-    :init
-    (setq ebib-uniquify-keys t)
-    (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
-    (setq ebib-index-window-size 10)
-    (setq ebib-preload-bib-files `(,mk/bib-main-file ,mk/bib-clean-file))
-    (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
-    (setq ebib-notes-storage 'one-file-per-note)
-    (setq ebib-reading-list-file "~/Dropbox/Dreams/OrgRoam/Ebib-ReadingList.org")
-    (setq ebib-notes-directory "~/Dropbox/Dreams/OrgRoam/PaperNotes/")
-    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
-    ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
-    (setq ebib-keywords-field-keep-sorted t)
-    (setq ebib-keywords-file-save-on-exit 'always)
-    ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
-    (setq ebib-use-timestamp t)  ; recording the time that entries are added
-    (setq ebib-index-columns '(("Entry Key" 20 t)
-                               ("Author/Editor" 40 nil)
-                               ("Year" 6 t)
-                               ("Title" 50 t)))
-    (setq ebib-index-default-sort '("timestamp" . descend))
-    )
-
-  (use-package ebib-biblio
-    :after (ebib biblio)
-    :straight nil
-    :demand
-    :bind (:map biblio-selection-mode-map
-                ("e" . ebib-biblio-selection-import)))
 #+END_SRC
 
 
@@ -2267,6 +2211,7 @@ An example:
 #+END_SRC
 ** Org Roam Bibtex
 
+
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam-bibtex
     :after org-roam
@@ -2274,6 +2219,82 @@ An example:
     (setq orb-roam-ref-format 'org-cite)
     (setq orb-use-bibdesk-attachments 't)
     )
+#+END_SRC
+
+** Biblio
+
+| biblio | https://github.com/cpitclaudel/biblio.el | Lookup & import bib |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package biblio
+    :init
+
+    (setq biblio-arxiv-bibtex-header "misc")
+    (setq biblio-bibtex-use-autokey nil)  ; Don't use autokey of biblio
+
+    ;; Some backends fail upon async queries.
+    (setq biblio-synchronous t)
+
+    :config
+
+    ;; Override
+    (defun biblio--completing-read-function ()
+      "Override to always return the defualt one"
+      completing-read-function)
+    )
+#+END_SRC
+
+
+** Ebib
+
+| Ebib | https://github.com/joostkremers/ebib | Bib Manager |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ebib
+    :after (biblio)
+    :init
+    (setq ebib-autogenerate-keys t)  ; Use bibtex autokey.
+    (setq ebib-uniquify-keys t)
+    (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
+    (setq ebib-index-window-size 10)
+    (setq ebib-preload-bib-files `(,mk/bib-main-file))
+    (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
+    (setq ebib-notes-storage 'one-file-per-note)
+    (setq ebib-reading-list-file "~/Dropbox/Dreams/OrgRoam/Ebib-ReadingList.org")
+    (setq ebib-notes-directory "~/Dropbox/Dreams/OrgRoam/PaperNotes/")
+    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
+    ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
+    (setq ebib-keywords-field-keep-sorted t)
+    (setq ebib-keywords-file-save-on-exit 'always)
+    ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
+    (setq ebib-use-timestamp t)  ; recording the time that entries are added
+    (setq ebib-index-columns '(("Year" 4 t)
+                               ("Entry Key" 30 t)
+                               ("Title" 50 t)
+                               ("Series/Journal" 20 t)
+                               ("Author/Editor" 40 nil)))
+    (setq ebib-index-default-sort '("timestamp" . descend))
+
+    (defun mk/ebib-display-series-or-journal (field key db)
+      "Return series/journal FIELD content from KEY and DB."
+      (or (ebib-get-field-value "Series" key db 'noerror 'unbraced 'xref)
+          (ebib-get-field-value "Journal" key db "(No Series/Journal)" 'unbraced 'xref))
+      )
+    (setq ebib-field-transformation-functions
+          '(("Title" . ebib-clean-TeX-markup-from-entry)
+            ("Doi" . ebib-display-www-link)
+            ("Url" . ebib-display-www-link)
+            ("Note" . ebib-notes-display-note-symbol)
+            ("Series/Journal" . mk/ebib-display-series-or-journal)
+            ))
+    )
+
+  (use-package ebib-biblio
+    :after (ebib biblio)
+    :straight nil
+    :demand
+    :bind (:map biblio-selection-mode-map
+                ("e" . ebib-biblio-selection-import)))
 #+END_SRC
 
 * MISC
