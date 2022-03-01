@@ -689,6 +689,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'TeX-output-mode 'emacs)
     (evil-set-initial-state 'ebib-index-mode 'emacs)
     (evil-set-initial-state 'ebib-entry-mode 'emacs)
+    (evil-set-initial-state 'ebib-strings-mode 'emacs)
     (evil-set-initial-state 'minibuffer-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
@@ -1558,7 +1559,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
            ("C-}" . #'doi-utils-add-entry-from-crossref-query)
            )
     :init
-    (setq org-latex-create-formula-image-program 'dvisvgm)
+    ;; (setq org-latex-create-formula-image-program 'dvisvgm)
+    (setq org-latex-create-formula-image-program 'imagemagick)
     (setq org-support-shift-select t)  ; Use shift to select region when possible.
     (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
     (defun mk/org-ref-cite()
@@ -1928,7 +1930,7 @@ An example:
 
 ** Calender sync
 #+BEGIN_SRC emacs-lisp
-  ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
+          ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
     :defer t
     :straight nil
@@ -1952,8 +1954,7 @@ An example:
     ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/Calendar")
     (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
     (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
-    (setq org-caldav-files '("~/Dropbox/Dreams/Org/IPADS.sched.org"
-                             "~/Dropbox/Dreams/Org/Main.org"
+    (setq org-caldav-files '("~/Dropbox/Dreams/Org/Main.org"
                              "~/Dropbox/Dreams/Org/Inbox.org"
                              ))
     ;; (setq org-icalendar-timezone "America/Los_Angeles")
