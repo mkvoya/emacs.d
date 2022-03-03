@@ -1470,6 +1470,10 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :defer t
     :config
 
+    (setq tramp-remote-path
+          (append tramp-remote-path
+                  '(tramp-own-remote-path)))
+
     ;; Speedup the C++ file over Tramp.
     (setq remote-file-name-inhibit-cache nil)
     (setq vc-ignore-dir-regexp
@@ -1703,78 +1707,14 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 ** SVG checkboxs
 
-Add svg checkbox that can be clicked.
-
-[[file:emacs-config.org.assets/svg-checkbox.gif]]
-
-An example:
-
-    [X] item1
-    [ ] item2
-      [X] item 3
-    [X] item3
-
 #+BEGIN_SRC emacs-lisp
-  (use-package svg-lib :demand t)
-  (use-package svg-tag-mode
-    :commands svg-tag-mode
-    :hook (org-mode . svg-tag-mode)
-    :demand t
-    :after (svg-lib org)
-    :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el"))
-    :config
-    (defun mk/svg-checkbox-empty()
-      (let* ((svg (svg-create 14 14)))
-        (svg-rectangle svg 0 0 14 14 :fill 'white :rx 2 :stroke-width 2.5 :stroke-color 'black)
-        (svg-image svg :ascent 'center)
-        ))
-
-    (defun mk/svg-checkbox-filled()
-      (let* ((svg (svg-create 14 14)))
-        (svg-rectangle svg 0 0 14 14 :fill "#2CAADC" :rx 2)
-        (svg-polygon svg '((5.5 . 11) (12 . 3.5) (11 . 2) (5.5 . 9) (1.5 . 5) (1 . 6.5))
-                     :stroke-color 'white :stroke-width 1 :fill 'white)
-        (svg-image svg :ascent 'center)
-        ))
-    ;; (insert-image (svg-checkbox-empty))
-    ;; (insert-image (svg-checkbox-filled))
-    (defun mk/svg-checkbox-toggle()
-      (interactive)
-      (save-excursion
-        (let* ((start-pos (line-beginning-position))
-               (end-pos (line-end-position))
-               (text (buffer-substring-no-properties start-pos end-pos))
-               (case-fold-search t)  ; Let X and x be the same in search
-               )
-          (beginning-of-line)
-          (cond ((string-match-p "\\[X\\]" text)
-                 (progn
-                   (re-search-forward "\\[X\\]" end-pos)
-                   (replace-match "[ ]")))
-                ((string-match-p "\\[ \\]" text)
-                 (progn
-                   (search-forward "[ ]" end-pos)
-                   (replace-match "[X]")))
-                ))))
-    (setq svg-tag-tags
-          '(
-            ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-                                         (svg-tag-make tag :beg 2))))
-            ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
-                                           (svg-tag-make tag :beg 2 :end -1))))
-            ("\\[ \\]" . ((lambda (_tag) (mk/svg-checkbox-empty))
-                          (lambda () (interactive) (mk/svg-checkbox-toggle))
-                          "Click to toggle."
-                          ))
-            ("\\(\\[[Xx]\\]\\)" . ((lambda (_tag) (mk/svg-checkbox-filled))
-                                   (lambda () (interactive) (mk/svg-checkbox-toggle))
-                                   "Click to toggle."))
-            ))
-    )
+  (use-package org-modern
+    :disabled
+    :straight (:host github :repo "minad/org-modern"))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-        ;;; Org Style
+  ;;; Org Style
   ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
   (setq org-startup-indented t)
   (use-package org-superstar
