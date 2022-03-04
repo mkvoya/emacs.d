@@ -2547,14 +2547,17 @@ Interesting Colors:
 #+BEGIN_SRC emacs-lisp
   ;; My source code for bib
   (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
+  (defun paper-title-cleanup (title)
+    "Remove bad chars in the paper TITLE."
+    (replace-regexp-in-string "/" "" (replace-regexp-in-string ":" "," title))
+  )
   (defun paper-add()
     "Add a paper to your Dreamland."
     (interactive)
     (let* ((base-dir paper-root-dir)
            (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
            (title (string-trim (read-string "The paper title: ")))
-           (filename (replace-regexp-in-string "/" ""
-                                               (replace-regexp-in-string ":" "," title)))
+           (filename (paper-title-cleanup title))
            (filepath (concat base-dir "/" conf "/" filename)))
       (make-directory filepath t)
       (find-file filepath)
