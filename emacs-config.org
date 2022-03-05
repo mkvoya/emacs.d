@@ -1559,18 +1559,12 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
            ("C-c c" . #'org-capture)
-           ("C-{" . #'mk/org-ref-cite)
-           ("C-}" . #'doi-utils-add-entry-from-crossref-query)
            )
     :init
     ;; (setq org-latex-create-formula-image-program 'dvisvgm)
     (setq org-latex-create-formula-image-program 'imagemagick)
     (setq org-support-shift-select t)  ; Use shift to select region when possible.
     (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
-    (defun mk/org-ref-cite()
-      (interactive)
-      (unless (featurep 'org-ref) (require 'org-ref))
-      (org-ref-insert-cite-link))
     ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
     (defun org-syntax-table-modify ()
       "Modify `org-mode-syntax-table' for the current org buffer."
@@ -1707,6 +1701,73 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 ** SVG checkboxs
 
+Add svg checkbox that can be clicked.
+
+An example:
+
+    [X] item1
+    [ ] item2
+      [X] item 3
+    [X] item3
+
+ #+BEGIN_SRC emacs-lisp
+   (use-package svg-lib :demand t)
+   (use-package svg-tag-mode
+     :commands svg-tag-mode
+     :hook (org-mode . svg-tag-mode)
+     :demand t
+     :after (svg-lib org)
+     :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el"))
+     :config
+     (defun mk/svg-checkbox-empty()
+       (let* ((svg (svg-create 14 14)))
+         (svg-rectangle svg 0 0 14 14 :fill 'white :rx 2 :stroke-width 2.5 :stroke-color 'black)
+         (svg-image svg :ascent 'center)
+         ))
+
+     (defun mk/svg-checkbox-filled()
+       (let* ((svg (svg-create 14 14)))
+         (svg-rectangle svg 0 0 14 14 :fill "#FFFFFF" :rx 2)
+         (svg-polygon svg '((5.5 . 11) (12 . 3.5) (11 . 2) (5.5 . 9) (1.5 . 5) (1 . 6.5))
+                      :stroke-color 'black :stroke-width 1 :fill 'black)
+         (svg-image svg :ascent 'center)
+         ))
+     ;; (insert-image (svg-checkbox-empty))
+     ;; (insert-image (svg-checkbox-filled))
+     (defun mk/svg-checkbox-toggle()
+       (interactive)
+       (save-excursion
+         (let* ((start-pos (line-beginning-position))
+                (end-pos (line-end-position))
+                (text (buffer-substring-no-properties start-pos end-pos))
+                (case-fold-search t)  ; Let X and x be the same in search
+                )
+           (beginning-of-line)
+           (cond ((string-match-p "\\[X\\]" text)
+                  (progn
+                    (re-search-forward "\\[X\\]" end-pos)
+                    (replace-match "[ ]")))
+                 ((string-match-p "\\[ \\]" text)
+                  (progn
+                    (search-forward "[ ]" end-pos)
+                    (replace-match "[X]")))
+                 ))))
+     (setq svg-tag-tags
+           '(
+             ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
+                                          (svg-tag-make tag :beg 2))))
+             ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
+                                            (svg-tag-make tag :beg 2 :end -1))))
+             ("\\[ \\]" . ((lambda (_tag) (mk/svg-checkbox-empty))
+                           (lambda () (interactive) (mk/svg-checkbox-toggle))
+                           "Click to toggle."
+                           ))
+             ("\\(\\[[Xx]\\]\\)" . ((lambda (_tag) (mk/svg-checkbox-filled))
+                                    (lambda () (interactive) (mk/svg-checkbox-toggle))
+                                    "Click to toggle."))
+             )))
+
+#+END_SRC
 #+BEGIN_SRC emacs-lisp
   (use-package org-modern
     :disabled
@@ -2129,6 +2190,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
   ;; citar
   (use-package citar
     :straight (:host github :repo "bdarcus/citar")
+    :after (embark)
     :bind (("C-c b" . citar-insert-citation)
            :map minibuffer-local-map
            ("M-b" . citar-insert-preset))
@@ -2144,9 +2206,11 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
             (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
     (setq citar-symbol-separator "  ")
+    (setq citar-at-point-function 'embark-act)
     :config
     (require 'org-roam-bibtex)
     (setq citar-open-note-function #'(lambda (key entry) (orb-edit-note key)))
+    (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
     )
 
 #+END_SRC
@@ -2228,6 +2292,20 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ("Note" . ebib-notes-display-note-symbol)
             ("Series/Journal" . mk/ebib-display-series-or-journal)
             ))
+    :config
+    (setq ebib-index-mode-line '("%e"
+                                 mode-line-front-space
+                                 ebib--mode-line-modified
+                                 mode-line-buffer-identification
+                                 (:eval (if (and ebib--cur-db (ebib-db-dependent-p ebib--cur-db))
+                                            (format " [%s]" (ebib-db-get-filename (ebib-db-get-main ebib--cur-db) t))))
+                                 (:eval (format "  (%s)" (ebib--get-dialect ebib--cur-db)))
+                                 (:eval (if (and ebib--cur-db (ebib--get-key-at-point))
+                                            (format "     Entry %d/%d" (line-number-at-pos) (count-lines (point-min) (point-max)))
+                                          "     No Entries"))
+                                 (:eval (if (and ebib--cur-db (ebib-db-get-filter ebib--cur-db))
+                                            (format "  |%s|" (ebib--filters-pp-filter (ebib-db-get-filter ebib--cur-db)))
+                                          ""))))
     )
 
   (use-package ebib-biblio
