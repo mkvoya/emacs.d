@@ -36,12 +36,15 @@
    (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
    (width . 90)
    (height . 100)
-   (font . "Menlo-14")
+   (font . "Monaco-12")
    (minibuffer . t)
    ))
+;; (set-frame-font "Monaco-12" nil t)
+(set-face-attribute 'fixed-pitch nil :family "Monaco")
+
+
 
 ;; (when window-system (set-frame-size (selected-frame) 100 80))
-
 
 ;;; Thank https://github.com/Eason0210/emacs.d/blob/master/early-init.el
 (setq load-prefer-newer t)

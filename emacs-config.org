@@ -40,6 +40,17 @@ Also from https://github.com/sachac/.emacs.d
                   (mk/sync-emacs-config))))
 #+END_SRC
 
+** Fonts
+We need to setup fonts early.
+
+#+BEGIN_SRC emacs-lisp
+  (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+                      charset (font-spec :family "LXGW WenKai Screen")))
+   (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
+  (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+#+END_SRC
+
 ** Bootstrap
 
 *** Custom Files
@@ -942,26 +953,11 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 * Chinese Optimizations
 ** CN Fonts
+| cn-fonts | |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package cnfonts
-    :config
-    (setq cnfonts-personal-fontnames
-          '(()
-            ("TsangerJinKai01" "TsangerJinKai02" "TsangerJinKai03" "TsangerJinKai04" "TsangerJinKai05" "PingFang SC" "Yuanti SC")
-            ()
-            ("Apple Color Emoji")
-            ))
-    (setq cnfonts-profiles
-          '("general" "code" "org-mode" "read-book"))
-    (setq cnfonts-use-system-type t)
-    (setq cnfonts-use-face-font-rescale t)
-    (defun set-apple-emoji-font(fontsizes-list)
-      (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend))
-    (add-hook 'cnfonts-set-font-finish-hook #'set-apple-emoji-font)
-    (cnfonts-mode 1)
-    (define-key cnfonts-mode-map (kbd "C--") #'cnfonts-decrease-fontsize)
-    (define-key cnfonts-mode-map (kbd "C-=") #'cnfonts-increase-fontsize)
+  (use-package valign
+    :hook (org-mode-hook . valign-mode)
     )
 #+END_SRC
 
