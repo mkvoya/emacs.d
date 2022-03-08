@@ -407,6 +407,7 @@ Alternatives (Check the selectrum repo README)
     )
 
   (use-package embark
+    :demand
     :bind
     (("C-." . embark-act)         ;; pick some comfortable binding
      ("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -524,6 +525,10 @@ Better than flymake?
     (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
     (define-key evil-normal-state-map (kbd "C-]") 'citre-jump)
     (define-key evil-normal-state-map (kbd "C-t") 'citre-jump-back)
+    (setq citre-project-root-function
+          #'(lambda ()
+              (when-let ((project (project-current nil)))
+                (expand-file-name (nth 2 project)))))
     )
 #+END_SRC
 
@@ -2048,7 +2053,7 @@ An example:
     ;; If using org-roam-protocol
     (require 'org-roam-protocol))
 #+END_SRC
-** OrgRoam-Server
+** OrgRoam UI
 # org-roam-server does not support org-roam v2, use org-roam-ui instead.
 #+BEGIN_SRC emacs-lisp
   (use-package websocket :defer t)
@@ -2061,7 +2066,7 @@ An example:
     ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
     ;;         a hookable mode anymore, you're advised to pick something yourself
     ;;         if you don't care about startup time, use
-    :hook (after-init . org-roam-ui-mode)
+    ;; :hook (after-init . org-roam-ui-mode)
     :config
     (setq org-roam-ui-sync-theme t
           org-roam-ui-follow t
@@ -2177,6 +2182,11 @@ An example:
             (t             . "${=has-pdf=:1}${=has-note=:1} ${year:4} ${author:36} ${title:*}")))
     (setq bibtex-completion-pdf-open-function
           (lambda (fpath) (call-process "open" nil 0 nil fpath)))
+    :config
+    (use-package bibtex-completion
+      :config
+      (bibtex-completion-init)  ; This will set the XXX-format-internal variable
+      )
     )
 #+END_SRC
 
@@ -2190,7 +2200,7 @@ An example:
   ;; citar
   (use-package citar
     :straight (:host github :repo "bdarcus/citar")
-    :after (embark)
+    :demand
     :bind (("C-c b" . citar-insert-citation)
            :map minibuffer-local-map
            ("M-b" . citar-insert-preset))
@@ -2206,24 +2216,20 @@ An example:
             (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
             (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
     (setq citar-symbol-separator "  ")
+    (require 'embark)
     (setq citar-at-point-function 'embark-act)
     :config
+    (use-package org-roam-bibtex
+      :after org-roam
+      :config
+      (setq orb-roam-ref-format 'org-cite)
+      (setq orb-use-bibdesk-attachments 't)
+      )
     (require 'org-roam-bibtex)
     (setq citar-open-note-function #'(lambda (key entry) (orb-edit-note key)))
     (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
     )
 
-#+END_SRC
-** Org Roam Bibtex
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package org-roam-bibtex
-    :after org-roam
-    :config
-    (setq orb-roam-ref-format 'org-cite)
-    (setq orb-use-bibdesk-attachments 't)
-    )
 #+END_SRC
 
 ** Biblio
@@ -2258,6 +2264,19 @@ An example:
   (use-package ebib
     :after (biblio)
     :init
+    (require 'dbus)  ; A function from dbus is used in ebib.
+    (defun mk/ebib-create-org-schedule (_key _db)
+      (format "SCHEDULED: <%s>" (org-read-date nil nil "+1d"))
+      )
+    (setq ebib-reading-list-template-specifiers '((?K . ebib-reading-list-create-org-identifier)
+                                                  (?T . ebib-create-org-title)
+                                                  (?M . ebib-reading-list-todo-marker)
+                                                  (?L . ebib-create-org-link)
+                                                  (?F . ebib-create-org-file-link)
+                                                  (?D . ebib-create-org-doi-link)
+                                                  (?U . ebib-create-org-url-link)
+                                                  (?S . mk/ebib-create-org-schedule)))
+    (setq ebib-reading-list-template "* %M %T\n:PROPERTIES:\n%K\n%S\n:END:\n%F\n")
     (setq ebib-autogenerate-keys t)  ; Use bibtex autokey.
     (setq ebib-uniquify-keys t)
     (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
@@ -2267,6 +2286,7 @@ An example:
     (setq ebib-notes-storage 'one-file-per-note)
     (setq ebib-reading-list-file "~/Dropbox/Dreams/OrgRoam/Ebib-ReadingList.org")
     (setq ebib-notes-directory "~/Dropbox/Dreams/OrgRoam/PaperNotes/")
+    (setq ebib-notes-locations `(,ebib-notes-directory))
     ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
     ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
     (setq ebib-keywords-field-keep-sorted t)

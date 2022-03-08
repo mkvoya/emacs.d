@@ -5,6 +5,8 @@
 
 ;;; Code:
 
+;; (setq debug-on-error t)
+;; (setq debug-on-signal t)
 (setq-default
  load-prefer-newer t ; Load newer packages when available.
  package-enable-at-startup nil
