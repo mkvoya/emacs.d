@@ -988,60 +988,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 ** Word count
 #+BEGIN_SRC emacs-lisp
-  (defvar wc-regexp-chinese-char-and-punc
-    (rx (category chinese)))
-  (defvar wc-regexp-chinese-punc
-    "[。，！？；：「」『』（）、【】《》〈〉※—]")
-  (defvar wc-regexp-english-word
-    "[a-zA-Z0-9-]+")
-
-  (defun wc ()
-    "「較精確地」統計中/日/英文字數。
-  - 文章中的註解不算在字數內。
-  - 平假名與片假名亦包含在「中日文字數」內，每個平/片假名都算單獨一個字（但片假
-    名不含連音「ー」）。
-  - 英文只計算「單字數」，不含標點。
-  - 韓文不包含在內。
-
-  ※計算標準太多種了，例如英文標點是否算入、以及可能有不太常用的標點符號沒算入等
-  。且中日文標點的計算標準要看 Emacs 如何定義特殊標點符號如ヴァランタン・アルカン
-  中間的點也被 Emacs 算為一個字而不是標點符號。"
-    (interactive)
-    (let* ((v-buffer-string
-            (progn
-              (if (eq major-mode 'org-mode) ; 去掉 org 文件的 OPTIONS（以#+開頭）
-                  (setq v-buffer-string (replace-regexp-in-string "^#\\+.+" ""
-                                                                  (buffer-substring-no-properties (point-min) (point-max))))
-                (setq v-buffer-string (buffer-substring-no-properties (point-min) (point-max))))
-              (replace-regexp-in-string (format "^ *%s *.+" comment-start) "" v-buffer-string)))
-                                          ; 把註解行刪掉（不把註解算進字數）。
-           (chinese-char-and-punc 0)
-           (chinese-punc 0)
-           (english-word 0)
-           (chinese-char 0))
-      (with-temp-buffer
-        (insert v-buffer-string)
-        (goto-char (point-min))
-        ;; 中文（含標點、片假名）
-        (while (re-search-forward wc-regexp-chinese-char-and-punc nil :no-error)
-          (setq chinese-char-and-punc (1+ chinese-char-and-punc)))
-        ;; 中文標點符號
-        (goto-char (point-min))
-        (while (re-search-forward wc-regexp-chinese-punc nil :no-error)
-          (setq chinese-punc (1+ chinese-punc)))
-        ;; 英文字數（不含標點）
-        (goto-char (point-min))
-        (while (re-search-forward wc-regexp-english-word nil :no-error)
-          (setq english-word (1+ english-word))))
-      (setq chinese-char (- chinese-char-and-punc chinese-punc))
-      (message
-       (format "中日文字數（不含標點）：%s
-  中日文字數（包含標點）：%s
-  英文字數（不含標點）：%s
-  =======================
-  中英文合計（不含標點）：%s"
-               chinese-char chinese-char-and-punc english-word
-               (+ chinese-char english-word)))))
+  (load-file "elisp/wc.el")
 #+END_SRC
 
 * Appearance
@@ -2272,7 +2219,7 @@ An example:
                                                   (?D . ebib-create-org-doi-link)
                                                   (?U . ebib-create-org-url-link)
                                                   (?S . mk/ebib-create-org-schedule)))
-    (setq ebib-reading-list-template "* %M %T\n:PROPERTIES:\n%K\n%S\n:END:\n%F\n")
+    (setq ebib-reading-list-template "* %M %T\n%S\n:PROPERTIES:\n%K\n:END:\n%F\n")
     (setq ebib-autogenerate-keys t)  ; Use bibtex autokey.
     (setq ebib-uniquify-keys t)
     (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
@@ -2641,17 +2588,20 @@ Interesting Colors:
 #+BEGIN_SRC emacs-lisp
   ;; My source code for bib
   (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
-  (defun paper-title-cleanup (title)
+  (defun mk/normalize-paper-title (title)
     "Remove bad chars in the paper TITLE."
-    (replace-regexp-in-string "/" "" (replace-regexp-in-string ":" "," title))
-  )
+    (replace-regexp-in-string
+     "[\s\n]+" " " (replace-regexp-in-string
+                    "/" "" (replace-regexp-in-string
+                            ":" "," title)))
+    )
   (defun paper-add()
     "Add a paper to your Dreamland."
     (interactive)
     (let* ((base-dir paper-root-dir)
            (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
            (title (string-trim (read-string "The paper title: ")))
-           (filename (paper-title-cleanup title))
+           (filename (mk/normalize-paper-title title))
            (filepath (concat base-dir "/" conf "/" filename)))
       (make-directory filepath t)
       (find-file filepath)
@@ -2705,6 +2655,51 @@ Interesting Colors:
       (insert "]]")
       (goto-char start)
       (insert (concat "[[" file "]["))))
+
+  (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
+  (defun mk/ebib-open-dir (key)
+    "Open the directory for KEY."
+    (interactive (list (ebib--get-key-at-point)))
+    (ebib--execute-when
+      (entries
+       (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+              (series (downcase (ebib-get-field-value "series" key ebib--cur-db nil t)))
+              (dir1 (string-replace " '" "" series))
+              (dir2 (string-replace " " "." series))
+              (cand1 (format "%s/%s/%s" mk/ebib-dir-root dir1 title))
+              (cand2 (format "%s/%s/%s" mk/ebib-dir-root dir2 title)))
+         (cond
+          ((file-exists-p cand1) (find-file cand1))
+          ((file-exists-p cand2) (find-file cand2))
+          (t (print "No such dir")))))
+      (default
+       (beep))))
+
+  (defun mk/paper-get-dirs ()
+    "Get all conf dirs."
+    (let* ((cmd (format "find %s -type d -maxdepth 1 -exec realpath --relative-to %s {} \\;" mk/ebib-dir-root mk/ebib-dir-root))
+           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+           (choice (completing-read "Choose the one to link: " candidates)))
+      (print choice)
+      ))
+
+  (defun mk/ebib-open-dir (key)
+    "Open the directory for KEY."
+    (interactive (list (ebib--get-key-at-point)))
+    (ebib--execute-when
+      (entries
+       (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+              (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
+              (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+              (cand (cond
+                     ((= 0 (length candidates)) nil)
+                     ((= 1 (length candidates)) (car candidates))
+                     (t (completing-read "Choose the one to link: " candidates)))))
+         (if cand (find-file cand)
+           ())))
+      (default
+       (beep))))
+
 #+END_SRC
 
 ** Notionify
