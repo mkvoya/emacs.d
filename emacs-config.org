@@ -2671,7 +2671,13 @@ Interesting Colors:
          (cond
           ((file-exists-p cand1) (find-file cand1))
           ((file-exists-p cand2) (find-file cand2))
-          (t (print "No such dir")))))
+          (t (progn
+               (print "No such dir, creating...")
+               (let* ((conf (string-trim (read-string "The conf abbr: ")))
+                      (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+                 (make-directory target t)
+                 (find-file target)
+                 ))))))
       (default
        (beep))))
 
@@ -2959,4 +2965,32 @@ A mode to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package citeproc)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package lua-mode)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/ns-get-window-title-and-buffer ()
+    (interactive)
+    ;; Apple script from the activitywatch project
+    (do-applescript "
+  global frontApp, frontAppName, windowTitle
+  set windowTitle to \"\"
+  tell application \"System Events\"
+          set frontApp to first application process whose frontmost is true
+          set frontAppName to name of frontApp
+          tell process frontAppName
+                  try
+                          tell (1st window whose value of attribute \"AXMain\" is true)
+                                  set windowTitle to value of attribute \"AXTitle\"
+                          end tell
+                  end try
+          end tell
+  end tell
+  return frontAppName & \"
+  \" & windowTitle"))
 #+END_SRC
