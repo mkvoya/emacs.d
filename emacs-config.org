@@ -988,7 +988,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 ** Word count
 #+BEGIN_SRC emacs-lisp
-  (load-file "elisp/wc.el")
+  (load-file "~/.emacs.d/elisp/wc.el")
 #+END_SRC
 
 * Appearance
@@ -1898,7 +1898,7 @@ An example:
   (use-package org-caldav
     :defer t
     :after (async)
-    :config
+    :init
     (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
     ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/Calendar")
     (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
@@ -2525,8 +2525,7 @@ Interesting Colors:
    (use-package imenu-list
      :after (org)
      :demand
-     :bind (
-            ("C-\"" . #'imenu-list-smart-toggle))
+     :bind (("C-\"" . #'imenu-list-smart-toggle))
      :config
      (setq imenu-list-auto-resize nil)
      (setq imenu-list-position 'left)
@@ -2580,6 +2579,13 @@ Interesting Colors:
     (xwidget-webkit-browse-url "http://127.0.0.1:35901" nil)
     ;; Switch to the buffer
     (switch-to-existing-buffer-other-window "Roam Server")
+    )
+  (defun mk/webkit-new-url (url &optional new-session)
+    "Create a new session to browse the URL."
+    (interactive (progn
+                   (require 'browse-url)
+                   (browse-url-interactive-arg "xwidget-webkit URL: ")))
+    (xwidget-webkit-browse-url url t)
     )
 #+END_SRC
 
@@ -2657,6 +2663,17 @@ Interesting Colors:
       (insert (concat "[[" file "]["))))
 
   (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
+  (defun mk/ebib-get-dir (title series)
+    "Calculate the directory for TITLE and SERIES."
+    (let* ((dir1 (string-replace " '" "" series))
+           (dir2 (string-replace " " "." series))
+           (cand1 (format "%s/%s/%s" mk/ebib-dir-root dir1 title))
+           (cand2 (format "%s/%s/%s" mk/ebib-dir-root dir2 title)))
+      (cond
+       ((file-exists-p cand1) cand1)
+       ((file-exists-p cand2) cand2)
+       (t nil)))
+    )
   (defun mk/ebib-open-dir (key)
     "Open the directory for KEY."
     (interactive (list (ebib--get-key-at-point)))
@@ -2664,20 +2681,14 @@ Interesting Colors:
       (entries
        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
               (series (downcase (ebib-get-field-value "series" key ebib--cur-db nil t)))
-              (dir1 (string-replace " '" "" series))
-              (dir2 (string-replace " " "." series))
-              (cand1 (format "%s/%s/%s" mk/ebib-dir-root dir1 title))
-              (cand2 (format "%s/%s/%s" mk/ebib-dir-root dir2 title)))
-         (cond
-          ((file-exists-p cand1) (find-file cand1))
-          ((file-exists-p cand2) (find-file cand2))
-          (t (progn
-               (print "No such dir, creating...")
-               (let* ((conf (string-trim (read-string "The conf abbr: ")))
-                      (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
-                 (make-directory target t)
-                 (find-file target)
-                 ))))))
+              (cand (mk/ebib-get-dir title series)))
+         (if cand (find-file cand)
+           (print "No such dir, creating...")
+           (let* ((conf (string-trim (read-string "The conf abbr: ")))
+                  (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+             (make-directory target t)
+             (find-file target)
+             ))))
       (default
        (beep))))
 
@@ -2689,8 +2700,8 @@ Interesting Colors:
       (print choice)
       ))
 
-  (defun mk/ebib-open-dir (key)
-    "Open the directory for KEY."
+  (defun mk/ebib-open-file (key)
+    "Open files for KEY."
     (interactive (list (ebib--get-key-at-point)))
     (ebib--execute-when
       (entries
@@ -2886,7 +2897,6 @@ Do we still use this?
             )))
 #+END_SRC
 
-
 * Disabled Pool
 
 
@@ -2993,4 +3003,15 @@ A mode to embed one buffer in another buffer and keep them in sync
   end tell
   return frontAppName & \"
   \" & windowTitle"))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package xenops)
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package elnode
+    :straight (:type git :host github :repo "jcaw/elnode"))
 #+END_SRC
