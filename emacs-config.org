@@ -988,7 +988,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 ** Word count
 #+BEGIN_SRC emacs-lisp
-  (load-file "~/.emacs.d/elisp/wc.el")
+  (load-file "~/.emacs.d/site-lisp/wc.el")
 #+END_SRC
 
 * Appearance
