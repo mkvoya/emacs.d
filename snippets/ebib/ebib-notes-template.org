@@ -1,0 +1,23 @@
+:PROPERTIES:
+:ID:        ${orgid}
+:Custom_id: ${citekey}
+:ROAM_REFS: [cite:@${citekey}]
+:END:
+
+#+TITLE: Notes on /${title}/
+#+DATE: ${date}
+#+AUTHOR: Mingkai Dong
+#+EMAIL: mk@dong.mk
+
+| Conference   | ${series}  |
+| Keywords     |            |
+| Authors      | ${authors} |
+| Affiliations |            |
+
+* Prologue
+
+* Brief
+
+* Details
+
+* Remarks

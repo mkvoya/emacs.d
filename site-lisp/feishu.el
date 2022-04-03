@@ -1,6 +1,12 @@
-;;; package --- Feishu Wiki Mode -*- lexical-binding: t -*-
+;;; feishu.el --- Feishu Wiki Mode -*- lexical-binding: t -*-
+
 ;;; Commentary:
+
 ;;; This file connects Feishu to sync wiki contents.
+
+(require 'request)
+(require 'elnode)
+
 ;;; Code:
 
 (setq lexical-binding t)
@@ -10,10 +16,8 @@
 (setq feishu/user-access-token nil)
 (setq feishu/app-access-token nil)
 
-(require 'elnode)
-(require 'request)
-
 (defun feishu/get-app-access-token (fn)
+  "Get app access token and call FN."
   (request
     "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
     :headers '(("Content-Type" . "application/json; charset=utf-8"))

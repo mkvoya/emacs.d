@@ -1260,6 +1260,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
     (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
     (add-to-list 'TeX-command-list '("Make Clean" "make clean" TeX-run-command nil t))
+    (add-to-list 'TeX-command-list '("Make Clean & Make" "make clean && make" TeX-run-command nil t))
     ;; (setq-default TeX-command-default "Make")
     ;; from https://gist.github.com/stefano-meschiari/9217695
     (setq TeX-auto-save t)
@@ -2269,6 +2270,42 @@ An example:
                                  (:eval (if (and ebib--cur-db (ebib-db-get-filter ebib--cur-db))
                                             (format "  |%s|" (ebib--filters-pp-filter (ebib-db-get-filter ebib--cur-db)))
                                           ""))))
+    (defun mk/ebib--clean-string (str)
+      "Clean the format of STR."
+      (or (substring-no-properties (remove ?\n (format "%s" str))) ""))
+    (defun mk/ebib--clean-field (key db field)
+      "Clean the format of FIELD of KEY in DB."
+      (mk/ebib--clean-string (ebib-get-field-value field key db 'noerror 'unbraced 'xref)))
+
+    (defun mk/read-file-content (filename)
+      "Read the file content of FILENAME."
+      (with-temp-buffer
+        (insert-file-contents filename)
+        (buffer-string)))
+    (defun mk/ebib-complete-rest-note-content (key db)
+      "Gerneate the rest content of the note template accroding to KEY in DB."
+      (let ((template (mk/read-file-content "~/.emacs.d/snippets/ebib/ebib-notes-template.org"))
+            (title (mk/ebib--clean-field key db "title"))
+            (date (format-time-string "%FT%T%z"))
+            (authors (mk/ebib--clean-field key db "author"))
+            (series (mk/ebib--clean-field key db "series")))
+        (setq template (string-replace "${citekey}" key template))
+        (setq template (string-replace "${orgid}" (org-id-new) template))
+        (setq template (string-replace "${title}" title template))
+        (setq template (string-replace "${date}" date template))
+        (setq template (string-replace "${authors}" authors template))
+        (setq template (string-replace "${series}" series template))
+        template))
+    (setq ebib-notes-template-specifiers '((?K . ebib-create-org-identifier)
+                                           (?T . ebib-create-org-description)
+                                           (?X . ebib-create-org-title)
+                                           (?C . ebib-create-org-cite)
+                                           (?L . ebib-create-org-link)
+                                           (?F . ebib-create-org-file-link)
+                                           (?D . ebib-create-org-doi-link)
+                                           (?U . ebib-create-org-url-link)
+                                           (?P . mk/ebib-complete-rest-note-content)))
+    (setq ebib-notes-template "%%?%P\n")
     )
 
   (use-package ebib-biblio
@@ -3014,4 +3051,28 @@ A mode to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package elnode
     :straight (:type git :host github :repo "jcaw/elnode"))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package blamer
+    :ensure t
+    :bind (("s-i" . blamer-show-commit-info))
+    :defer 20
+    :custom
+    (blamer-idle-time 0.3)
+    (blamer-min-offset 70)
+    :custom-face
+    (blamer-face ((t :foreground "#7a88cf"
+                     :background nil
+                     :height 110
+                     :italic t)))
+    :config
+    ;; (global-blamer-mode 1)
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package multiple-cursors
+    :bind (("C-!" . mc/mark-next-like-this)))
 #+END_SRC
