@@ -27,6 +27,7 @@
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ; No tool bar
+   (tab-bar-lines . 0)                  ; No tab bar
    ;; (undecorated . 1)                 ; this will completely remove the titlebar
    (ns-titlebar-height-adjust . -10)    ; this is actually not used
    (ns-title-hidden . 1)                ; hide the title text in the titlebar

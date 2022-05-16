@@ -6,6 +6,44 @@
 Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 Also from https://github.com/sachac/.emacs.d
 
+#+BEGIN_SRC emacs-lisp
+  (require 'top-bar)
+  (top-bar-mode 1)
+
+  (defun simple-top-bar-render (left right)
+    "Return a string of `frame-width' length. Containing LEFT, and RIGHT aligned respectively."
+    (let ((available-width (- (frame-width top-bar-current-frame)
+                              (+ (length (format-mode-line left))
+                                 (length (format-mode-line right))
+                                 )
+                              15)))
+      (append left
+              (list (format (format "%%%ds" available-width) ""))
+              right)))
+  (defun mk/set-frame-top-bar-format (format)
+    (dolist (frame (frame-list))
+      (set-frame-parameter frame 'top-bar-format format)
+      )
+    )
+
+  (mk/set-frame-top-bar-format
+   '((:eval
+      (simple-top-bar-render
+       ;; Left.
+       `("           "
+         "MK's EMACS "
+         ,(format "[%s]"
+                  (buffer-name
+                   (window-buffer
+                    (get-mru-window top-bar-current-frame)))))
+       ;; Right.
+       '(mode-line-misc-info
+         )))))
+  (set-face-attribute 'top-bar nil
+                      :background "#EFEFEF"
+                      :font "Menlo-12")
+
+#+END_SRC
 * Core
 ** Env
 
@@ -877,9 +915,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       "Show the unread mail count in the mode line."
       )
     (setq display-time-string-forms
-          '(" " (substring year -2) "/" month "/" day
-            " " 24-hours ":" minutes
-            ;; (if time-zone " (") time-zone (if time-zone ")")
+          '((format-time-string "%F %H:%M")
             (propertize
               (format " [M:%s]" (mk/notmuch-count-unread))
               'help-echo  "Unread!"
@@ -1552,9 +1588,16 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)" "HAND(h)" "WAIT(w)" "LONG-TERM(l)" "DELEGATE(g)" "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
+             "TODO(t)"  ; New task
+             "HAND(h)"  ; Doing
+             "WAIT(w)"  ; Procrastinated on purpose
+             "LONG-TERM(l)"  ; Long-term
+             "DELEGATE(g)"   ; Delegated
+             "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "|"
-             "DONE(d!)" "CANCELED(c@)")))
+             "DONE(d!)"      ; Done
+             "CANCELED(c@)"  ; Eliminated
+             )))
     ;; Keyword colors
     (setf org-todo-keyword-faces
           '(
@@ -1913,45 +1956,6 @@ An example:
     )
 #+END_SRC
 
-** Capture
-#+BEGIN_SRC emacs-lisp
-  (defun mkvoya/create-capture-file()
-    "Create org file on-the-fly."
-    (interactive)
-    (let ((name (read-string "Filename: ")))
-      (expand-file-name (format "%s.org" name)
-                        "~/Dropbox/Dreams/Org/Collections")))
-              ;;; Captures
-  (use-package org-capture
-    :defer t
-    :straight nil
-    :after (org)
-    :config
-    (setq org-capture-templates
-          '(
-            ("j" "Journals" entry
-             (file+datetree "~/Dropbox/Dreams/Org/Journals/Index.org" "Journals")
-             "* %U - %^{heading}\n  %?")
-            ("t" "Tasks" entry
-             (file+headline "~/Dropbox/Dreams/Org/Inbox.org" "Tasks")
-             "* TODO %?\nADDED: %u\n%a")
-            ("b" "Bookmarks" entry
-             (file+datetree "~/Dropbox/Dreams/Org/Collections/Bookmarks.org" "Bookmarks")
-             "* %U - %^{title}\nADDED: %U\n%?")
-            ("p" "Plans" entry
-             (file+olp+datetree "~/Dropbox/Dreams/Org/Plans.org" "Plans")
-             "* TODO %T %^{Heading}\n  %^{EFFORT}p %?" :time-prompt t :tree-type week :empty-lines 1)
-            ("c" "Collection" entry
-             (file mkvoya/create-capture-file)
-             "<org")
-            ("n" "News" entry
-             (file+headline "~/Dropbox/Dreams/Org/News.org" "Inbox")
-             "* %^{title}\n:PROPERTIES:\n:LINK: %^{link}\n:ADD-TIME: %U\n:TAGS: %^g\n:END:\n%?")
-            )
-          )
-    ;; (setq org-default-notes-file "~/Dropbox/Dreams/Org/Inbox.org")
-    )
-#+END_SRC
 ** OrgRoam
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
@@ -2484,7 +2488,7 @@ Interesting Colors:
      :height 1.2
      :font (font-spec :family "Sans Serif" :size 16))
      ;; :font (font-spec :family "Heiti SC" :weight 'normal :size 18)
-    (tab-bar-mode 1)
+    ;; (tab-bar-mode 1)
     )
 
 #+END_SRC
@@ -2701,6 +2705,10 @@ Interesting Colors:
       (insert (concat "[[" file "]["))))
 
   (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
+  (defun mk/ebib-series-dir-name (series)
+    "Get the name of dir of SERIES."
+    (string-replace " " "." (string-replace " '" "" series))
+    )
   (defun mk/ebib-get-dir (title series)
     "Calculate the directory for TITLE and SERIES."
     (let* ((dir1 (string-replace " '" "" series))
@@ -2722,7 +2730,7 @@ Interesting Colors:
               (cand (mk/ebib-get-dir title series)))
          (if cand (find-file cand)
            (print "No such dir, creating...")
-           (let* ((conf (string-trim (read-string "The conf abbr: ")))
+           (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
                   (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
              (make-directory target t)
              (find-file target)
@@ -2819,8 +2827,8 @@ Interesting Colors:
           (select-frame f)
           (select-frame-set-input-focus f)
           (switch-to-buffer "*scratch*")
-          (call-interactively (global-key-binding "\M-x")))
-        )))
+          ;; (call-interactively (global-key-binding "\M-x"))
+          ))))
 
   (use-package popwin
     :disabled t
@@ -3085,4 +3093,63 @@ A mode to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package symbol-overlay)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/dired-curl ()
+    "Get file from url to dired."
+    (interactive)
+    (when (equal major-mode 'dired-mode)
+      (let* ((url (read-string "URL: "))
+             (cwd (dired-current-directory))
+             (target (concat (file-name-as-directory cwd) (file-name-nondirectory url))))
+        (url-copy-file url target)
+        )))
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/frame-pin ()
+    "Pin current frame to always-on-top."
+    (interactive)
+    (modify-frame-parameters
+     nil '((z-group . above))))
+  (defun mk/frame-unpin ()
+    "Unpin current frame to always-on-top."
+    (interactive)
+    (modify-frame-parameters
+     nil '((z-group . nil))))
+
+
+  (defun mk/make-pinned-frame ()
+    "Make a new pined frame."
+    (interactive)
+    (make-frame '((undecorated . 1)
+                  (z-group . above)
+                  (width . 80)
+                  (height . 10)
+                  (user-size . t)
+                  (left . 1)
+                  (top . 1)
+                  (user-position . t)
+                  (tab-bar-lines . 0)
+                  (drag-with-header-line . t)
+                  (drag-with-tab-line . t)
+                  (drag-with-mode-line . t))))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package chronos)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (setq mk/daily-reminder--today nil)
+  (defun mk/daily-reminder ()
+    "Remind you important things upon the first touch of emacs in the day."
+    (let ((day (format-time-string "%d")))
+      (unless (eq day mk/daily-reminder--today)
+        (x-popup-dialog t '("Emacs Daily Report    \nRecent Submission Deadlines:\n" ("Love You 😘 .x..." . t)))
+        (setq mk/daily-reminder--today day))))
 #+END_SRC

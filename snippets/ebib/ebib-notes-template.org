@@ -6,17 +6,9 @@
 
 #+TITLE: Notes on /${title}/
 #+DATE: ${date}
-#+AUTHOR: Mingkai Dong
-#+EMAIL: mk@dong.mk
+#+SERIES: ${series}
 
-| Conference   | ${series}  |
-| Keywords     |            |
-| Authors      | ${authors} |
-| Affiliations |            |
-
-* Prologue
-
-* Brief
+<Brief Here>
 
 * Details
 
