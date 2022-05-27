@@ -2,7 +2,7 @@
 # name: Org Skeleton
 # key: <org
 # --
-#+TITLE:
-#+AUTHOR: Mingkai Dong
+#+TITLE: $1
 #+DATE: `(format-time-string "%FT%T%z" (current-time))`
-#+EMAIL: mk@dong.mk
+
+$0

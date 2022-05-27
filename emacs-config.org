@@ -9,40 +9,10 @@ Also from https://github.com/sachac/.emacs.d
 #+BEGIN_SRC emacs-lisp
   (require 'top-bar)
   (top-bar-mode 1)
-
-  (defun simple-top-bar-render (left right)
-    "Return a string of `frame-width' length. Containing LEFT, and RIGHT aligned respectively."
-    (let ((available-width (- (frame-width top-bar-current-frame)
-                              (+ (length (format-mode-line left))
-                                 (length (format-mode-line right))
-                                 )
-                              15)))
-      (append left
-              (list (format (format "%%%ds" available-width) ""))
-              right)))
-  (defun mk/set-frame-top-bar-format (format)
-    (dolist (frame (frame-list))
-      (set-frame-parameter frame 'top-bar-format format)
-      )
-    )
-
-  (mk/set-frame-top-bar-format
-   '((:eval
-      (simple-top-bar-render
-       ;; Left.
-       `("           "
-         "MK's EMACS "
-         ,(format "[%s]"
-                  (buffer-name
-                   (window-buffer
-                    (get-mru-window top-bar-current-frame)))))
-       ;; Right.
-       '(mode-line-misc-info
-         )))))
+  (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
   (set-face-attribute 'top-bar nil
                       :background "#EFEFEF"
                       :font "Menlo-12")
-
 #+END_SRC
 * Core
 ** Env
@@ -247,7 +217,8 @@ We need to setup fonts early.
   (use-package ns-win
     :straight nil
     :init
-    (setq mac-right-command-modifier 'control))
+    (setq mac-right-command-modifier 'control)
+    (setq mac-right-option-modifier 'control))
 #+end_src
 
 * Completion & Correction
@@ -539,16 +510,25 @@ Better than flymake?
   (use-package flycheck-languagetool
     :hook (text-mode . (lambda ()
                          (require 'flycheck-languagetool)))
+    :disabled t
     :init
     (setq flycheck-languagetool-server-jar
           "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
     (setq flycheck-languagetool-language "en-US")
     )
+  (use-package grammarly
+    :straight (:host github :repo "emacs-grammarly/grammarly")
+    :config
+    ;; (require 'grammarly)
+    (grammarly-load-from-authinfo)
+    )
   (use-package flycheck-grammarly
+    :straight (:host github :repo "emacs-grammarly/flycheck-grammarly")
+    :init
     ;; :hook (text-mode . (lambda ()
     ;;                      (require 'flycheck-languagetool)))
-    :disabled t
     :config
+    ;; (flycheck-grammarly-setup)
     (setq flycheck-grammarly-check-time 0.8)
     )
 #+END_SRC
@@ -964,8 +944,22 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 *** Calfw - A calendar framework for Emacs
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
-  (use-package calfw :defer t)
-  (use-package calfw-org :defer t :after (calfw org))
+  (use-package calfw
+    :init
+    (use-package calfw-org :after (org))
+    :config
+    (defun mk/open-calendar ()
+      (interactive)
+      (cfw:open-calendar-buffer
+       :contents-sources
+       (list
+        (cfw:org-create-source "Green")  ; orgmode source
+        ;; (cfw:howm-create-source "Blue")  ; howm source
+        ;; (cfw:cal-create-source "Orange") ; diary source
+        ;; (cfw:ical-create-source "Moon" "~/moon.ics" "Gray")  ; ICS source1
+        ;; (cfw:ical-create-source "gcal" "https://..../basic.ics" "IndianRed") ; google calendar ICS
+        )))
+    )
 #+END_SRC
 *** whitespace
 | whitespace | Built-in | http://ergoemacs.org/emacs/whitespace-mode.html |
@@ -1594,6 +1588,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
              "LONG-TERM(l)"  ; Long-term
              "DELEGATE(g)"   ; Delegated
              "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
+             "CONFDDL(c)"
+             "GOAL(G)"
              "|"
              "DONE(d!)"      ; Done
              "CANCELED(c@)"  ; Eliminated
@@ -1688,6 +1684,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
     (use-package org-contrib :disabled)
     (use-package org-inline-pdf :defer t)
+    (use-package org-super-agenda)
     )
 #+END_SRC
 
@@ -1768,7 +1765,7 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;;; Org Style
+      ;;; Org Style
   ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
   (setq org-startup-indented t)
   (use-package org-superstar
@@ -1787,6 +1784,14 @@ An example:
             (?+ . ?⋇) ; + ; previously used: 10210
             (?- . ?▪))) ; - ; previously used: 8211
     ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
+
+    (set-face-attribute 'outline-1 nil :foreground "purple2")
+    (set-face-attribute 'outline-2 nil :foreground "violetRed2")
+    (set-face-attribute 'outline-3 nil :foreground "cyan4")
+    (set-face-attribute 'outline-4 nil :foreground "springgreen4")
+
+    (setq org-superstar-headline-bullets-list
+          '(9673 9675 ?◇ 10047 10040))
     )
 
   (use-package org-bars
@@ -2068,7 +2073,17 @@ An example:
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
     :defer t
-    :after org)
+    :after org
+    :config
+    (set-face-attribute
+     'org-transclusion-fringe nil
+     :foreground "lightgrey"
+     :background "lightgreen")
+    (set-face-attribute
+     'org-transclusion-source-fringe nil
+     :foreground "lightblue"
+     :background "blue")
+    )
   ;; :bind (("<f12>" . #'org-transclusion-add))
   ;; ("C-n t" . #'org-transclusion-mode)
 #+END_SRC
@@ -2510,7 +2525,8 @@ Interesting Colors:
 
 #+BEGIN_SRC emacs-lisp
   (use-package send-to-osx-grammarly
-    :disabled t ; Actually, it's not too complex to copy the text to grammarly by hand
+    :disabled t ;  Actually, it's not too complex to copy the text to grammarly by hand
+                ;  What's more importatnt, the grammarly desktop version changed.
     :straight (:host github :repo "mmagnus/emacs-grammarly")
     :bind (("C-c C-g h" . #'send-to-osx-grammarly-push)
            ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
@@ -2726,7 +2742,7 @@ Interesting Colors:
     (ebib--execute-when
       (entries
        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-              (series (downcase (ebib-get-field-value "series" key ebib--cur-db nil t)))
+              (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
               (cand (mk/ebib-get-dir title series)))
          (if cand (find-file cand)
            (print "No such dir, creating...")
@@ -2874,7 +2890,7 @@ Interesting Colors:
     (use-package htmlize)
     :config
 
-    (setq org-static-blog-publish-title "Mika, Mika, Mika!")
+    (setq org-static-blog-publish-title "Mika.blog")
     (setq org-static-blog-publish-url "https://blog.dong.mk/")
     (setq org-static-blog-publish-directory "~/Dropbox/Dreams/Org/Blog/Publish/")
     (setq org-static-blog-posts-directory "~/Dropbox/Dreams/Org/Blog/Posts/")
@@ -2894,19 +2910,20 @@ Interesting Colors:
                   <link href= \"static/style.css\" rel=\"stylesheet\" type=\"text/css\" />
                   <link rel=\"icon\" href=\"static/favicon.ico\">")
 
-    (setq org-static-blog-page-preamble
-          "<div class=\"header\">
-               <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
-             </div>")
+    (setq org-static-blog-page-preamble "")
+    ;;  ("<div class=\"header\">
+    ;;       <a href=\"https://blog.dong.mk\">Mika, Mika, Mika.</a>
+    ;;     </div>")
 
-    (setq org-static-blog-page-postamble
-          "<div id=\"archive\">
-          <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
-        </div>
-        <center></center>")
+    (setq org-static-blog-page-postamble "")
+    ;; (setq org-static-blog-page-postamble
+    ;;       "<div id=\"archive\">
+    ;;       <a href=\"https://blog.dong.mk/archive.html\">Other posts</a>
+    ;;     </div>
+    ;;     <center></center>")
 
-    (setq org-static-blog-index-front-matter
-          "<h1> Hey it is </h1>\n")
+    (setq org-static-blog-index-front-matter "")
+          ;; "<h1> Hey it is </h1>\n"
     )
 #+END_SRC
 
@@ -3145,11 +3162,6 @@ A mode to embed one buffer in another buffer and keep them in sync
 
 
 #+BEGIN_SRC emacs-lisp
-  (setq mk/daily-reminder--today nil)
-  (defun mk/daily-reminder ()
-    "Remind you important things upon the first touch of emacs in the day."
-    (let ((day (format-time-string "%d")))
-      (unless (eq day mk/daily-reminder--today)
-        (x-popup-dialog t '("Emacs Daily Report    \nRecent Submission Deadlines:\n" ("Love You 😘 .x..." . t)))
-        (setq mk/daily-reminder--today day))))
+  (require 'motd)
+  (motd-start-timer)
 #+END_SRC

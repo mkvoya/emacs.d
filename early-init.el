@@ -19,15 +19,48 @@
 
 (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@29--git"))
 
+(defun simple-top-bar-render (left right)
+  "Return a string of `frame-width' length. Containing LEFT, and RIGHT aligned respectively."
+  (let ((available-width (- (frame-width top-bar-current-frame)
+                            (+ (length (format-mode-line left))
+                               (length (format-mode-line right))
+                               )
+                            15)))
+    (append left
+            (list (format (format "%%%ds" available-width) ""))
+            right)))
+(defun mk/set-frame-top-bar-format (format)
+  (dolist (frame (frame-list))
+    (set-frame-parameter frame 'top-bar-format format)
+    )
+  )
+
+(defvar mk/default-frame-top-bar-format
+ '((:eval
+    (simple-top-bar-render
+     ;; Left.
+     `("           "
+       "MK's EMACS "
+       ,(format "[%s]"
+                (buffer-name
+                 (window-buffer
+                  (get-mru-window top-bar-current-frame)))))
+     ;; Right.
+     '(mode-line-misc-info
+       )))))
+;; (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+
 (setq-default
  default-frame-alist
- '(
+ `(
    (left-fringe . 8)                    ;; Thin left fringe
    (menu-bar-lines . 0)                 ; No menu bar
    (right-divider-width . 1)            ;; Thin vertical window divider
    (right-fringe . 3)                   ;; Thin right fringe
    (tool-bar-lines . 0)                 ; No tool bar
    (tab-bar-lines . 0)                  ; No tab bar
+   (top-bar-lines . 1)                  ; Enable top bar
+   (top-bar-format . ,mk/default-frame-top-bar-format)   ; Enable top bar
    ;; (undecorated . 1)                 ; this will completely remove the titlebar
    (ns-titlebar-height-adjust . -10)    ; this is actually not used
    (ns-title-hidden . 1)                ; hide the title text in the titlebar
@@ -42,8 +75,6 @@
    ))
 ;; (set-frame-font "Monaco-12" nil t)
 (set-face-attribute 'fixed-pitch nil :family "Monaco")
-
-
 
 ;; (when window-system (set-frame-size (selected-frame) 100 80))
 
