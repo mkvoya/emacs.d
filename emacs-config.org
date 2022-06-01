@@ -636,6 +636,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     )
   (use-package git-link :defer t)
   (use-package forge :after (magit) :defer t)
+  (use-package git-timemachine)
 
   (use-package diff-hl
     :defer t
@@ -725,6 +726,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'ebib-entry-mode 'emacs)
     (evil-set-initial-state 'ebib-strings-mode 'emacs)
     (evil-set-initial-state 'minibuffer-mode 'emacs)
+    (evil-set-initial-state 'motd-message-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
       "Switch to the english ABC input method."
@@ -2829,14 +2831,15 @@ Interesting Colors:
            (w (nth 2 geo))
            (h (nth 3 geo))
            (f (get-floating-frame)))
-      (unless f
-        (setq f (make-frame '((undecorated . 1)
-                              (name . "*Floating*")))))
-      (if (frame-visible-p f)
+      (if f
           (progn
             ;; (keyboard-quit)
-            (make-frame-invisible f))
+            ;; (make-frame-invisible f)
+            (delete-frame)
+            )
         (progn
+          (setq f (make-frame '((undecorated . 1)
+                                (name . "*Floating*"))))  ; TODO: do not make-frame every time.
           (set-frame-position f 0 0)
           (set-frame-size f w (/ h 2) t)
           (make-frame-visible f)

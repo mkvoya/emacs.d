@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: Elisp Package Skeleton
+# key: <package
+# --
+;;; $1.el --- $2 -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+$0
+
+;;; $1.el ends here
