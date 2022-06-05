@@ -8,8 +8,16 @@ Also from https://github.com/sachac/.emacs.d
 
 #+BEGIN_SRC emacs-lisp
   (require 'top-bar)
-  (top-bar-mode 1)
-  (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+
+  (defun mk/enable-top-bar (frame)
+    "Setup top-bar for FRAME."
+    (set-frame-parameter frame 'top-bar-lines 1)
+    (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+    )
+
+  (mk/enable-top-bar nil)
+  (add-hook 'after-make-frame-function #'mk/enable-top-bar)
+
   (set-face-attribute 'top-bar nil
                       :background "#EFEFEF"
                       :font "Menlo-12")
@@ -3165,6 +3173,13 @@ A mode to embed one buffer in another buffer and keep them in sync
 
 
 #+BEGIN_SRC emacs-lisp
-  (require 'motd)
-  (motd-start-timer)
+  ;; (load-file "~/.emacs.d/site-lisp/wc.el")
+  (use-package motd
+    :straight nil
+    :ensure nil
+    :load-path "~/.emacs.d/site-lisp/"
+    :config
+    (setq motd--git-commit-dir "~/Dropbox/Dreams")
+    (motd-start-timer)
+    )
 #+END_SRC

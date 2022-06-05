@@ -14,6 +14,15 @@
 
 (defvar motd--today nil)
 (defvar motd--posframe-buffer " *motd-message*")
+(defvar motd--git-commit-dir nil)
+
+(defun motd--git-commit ()
+  "Generate git commit when motd message is shown."
+  (when motd--git-commit-dir
+    (shell-command (format "cd %s && git add -A && git commit -m \"%s\""
+                           motd--git-commit-dir (format-time-string "%F")))
+    (message (format "[motd-git] %s is committed." motd--git-commit-dir))
+    ))
 
 (defun motd--org-timestamp-day-diff (ts1 ts2)
   "Return the number of days from TS1 to TS2."
@@ -95,6 +104,7 @@ Recent Submission Deadlines:
         (if (posframe-workable-p)
             (motd--popup-posframe text)
           (motd--popup-ns text)))
+      (motd--git-commit)
       (setq motd--today day))))
 
 (defvar motd--timer nil)
