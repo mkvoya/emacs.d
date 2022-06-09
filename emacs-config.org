@@ -1599,6 +1599,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
              "DELEGATE(g)"   ; Delegated
              "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "CONFDDL(c)"
+             "PROJECT(p)"
              "GOAL(G)"
              "|"
              "DONE(d!)"      ; Done
@@ -1976,7 +1977,7 @@ An example:
   (use-package org-roam
     :after (org)
     :init
-    (setq org-roam-directory "~/Dropbox/Dreams/OrgRoam/")
+    (setq org-roam-directory "~/Dropbox/Dreams/")
     (setq org-roam-link-file-path-type 'relative)
     (setq org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
     :bind (("C-c n l" . org-roam-buffer-toggle)
@@ -1990,25 +1991,25 @@ An example:
     ;; If you're using a vertical completion framework, you might want a more informative completion interface
     (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
     (setq org-roam-rename-file-on-title-change nil)
-    (setq org-roam-dailies-directory "Daily/")
+    (setq org-roam-dailies-directory "Org/Daily/")
     (org-roam-db-autosync-mode)
     (setq org-roam-capture-templates
           '(("d" "default" plain "%?"
-             :target (file+head "%<%Y%m%d%H%M%S>-${slug}.org"
+             :target (file+head "Org/Notes/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n")
              :unnarrowed t)
             ("l" "LWN" plain "%?"
-             :target (file+head "LWNs/%<%Y%m%d%H%M%S>-${slug}.org"
+             :target (file+head "Org/LWNs/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+link: \n")
              :unnarrowed t
              )
             ("p" "Paper Notes" plain "%?"
-             :target (file+head "PaperNotes/%<%Y%m%d%H%M%S>-${slug}.org"
+             :target (file+head "Org/PaperNotes/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+TITLE: Notes on /${title}/\n#+DATE: %<%FT%T%z>\n%[~/.emacs.d/snippets/plain/PaperNotes]")
              :unnarrowed t
              )
             ("n" "News" plain "%?"
-             :target (file+head "News/%<%Y%m%d%H%M%S>-${slug}.org"
+             :target (file+head "Org/News/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+link: \n")
              :unnarrowed t
              )
@@ -2179,7 +2180,7 @@ An example:
            :map minibuffer-local-map
            ("M-b" . citar-insert-preset))
     :init
-    (setq citar-notes-paths '("~/Dropbox/Dreams/OrgRoam/PaperNotes"))
+    (setq citar-notes-paths '("~/Dropbox/Dreams/Org/PaperNotes"))
     (setq org-cite-global-bibliography `(,mk/bib-main-file))
     (setq org-cite-insert-processor 'citar)
     (setq org-cite-follow-processor 'citar)
@@ -2258,8 +2259,8 @@ An example:
     (setq ebib-preload-bib-files `(,mk/bib-main-file))
     (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
     (setq ebib-notes-storage 'one-file-per-note)
-    (setq ebib-reading-list-file "~/Dropbox/Dreams/OrgRoam/Ebib-ReadingList.org")
-    (setq ebib-notes-directory "~/Dropbox/Dreams/OrgRoam/PaperNotes/")
+    (setq ebib-reading-list-file "~/Dropbox/Dreams/Org/Ebib-ReadingList.org")
+    (setq ebib-notes-directory "~/Dropbox/Dreams/Org/PaperNotes/")
     (setq ebib-notes-locations `(,ebib-notes-directory))
     ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
     ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
@@ -2873,6 +2874,7 @@ Interesting Colors:
   (global-set-key (kbd "C-h c") #'describe-char)
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
   (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
+  (global-set-key (kbd "C-c p") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Projects.org")))
   (global-set-key (kbd "M-s-<left>") 'tab-previous)
   (global-set-key (kbd "M-s-<right>") 'tab-next)
   (global-set-key (kbd "M-s-n") 'tab-new)
@@ -3182,4 +3184,30 @@ A mode to embed one buffer in another buffer and keep them in sync
     (setq motd--git-commit-dir "~/Dropbox/Dreams")
     (motd-start-timer)
     )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (defun mk/--pick-project ()
+    "Pick a project to do."
+    (seq-random-elt
+     (mapcar #'(lambda (h)
+                 (let* ((headline (plist-get h 'headline))
+                        (title (substring-no-properties (car (plist-get headline :title)))))
+                   title))
+             (org-ql-query
+               :select 'element
+               :from "~/Dropbox/Dreams/Org/Projects.org"
+               :where '(todo "PROJECT")
+               :order-by 'deadline))))
+
+  (defun mk/pick-project ()
+    "Pick a project to do."
+    (interactive)
+    (message (mk/--pick-project)))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package decide
+    :straight (:type git :host github :repo "lifelike/decide-mode"))
 #+END_SRC
