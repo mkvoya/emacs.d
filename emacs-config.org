@@ -242,59 +242,74 @@ We need to setup fonts early.
     :after yasnippet)
 #+END_SRC
 
-** Company: Modular in-buffer completion framework for Emacs
+** Auto-completion
 
-| company-mode | https://github.com/company-mode/company-mode |
+| company-mode          | https://github.com/company-mode/company-mode |
+| Corfu                 | https://github.com/minad/corfu               |
+| Cape (use with Corfu) | https://github.com/minad/cape                |
 
 #+BEGIN_SRC emacs-lisp
-  ;; Autocomplete
-  (use-package company
-    :after (yasnippet-snippets)
+  (use-package corfu
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    (corfu-separator ?\s)          ;; Orderless field separator
+    (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
+    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+    :bind (:map corfu-map
+                ("C-n"      . corfu-next)
+                ("C-p"      . corfu-previous))
     :init
-    (setq company-dabbrev-downcase nil
-          company-show-numbers t
-          company-minimum-prefix-length 2
-          company-tooltip-flip-when-above t)
+    (global-corfu-mode))
 
-    (use-package company-emoji :defer nil)
-    (setq company-backends
-          '((company-files
-             company-keywords
-             company-capf
-             company-yasnippet
-             company-emoji)
-            ;; company-ispell
-            ;; company-lsp
-            (company-abbrev company-dabbrev)))
-
-    (add-hook 'prog-mode-hook 'company-mode)
-    (global-company-mode 1)
-
-    :config
-    ;; (company-statistics-mode 1)
-    ;; (setq company-frontends '(company-pseudo-tooltip-frontend
-    ;;                           company-echo-metadata-frontend))
-    (define-key company-active-map (kbd "\C-n") #'company-select-next)
-    (define-key company-active-map (kbd "\C-p") #'company-select-previous)
-    (define-key company-active-map (kbd "M-n") nil)
-    (define-key company-active-map (kbd "M-p") nil)
-    (define-key (make-sparse-keymap) [down-mouse-1] 'ignore)
-    (define-key (make-sparse-keymap) [down-mouse-3] 'ignore)
-    (define-key (make-sparse-keymap) [mouse-1] 'company-complete-mouse)
-    (define-key (make-sparse-keymap) [mouse-3] 'company-select-mouse)
-    (define-key (make-sparse-keymap) [up-mouse-1] 'ignore)
-    (define-key (make-sparse-keymap) [up-mouse-3] 'ignore)
-
-    (advice-add 'company-complete-common :before (lambda ()
-                                                   (setq my-company-point (point))))
-    (advice-add 'company-complete-common :after (lambda ()
-                                                  (when (equal my-company-point (point)) (yas-expand))))
+  ;; Add extensions
+  (use-package cape
+    ;; Bind dedicated completion commands
+    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+    :bind (("M-p p" . completion-at-point) ;; capf
+           ("M-p t" . complete-tag)        ;; etags
+           ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
+           ("M-p h" . cape-history)
+           ("M-p f" . cape-file))
+    :init
+    ;; Add `completion-at-point-functions', used by `completion-at-point'.
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-history)
+    (add-to-list 'completion-at-point-functions #'cape-keyword)
+    (add-to-list 'completion-at-point-functions #'cape-tex)
+    ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
+    ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+    (add-to-list 'completion-at-point-functions #'cape-abbrev)
+    ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
+    ;;(add-to-list 'completion-at-point-functions #'cape-dict)
+    ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
+    ;;(add-to-list 'completion-at-point-functions #'cape-line)
     )
 
-  (use-package company-posframe
-    :after company
+  ;; Use Dabbrev with Corfu!
+  (use-package dabbrev
+    ;; Swap M-/ and C-M-/
+    :bind (("M-/" . dabbrev-completion)
+           ("C-M-/" . dabbrev-expand))
+    ;; Other useful Dabbrev configurations.
+    :custom
+    (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+
+  (use-package kind-icon
+    :ensure t
+    :after corfu
+    :custom
+    (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
     :config
-    (company-posframe-mode 1))
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+
 #+END_SRC
 
 ** Vertico
