@@ -270,13 +270,26 @@ We need to setup fonts early.
 
   ;; Add extensions
   (use-package cape
+    :custom
+    (cape-line-buffer-function #'current-buffer)
     ;; Bind dedicated completion commands
     ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-    :bind (("M-p p" . completion-at-point) ;; capf
-           ("M-p t" . complete-tag)        ;; etags
-           ("M-p d" . cape-dabbrev)        ;; or dabbrev-completion
-           ("M-p h" . cape-history)
-           ("M-p f" . cape-file))
+    :bind (("C-c e p" . completion-at-point) ;; capf
+           ("C-c e t" . complete-tag)        ;; etags
+           ("C-c e d" . cape-dabbrev)        ;; or dabbrev-completion
+           ("C-c e h" . cape-history)
+           ("C-c e f" . cape-file)
+           ("C-c e k" . cape-keyword)
+           ("C-c e s" . cape-symbol)
+           ("C-c e a" . cape-abbrev)
+           ("C-c e i" . cape-ispell)
+           ("C-c e l" . cape-line)
+           ("C-c e w" . cape-dict)
+           ("C-c e \\" . cape-tex)
+           ("C-c e _" . cape-tex)
+           ("C-c e ^" . cape-tex)
+           ("C-c e &" . cape-sgml)
+           ("C-c e r" . cape-rfc1345))
     :init
     ;; Add `completion-at-point-functions', used by `completion-at-point'.
     (add-to-list 'completion-at-point-functions #'cape-file)
@@ -284,13 +297,13 @@ We need to setup fonts early.
     (add-to-list 'completion-at-point-functions #'cape-history)
     (add-to-list 'completion-at-point-functions #'cape-keyword)
     (add-to-list 'completion-at-point-functions #'cape-tex)
-    ;;(add-to-list 'completion-at-point-functions #'cape-sgml)
-    ;;(add-to-list 'completion-at-point-functions #'cape-rfc1345)
+    (add-to-list 'completion-at-point-functions #'cape-sgml)
+    (add-to-list 'completion-at-point-functions #'cape-rfc1345)
     (add-to-list 'completion-at-point-functions #'cape-abbrev)
-    ;;(add-to-list 'completion-at-point-functions #'cape-ispell)
-    ;;(add-to-list 'completion-at-point-functions #'cape-dict)
-    ;;(add-to-list 'completion-at-point-functions #'cape-symbol)
-    ;;(add-to-list 'completion-at-point-functions #'cape-line)
+    (add-to-list 'completion-at-point-functions #'cape-ispell)
+    (add-to-list 'completion-at-point-functions #'cape-dict)
+    (add-to-list 'completion-at-point-functions #'cape-symbol)
+    (add-to-list 'completion-at-point-functions #'cape-line)
     )
 
   ;; Use Dabbrev with Corfu!
@@ -707,6 +720,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :straight t
     :after (undo-fu)
     :init
+    (setq evil-want-C-i-jump nil)
     :config
     ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
     ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -749,6 +763,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'ebib-entry-mode 'emacs)
     (evil-set-initial-state 'ebib-strings-mode 'emacs)
     (evil-set-initial-state 'minibuffer-mode 'emacs)
+    (evil-set-initial-state 'corfu-mode 'emacs)
     (evil-set-initial-state 'motd-message-mode 'emacs)
 
     (defun mk/switch-to-english-input (&rest r)
@@ -2751,17 +2766,41 @@ Interesting Colors:
     "Get the name of dir of SERIES."
     (string-replace " " "." (string-replace " '" "" series))
     )
-  (defun mk/ebib-get-dir (title series)
-    "Calculate the directory for TITLE and SERIES."
-    (let* ((dir1 (string-replace " '" "" series))
-           (dir2 (string-replace " " "." series))
-           (cand1 (format "%s/%s/%s" mk/ebib-dir-root dir1 title))
-           (cand2 (format "%s/%s/%s" mk/ebib-dir-root dir2 title)))
+
+  (defun mk/ebib--format-full-dir (dir title)
+    "Get the full dir name from DIR and TITLE."
+    (format "%s/%s/%s" mk/ebib-dir-root dir title))
+  (defun mk/ebib--get-dir-journal-style-via-journal (title journal year)
+    "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
+    (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
+                      (t "XXXX")))
+           (fulldir (mk/ebib--format-full-dir dir title)))
+      (if (file-exists-p fulldir) fulldir nil)
+      ))
+  (defun mk/ebib--get-dir-conf-style-via-series (title series)
+    "Get the dir name in conf style via TITLE and SERIES."
+    (let ((dir (mk/ebib--format-full-dir
+                (string-replace " '" "" series)
+                title)))
+      (if (file-exists-p dir) dir nil)))
+  (defun mk/ebib--get-dir-journal-style-via-series (title series)
+    "Get the dir name in journal style via TITLE and SERIES."
+    (let ((dir (mk/ebib--format-full-dir
+                (string-replace " " "." series)
+                title)))
+      (if (file-exists-p dir) dir nil)))
+
+  (defun mk/ebib-get-dir (title series journal year)
+    "Calculate the directory for TITLE and SERIES and JOURNAL."
+    (let* ((cand1 (mk/ebib--get-dir-journal-style-via-series title series))
+           (cand2 (mk/ebib--get-dir-conf-style-via-series title series))
+           (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year)))
       (cond
-       ((file-exists-p cand1) cand1)
-       ((file-exists-p cand2) cand2)
-       (t nil)))
-    )
+       (cand1 cand1)
+       (cand2 cand2)
+       (cand3 cand3)
+       (t nil))))
+
   (defun mk/ebib-open-dir (key)
     "Open the directory for KEY."
     (interactive (list (ebib--get-key-at-point)))
@@ -2769,7 +2808,9 @@ Interesting Colors:
       (entries
        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
               (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
-              (cand (mk/ebib-get-dir title series)))
+              (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
+              (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
+              (cand (mk/ebib-get-dir title series journal year)))
          (if cand (find-file cand)
            (print "No such dir, creating...")
            (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
