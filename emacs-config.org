@@ -2573,44 +2573,6 @@ Interesting Colors:
            ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package buffer-focus-hook
-    :straight (:host github :repo "mschuldt/buffer-focus-hook")
-    :defer t)
-
-  (use-package posframe
-    :defer t
-    :config
-
-    (defun mk/posframe-onclick ()
-      (message "click!"))
-
-    (defun mk/posframe-setup-click-callback ()
-      (require 'buffer-focus-hook)
-      (buffer-focus-in-callback 'mk/check-notification-click)
-      ;; (message "setup")
-      )
-
-    (defun mk/posframe-notify ()
-      (when (posframe-workable-p)
-        (posframe-show " *Notifications*"
-                       :string "This is a test"
-                       :position '(1, 1)
-                       :background-color "lightgreen"
-                       :accept-focus t
-                       :initialize #'mk/posframe-setup-click-callback
-                       :border-color "grey"
-                       :timeout 2
-                       :border-width 1
-                       :poshandler 'posframe-poshandler-frame-top-center)))
-    )
-
-#+END_SRC
-
- (insert-image (mk/svg-checkbox-empty))
-
-
-
  #+BEGIN_SRC emacs-lisp
    (use-package google-this
      :demand
