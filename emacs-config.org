@@ -1702,7 +1702,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                          (face-attribute 'default :background) 3))
     (setq org-fontify-quote-and-verse-blocks t)
     (set-face-attribute 'org-block-begin-line nil :background
-                        "#E4D6E8")
+                        "#F1E6F8")
     (set-face-attribute 'org-block-end-line nil :background
                         (color-darken-name
                          (face-attribute 'default :background) 4))
@@ -1799,11 +1799,6 @@ An example:
              )))
 
 #+END_SRC
-#+BEGIN_SRC emacs-lisp
-  (use-package org-modern
-    :disabled
-    :straight (:host github :repo "minad/org-modern"))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
       ;;; Org Style
@@ -1842,8 +1837,6 @@ An example:
     :config
     (setq org-bars-with-dynamic-stars-p nil)
     )
-
-
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -1905,53 +1898,7 @@ An example:
 
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-    ;;; from https://christiantietze.de/posts/2019/12/emacs-notifications/
-  (use-package appt
-    :straight nil
-    :defer t
-    :config
-    (setq
-     appt-time-msg-list nil ;; clear existing appt list
-     appt-display-interval '5 ;; warn every 5 minutes from t - appt-message-warning-time
-     appt-message-warning-time '15 ;; send first warning 15 minutes before appointment
-     appt-display-mode-line nil ;; don't show in the modeline
-     appt-display-format 'window) ;; pass warnings to the designated window function
-    (setq appt-disp-window-function (function ct/appt-display-native))
-
-    (appt-activate 1) ;; activate appointment notification
-                                          ; (display-time) ;; Clock in modeline
-
-    (setq exec-path (append '("~/.emacs.d/3rd-parties/alerter/bin") exec-path))
-    (defvar alerter-command (executable-find "alerter") "The path to alerter.")
-
-    (defun ct/send-notification (title msg)
-      "Send notification (TITLE MSG)."
-      (let ((notifier-path (executable-find "alerter")))
-        (start-process
-         "Appointment Alert"
-         "*Appointment Alert*" ; use `nil` to not capture output; this captures output in background
-         notifier-path
-         "-message" msg
-         "-title" title
-         "-sender" "org.gnu.Emacs"
-         "-activate" "org.gnu.Emacs")))
-    (defun mkvoya/marquee-message-display (title message)
-      (marquee-header-notify (concat "!NOTICE! " title ": " message)))
-    (defun ct/appt-display-native (min-to-app new-time msg)
-      "Appt display native (MIN-TO-APP NEW-TIME MSG)."
-      ;; (ct/send-notification)
-      (mkvoya/marquee-message-display
-       (format "Appointment in %s minutes" min-to-app) ; Title
-       (format "%s" msg))) ; Message/detail text
-
-    ;; Agenda-to-appointent hooks
-    (org-agenda-to-appt) ;; generate the appt list from org agenda files on emacs launch
-    (run-at-time "24:01" 3600 'org-agenda-to-appt) ;; update appt list hourly
-    (add-hook 'org-finalize-agenda-hook 'org-agenda-to-appt) ;; update appt list on agenda view
-    )
-
-#+END_SRC
+| appt | MELPA, Appointment package |
 
 #+BEGIN_SRC emacs-lisp
   (use-package ox-html
@@ -2110,6 +2057,11 @@ An example:
 
 
 ** Org-transclusion
+
+Modes to embed one buffer in another buffer and keep them in sync
+
+| Freex                   | https://github.com/gregdetre/emacs-freex          |
+| transclusion-minor-mode | http://github.com/whacked/transclusion-minor-mode |
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
@@ -2409,18 +2361,6 @@ An example:
 #+END_SRC
 
 
-* Freex
-
-A mode to embed one buffer in another buffer and keep them in sync
-
-#+BEGIN_SRC emacs-lisp
-  (use-package freex
-    :disabled t
-    :defer t
-    :straight (emacs-freex :host github
-                           :repo "gregdetre/emacs-freex")
-    )
-#+END_SRC
 
 * Popweb
 
@@ -2527,60 +2467,9 @@ Interesting Colors:
 
 
 #+BEGIN_SRC emacs-lisp
-
-  (use-package tab-bar
-    :config
-    (defun tab-bar-padding-left()
-      "                ")
-    (setq tab-bar-format
-          '(tab-bar-padding-left
-            tab-bar-format-history
-            tab-bar-format-tabs
-            tab-bar-separator
-            tab-bar-format-add-tab))
-    (set-face-attribute
-     'tab-bar nil
-     :background "white"
-     :height 1.2
-     :font (font-spec :family "Sans Serif" :size 16))
-     ;; :font (font-spec :family "Heiti SC" :weight 'normal :size 18)
-    ;; (tab-bar-mode 1)
-    )
-
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package transclusion-minor-mode
-    :disabled t
-    :straight (:host github :repo "whacked/transclusion-minor-mode"))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
   (use-package gitlab-ci-mode :defer t)
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package dockerfile-mode :mode "Dockerfile" :defer t)
 #+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package send-to-osx-grammarly
-    :disabled t ;  Actually, it's not too complex to copy the text to grammarly by hand
-                ;  What's more importatnt, the grammarly desktop version changed.
-    :straight (:host github :repo "mmagnus/emacs-grammarly")
-    :bind (("C-c C-g h" . #'send-to-osx-grammarly-push)
-           ("C-c C-g l" . #'send-to-osx-grammarly-pull)))
-#+END_SRC
-
- #+BEGIN_SRC emacs-lisp
-   (use-package google-this
-     :demand
-     :straight (:host github :repo "Malabarba/emacs-google-this")
-     :config
-     (google-this-mode 1))
- #+END_SRC
-
 
  #+BEGIN_SRC emacs-lisp
    (use-package imenu-list
@@ -2662,28 +2551,11 @@ Interesting Colors:
                     "/" "" (replace-regexp-in-string
                             ":" "," title)))
     )
-  (defun paper-add()
-    "Add a paper to your Dreamland."
-    (interactive)
-    (let* ((base-dir paper-root-dir)
-           (conf (string-trim (read-string "Enter the conference abbrivation with year: ")))
-           (title (string-trim (read-string "The paper title: ")))
-           (filename (mk/normalize-paper-title title))
-           (filepath (concat base-dir "/" conf "/" filename)))
-      (make-directory filepath t)
-      (find-file filepath)
-      )
-    )
 
   (defun paper-root()
     "Open the paper root."
     (interactive)
     (find-file paper-root-dir))
-
-  (defun topic-root()
-    "Open the research topic root."
-    (interactive)
-    (find-file "~/Dropbox/Dreams/Research/ByTopic"))
 
   (defun paper-find (&optional initial)
     "Search a paper in your Dreamland, by title, with INITIAL input."
@@ -2835,12 +2707,6 @@ Interesting Colors:
 ** Launcher
 
 #+BEGIN_SRC emacs-lisp
-  (defun make-frame-undecorated ()
-    "Make a frame that is undecorated (borderless)."
-    (interactive)
-    (make-frame '((undecorated . 1)))
-    )
-
   (defun is-floating-frame(f)
     (equal (frame-parameter f 'name) "*Floating*")
     )
@@ -2995,10 +2861,7 @@ Do we still use this?
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package eaf :disabled t
-    :straight (:type git :host gitlab :repo "emacs-eaf/emacs-application-framework" :files ("*")))
   (use-package maple-explorer :disabled t)
-  (use-package nox :disabled t) ; LSP-server alternatives: lsp-mode and elgot
   (use-package org-brain :disabled t)
   (use-package deft :disabled t)
   (use-package zettledeft :disabled t)
@@ -3048,17 +2911,6 @@ Do we still use this?
     )
 #+END_SRC
 
-
-A mode to embed one buffer in another buffer and keep them in sync
-
-#+BEGIN_SRC emacs-lisp
-  (use-package freex
-    :disabled t
-    :defer t
-    :straight (emacs-freex :host github
-                           :repo "gregdetre/emacs-freex")
-    )
-#+END_SRC
 
 
 
