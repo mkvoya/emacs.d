@@ -300,10 +300,10 @@ We need to setup fonts early.
     (add-to-list 'completion-at-point-functions #'cape-sgml)
     (add-to-list 'completion-at-point-functions #'cape-rfc1345)
     (add-to-list 'completion-at-point-functions #'cape-abbrev)
-    (add-to-list 'completion-at-point-functions #'cape-ispell)
-    (add-to-list 'completion-at-point-functions #'cape-dict)
-    (add-to-list 'completion-at-point-functions #'cape-symbol)
-    (add-to-list 'completion-at-point-functions #'cape-line)
+    ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+    ;; (add-to-list 'completion-at-point-functions #'cape-dict)
+    ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+    ;; (add-to-list 'completion-at-point-functions #'cape-line)
     )
 
   ;; Use Dabbrev with Corfu!
@@ -634,17 +634,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (global-yascroll-bar-mode 1)
     )
   ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
-#+END_SRC
-
-** ns-auto-titlebar
-
-#+BEGIN_SRC emacs-lisp
-  ;; We already hide the whole titlebar via an Emacs patch.
-  (use-package ns-auto-titlebar
-    :disabled t  ; We used a better patch.
-    :config
-    (when (eq system-type 'darwin) (ns-auto-titlebar-mode)))
-  ;; (setq ns-use-proxy-icon nil)  ; What is this for?
 #+END_SRC
 
 ** Bind key
@@ -2244,7 +2233,6 @@ Modes to embed one buffer in another buffer and keep them in sync
     (setq ebib-reading-list-file "~/Dropbox/Dreams/Org/Ebib-ReadingList.org")
     (setq ebib-notes-directory "~/Dropbox/Dreams/Org/PaperNotes/")
     (setq ebib-notes-locations `(,ebib-notes-directory))
-    ;; ebib-reading-list-file "~/Dropbox/Bibliography/ReadingList.org"
     ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
     (setq ebib-keywords-field-keep-sorted t)
     (setq ebib-keywords-file-save-on-exit 'always)
@@ -2348,25 +2336,12 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp
-  (use-package telega
-    :defer t
-    :config
-    (setq telega-proxies
-          (list
-           '(:server "127.0.0.1" :port 7890 :enable t
-                     :type (:@type "proxyTypeSocks5"))
-           )))
-  ;; goood
-#+END_SRC
-
-
-
 * Popweb
 
 #+BEGIN_SRC emacs-lisp
   (use-package popweb
     :defer t
+    :disabled t
     :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
     :config
     (setq popweb-root (file-name-directory (locate-library "popweb.el")))
@@ -2378,18 +2353,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
 #+END_SRC
 
-* A Gantt Chart (Calendar) for Org Mode
-#+begin_src emacs-lisp
-  (use-package org-ql
-    :defer t
-    :after (ts))
-  (use-package elgantt
-    :defer t
-    :after (org org-ql dash ts s)
-    :straight (:type git :host github :repo "legalnonsense/elgantt")
-    )
-#+end_src
-
+* vterm
 
 #+BEGIN_SRC emacs-lisp
   (use-package vterm
@@ -2413,48 +2377,12 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
 #+END_SRC
 
-
-#+BEGIN_SRC emacs-lisp
-
-#+END_SRC
-
-Interesting Colors:
-
-(setq colorrrrs '("#383a42" "#fafafa" "#A6E22E" "#272822" "#fafafa" "#e45649"
-"#50a14f" "#986801" "#4078f2" "#a626a4" "#0184bc" "#383a42" "#F92672" "#CF4F1F"
-"#C26C0F" "#E6DB74" "#AB8C00" "#A18F00" "#989200" "#8E9500" "#A6E22E" "#729A1E"
-"#609C3C" "#4E9D5B" "#3C9F79" "#A1EFE4" "#299BA6" "#2896B5" "#2790C3" "#66D9EF"
-"#99aaff"))
-
-
-
 #+BEGIN_SRC emacs-lisp
   (use-package highlight-indent-guides :defer t)
 #+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package paper
-    :disabled t
-    ;; LIBS = gtk+-3.0 cairo fontconfig lcms2 zlib jbig2dec libjpeg freetype2 mujs gumbo harfbuzz libopenjp2
-    ;; CFLAGS += -lmupdf -lmupdf-third
-    :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so"))
-    ;; you could also add html, png, jpg
-    :mode ("\\.pdf\\'"  . paper-mode)
-    :mode ("\\.epub\\'"  . paper-mode)
-    :mode ("\\.cbz\\'"  . paper-mode)
-    :config
-    ;; https://github.com/emacs-evil/evil-collection/issues/60
-    (setq evil-want-keybinding nil)
-    (use-package evil-collection
-      :after (evil))
-    (use-package evil-collection-paper
-      :after (evil-collection)
-      :straight nil
-      :config
-      (evil-collection-paper-setup))
-    )
-
   (use-package hl-line
     :config
     (set-face-background 'hl-line "#d0fed0")
@@ -2462,7 +2390,6 @@ Interesting Colors:
     (set-face-foreground 'highlight nil)
     ;; (global-hl-line-mode t)
     )
-
 #+END_SRC
 
 
@@ -2654,6 +2581,7 @@ Interesting Colors:
              ))))
       (default
        (beep))))
+  (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
 
   (defun mk/paper-get-dirs ()
     "Get all conf dirs."
@@ -2859,7 +2787,6 @@ Do we still use this?
 
 * Disabled Pool
 
-
 #+BEGIN_SRC emacs-lisp
   (use-package maple-explorer :disabled t)
   (use-package org-brain :disabled t)
@@ -2872,6 +2799,12 @@ Do we still use this?
   (use-package netease-cloud-music :disabled t
     :straight (:host github :repo "SpringHan/netease-cloud-music.el"))
   (use-package peep-dired :disabled t)  ; Preview files in dired, but we use ranger instead.
+  (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
+  (use-package telega :disabled t)  ; Prefer the GUI
+  (use-package elgantt :disabled t
+    :straight (:type git :host github :repo "legalnonsense/elgantt"))
+  (use-package paper :disabled t
+    :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
 #+END_SRC
 
 
@@ -2891,41 +2824,27 @@ Do we still use this?
 
 ** Less (if ever) used
 
+
 #+BEGIN_SRC emacs-lisp
   (use-package chronos :defer t)
-#+END_SRC
-
-
-#+begin_src emacs-lisp
+  (use-package elquery)
+  (use-package citeproc)
+  (use-package lua-mode)
+  (use-package xenops)
+  (use-package org-download)
+  (use-package symbol-overlay)
   (use-package read-aloud
     :defer t
     :config
     (setq read-aloud-engine "say"))
-#+end_src
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package emacs-badge
     :defer t
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     )
-#+END_SRC
-
-
-
-
-#+BEGIN_SRC emacs-lisp
-(use-package elquery)
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package citeproc)
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package lua-mode)
+  (use-package elnode
+    :straight (:type git :host github :repo "jcaw/elnode"))
+  (use-package multiple-cursors
+    :bind (("C-!" . mc/mark-next-like-this)))
 #+END_SRC
 
 
@@ -2951,16 +2870,7 @@ Do we still use this?
   \" & windowTitle"))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package xenops)
-#+END_SRC
 
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package elnode
-    :straight (:type git :host github :repo "jcaw/elnode"))
-#+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2981,19 +2891,6 @@ Do we still use this?
     )
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package multiple-cursors
-    :bind (("C-!" . mc/mark-next-like-this)))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (use-package org-download)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package symbol-overlay)
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (defun mk/dired-curl ()
@@ -3039,10 +2936,6 @@ Do we still use this?
                   (drag-with-mode-line . t))))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package chronos)
-#+END_SRC
-
 
 #+BEGIN_SRC emacs-lisp
   ;; (load-file "~/.emacs.d/site-lisp/wc.el")
@@ -3076,8 +2969,3 @@ Do we still use this?
     (message (mk/--pick-project)))
 #+END_SRC
 
-
-#+BEGIN_SRC emacs-lisp
-  (use-package decide
-    :straight (:type git :host github :repo "lifelike/decide-mode"))
-#+END_SRC
