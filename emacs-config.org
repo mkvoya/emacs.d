@@ -420,8 +420,6 @@ Alternatives (Check the selectrum repo README)
     ;; Optionally tweak the register preview window.
     ;; This adds thin lines, sorting and hides the mode line of the window.
     (advice-add #'register-preview :override #'consult-register-window)
-    ;; Optionally replace `completing-read-multiple' with an enhanced version.
-    (advice-add #'completing-read-multiple :override #'consult-completing-read-multiple)
     )
 
   (use-package all-the-icons-completion
@@ -760,7 +758,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       (unless (or (evil-normal-state-p) (not (file-exists-p default-directory)))
         (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
       )
-    (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
+    ;; (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
+    ;; 使用 emacs-rime 之后就不需要使用这个 hook 了
 
     (evil-mode 1))
 
@@ -2969,3 +2968,33 @@ Do we still use this?
     (message (mk/--pick-project)))
 #+END_SRC
 
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rime
+    :straight (rime :type git
+                    :host github
+                    :repo "DogLooksGood/emacs-rime"
+                    :files ("*.el" "Makefile" "lib.c"))
+    :custom
+    (default-input-method "rime")
+    (rime-librime-root "~/.emacs.d/librime/dist")
+    (rime-share-data-dir "~/Library/Rime")
+    (rime-user-data-dir "~/Library/Rime")
+    (rime-show-candidate 'posframe)
+    (rime-posframe-properties
+     (list :background-color "#F706FF"  ; 不要在这里设置字体，会影响后面 face 里字体的
+           :foreground-color "#333333"
+           :internal-border-width 10))
+    :config
+    (set-face-attribute 'rime-default-face nil
+                        :background "#FFF7C3"
+                        :foreground "#333333"
+                        :font "Hei-20")
+    (set-face-attribute 'rime-highlight-candidate-face nil
+                        :background "#FFF7C3"
+                        :foreground "#9E2655"
+                        :font "Hei-20")
+    (set-face-attribute 'rime-code-face nil
+                        :font "Hei-20")
+    )
+#+END_SRC
