@@ -7,20 +7,24 @@ Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
 Also from https://github.com/sachac/.emacs.d
 
 #+BEGIN_SRC emacs-lisp
-  (require 'top-bar)
 
-  (defun mk/enable-top-bar (frame)
-    "Setup top-bar for FRAME."
-    (set-frame-parameter frame 'top-bar-lines 1)
-    (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+  (when (eq system-type 'darwin)
+
+    (require 'top-bar)
+
+    (defun mk/enable-top-bar (frame)
+      "Setup top-bar for FRAME."
+      (set-frame-parameter frame 'top-bar-lines 1)
+      (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+      )
+
+    (mk/enable-top-bar nil)
+    (add-hook 'after-make-frame-function #'mk/enable-top-bar)
+
+    (set-face-attribute 'top-bar nil
+                        :background "#EFEFEF"
+                        :font "Menlo-12")
     )
-
-  (mk/enable-top-bar nil)
-  (add-hook 'after-make-frame-function #'mk/enable-top-bar)
-
-  (set-face-attribute 'top-bar nil
-                      :background "#EFEFEF"
-                      :font "Menlo-12")
 #+END_SRC
 * Core
 ** Env
@@ -60,11 +64,13 @@ Also from https://github.com/sachac/.emacs.d
 We need to setup fonts early.
 
 #+BEGIN_SRC emacs-lisp
-  (dolist (charset '(kana han symbol cjk-misc bopomofo))
-    (set-fontset-font (frame-parameter nil 'font)
-                      charset (font-spec :family "LXGW WenKai Screen")))
-   (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
-  (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+  (when (eq system-type 'darwin)
+    (dolist (charset '(kana han symbol cjk-misc bopomofo))
+      (set-fontset-font (frame-parameter nil 'font)
+                        charset (font-spec :family "LXGW WenKai Screen")))
+    (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
+    (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+    )
 #+END_SRC
 
 ** Bootstrap
@@ -223,6 +229,7 @@ We need to setup fonts early.
 
 #+begin_src emacs-lisp
   (use-package ns-win
+    :if (memq window-system '(mac ns))
     :straight nil
     :init
     (setq mac-right-command-modifier 'control)
@@ -753,14 +760,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-set-initial-state 'corfu-mode 'emacs)
     (evil-set-initial-state 'motd-message-mode 'emacs)
     (evil-set-initial-state 'special-mode 'emacs)
-
-    (defun mk/switch-to-english-input (&rest r)
-      "Switch to the english ABC input method."
-      (unless (or (evil-normal-state-p) (not (file-exists-p default-directory)))
-        (start-process "set-input-source" nil "macism" "com.apple.keylayout.ABC"))
-      )
-    ;; (advice-add 'evil-normal-state :before #'mk/switch-to-english-input)
-    ;; 使用 emacs-rime 之后就不需要使用这个 hook 了
 
     (evil-mode 1))
 
