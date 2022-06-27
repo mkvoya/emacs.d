@@ -823,20 +823,24 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     ;; (setq evil-emacs-state-cursor '(hollow))
     (setq evil-emacs-state-cursor '(bar . 3))
     ;; Disable Evil in snails-mode
-    (evil-set-initial-state 'snails-mode 'emacs)
-    (evil-set-initial-state 'notdeft-mode 'emacs)
-    (evil-set-initial-state 'vterm-mode 'emacs)
-    (evil-set-initial-state 'netease-cloud-music-mode 'emacs)
-    (evil-set-initial-state 'cnfonts-ui-mode 'emacs)
-    (evil-set-initial-state 'Ilist-mode 'emacs)
-    (evil-set-initial-state 'TeX-output-mode 'emacs)
-    (evil-set-initial-state 'ebib-index-mode 'emacs)
-    (evil-set-initial-state 'ebib-entry-mode 'emacs)
-    (evil-set-initial-state 'ebib-strings-mode 'emacs)
-    (evil-set-initial-state 'minibuffer-mode 'emacs)
-    (evil-set-initial-state 'corfu-mode 'emacs)
-    (evil-set-initial-state 'motd-message-mode 'emacs)
-    (evil-set-initial-state 'special-mode 'emacs)
+
+    (dolist (nonevil-mode '(snails-mode
+                            notdeft-mode
+                            vterm-mode
+                            netease-cloud-music-mode
+                            cnfonts-ui-mode
+                            Ilist-mode
+                            TeX-output-mode
+                            ebib-index-mode
+                            ebib-entry-mode
+                            ebib-strings-mode
+                            minibuffer-mode
+                            corfu-mode
+                            motd-message-mode
+                            special-mode
+                            ))
+      (when (boundp nonevil-mode)
+        (evil-set-initial-state nonevil-mode 'emacs)))
 
     (evil-mode 1))
 
