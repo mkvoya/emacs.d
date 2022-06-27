@@ -127,6 +127,15 @@ We need to setup fonts early.
     (exec-path-from-shell-initialize))
 #+END_SRC
 
+
+* Options
+
+#+BEGIN_SRC emacs-lisp
+  (defvar mk-feature/bibliography t "Enable bibliography.")
+  (defvar mk-feature/gui t "Enable GUI-related packages.")
+  (defvar mk-feature/noteman t "Enable note management.")
+#+END_SRC
+
 * SETQs
 
 #+BEGIN_SRC emacs-lisp
@@ -170,6 +179,10 @@ We need to setup fonts early.
       ))
 
   (blink-cursor-mode 0)
+
+  (when (> emacs-major-version 28)
+    (pixel-scroll-precision-mode))
+  (setq delete-by-moving-to-trash t)
 #+END_SRC
 
 #+begin_src emacs-lisp
@@ -1719,6 +1732,7 @@ An example:
  #+BEGIN_SRC emacs-lisp
    (use-package svg-lib :demand t)
    (use-package svg-tag-mode
+     :if mk-feature/gui
      :commands svg-tag-mode
      :hook (org-mode . svg-tag-mode)
      :demand t
@@ -1927,6 +1941,7 @@ An example:
 ** OrgRoam
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
+    :if mk-feature/noteman
     :after (org)
     :init
     (setq org-roam-directory "~/Dropbox/Dreams/")
@@ -1976,6 +1991,7 @@ An example:
   (use-package websocket :defer t)
   (use-package simple-httpd :defer t)
   (use-package org-roam-ui
+    :if mk-feature/noteman
     :defer t
     :after (org-roam)
     :straight (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out"))
@@ -2058,6 +2074,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 ** NotDeft
 #+BEGIN_SRC emacs-lisp
   (use-package notdeft
+    :if mk-feature/noteman
     :defer t
     :straight (:host github :repo "hasu/notdeft" :files ("*.el" "xapian"))
     :config
@@ -2082,6 +2099,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package bibtex
+    :if mk-feature/bibliography
     :straight nil  ; built in
     :init
     (setq bibtex-dialect 'biblatex)
@@ -2131,6 +2149,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   ;; citar
   (use-package citar
+    :if mk-feature/bibliography
     :straight (:host github :repo "bdarcus/citar")
     :demand
     :bind (("C-c b" . citar-insert-citation)
@@ -2170,6 +2189,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package biblio
+    :if mk-feature/bibliography
     :init
 
     (setq biblio-arxiv-bibtex-header "misc")
@@ -2194,6 +2214,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package ebib
+    :if mk-feature/bibliography
     :after (biblio)
     :init
     (require 'dbus)  ; A function from dbus is used in ebib.
@@ -2296,6 +2317,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
 
   (use-package ebib-biblio
+    :if mk-feature/bibliography
     :after (ebib biblio)
     :straight nil
     :demand
@@ -2307,6 +2329,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package image-click-mode
+    :if mk-feature/gui
     :delight
     :ensure t
     :after (org)
@@ -2321,6 +2344,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package popweb
+    :if mk-feature/gui
     :defer t
     :disabled t
     :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
@@ -2350,18 +2374,10 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package emacs
-    :config
-    (pixel-scroll-precision-mode)
-    (setq delete-by-moving-to-trash t)
-    )
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package highlight-indent-guides :defer t)
 #+END_SRC
-
 
 #+BEGIN_SRC emacs-lisp
   (use-package hl-line
