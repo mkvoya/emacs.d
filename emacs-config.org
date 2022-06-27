@@ -134,6 +134,7 @@ We need to setup fonts early.
   (defvar mk-feature/bibliography t "Enable bibliography.")
   (defvar mk-feature/gui t "Enable GUI-related packages.")
   (defvar mk-feature/noteman t "Enable note management.")
+  (defvar mk-feature/light t "Use light mode.")
 #+END_SRC
 
 * SETQs
@@ -1089,62 +1090,62 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 #+BEGIN_SRC emacs-lisp
 
-  (use-package emacs
-    :straight nil
-    :config
-    (setq window-divider-default-right-width 2)
-    (setq window-divider-default-bottom-width 2)
-    (setq window-divider-default-places t)
-    (window-divider-mode 1))
+    (use-package emacs
+      :straight nil
+      :config
+      (setq window-divider-default-right-width 2)
+      (setq window-divider-default-bottom-width 2)
+      (setq window-divider-default-places t)
+      (window-divider-mode 1))
 
-  (defun mk/modeline-setup ()
-    "Setup my modeline."
-    (progn
-      ;; mode line
-      (column-number-mode 1)
-      (set-face-attribute 'mode-line           nil :background "#CF3F1F")
-      (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-      (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-      (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+    (defun mk/modeline-setup ()
+      "Setup my modeline."
+      (progn
+        ;; mode line
+        (column-number-mode 1)
+        (set-face-attribute 'mode-line           nil :background "#CF3F1F")
+        (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+        (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+        (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
 
-      ;; Thank https://emacs.stackexchange.com/a/37270/30542
-      (defun simple-mode-line-render (left right)
-        "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
-        (let ((available-width (- (window-total-width)
-                                  (+ (length (format-mode-line left))
-                                     (length (format-mode-line right))
-                                     ))))
-          (append left
-                  (list (format (format "%%%ds" available-width) ""))
-                  right)))
+        ;; Thank https://emacs.stackexchange.com/a/37270/30542
+        (defun simple-mode-line-render (left right)
+          "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
+          (let ((available-width (- (window-total-width)
+                                    (+ (length (format-mode-line left))
+                                       (length (format-mode-line right))
+                                       ))))
+            (append left
+                    (list (format (format "%%%ds" available-width) ""))
+                    right)))
 
-      (require 'uniquify)
-      (setq uniquify-buffer-name-style 'forward)
+        (require 'uniquify)
+        (setq uniquify-buffer-name-style 'forward)
 
-      (setq-default mode-line-format
-                    '((:eval
-                       (simple-mode-line-render
-                        ;; Left.
-                        '("[%*]"
-                          evil-mode-line-tag
-                          mode-line-buffer-identification
-                          )
-                        ;; Right.
-                        '(" %e %l:%c "
-                          mode-line-frame-identification
-                          ;; mode-line-modes
-                          " %m "
-                          mode-line-misc-info
-                          " ")))))
-      ))
+        (setq-default mode-line-format
+                      '((:eval
+                         (simple-mode-line-render
+                          ;; Left.
+                          '("[%*]"
+                            evil-mode-line-tag
+                            mode-line-buffer-identification
+                            )
+                          ;; Right.
+                          '(" %e %l:%c "
+                            mode-line-frame-identification
+                            ;; mode-line-modes
+                            " %m "
+                            mode-line-misc-info
+                            " ")))))
+        ))
 
-  (use-package hemisu-theme
-    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
-    :config
-    (load-theme 'hemisu-light t)
-    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-    (mk/modeline-setup)
-    )
+    (use-package hemisu-theme
+      :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
+      :config
+      (load-theme (if mk-feature/light 'hemisu-light 'hemisu-dark) t)
+      (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
+      (mk/modeline-setup)
+      )
 #+END_SRC
 
 ** Beacon - A light that follows your cursor around so you don't lose it!
