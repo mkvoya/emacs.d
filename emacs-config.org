@@ -3,32 +3,8 @@
 #+DATE: 2021-02-16T01:16:18+0800
 #+EMAIL: mingkaidong@gmail.com
 
-Styles from https://github.com/angrybacon/dotemacs/blob/master/dotemacs.org
-Also from https://github.com/sachac/.emacs.d
-
-#+BEGIN_SRC emacs-lisp
-
-  (when (eq system-type 'darwin)
-
-    (require 'top-bar)
-
-    (defun mk/enable-top-bar (frame)
-      "Setup top-bar for FRAME."
-      (set-frame-parameter frame 'top-bar-lines 1)
-      (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
-      )
-
-    (mk/enable-top-bar nil)
-    (add-hook 'after-make-frame-function #'mk/enable-top-bar)
-
-    (set-face-attribute 'top-bar nil
-                        :background "#EFEFEF"
-                        :font "Menlo-12")
-    )
-#+END_SRC
 * Core
-** Env
-
+** Literal Configuration Bootstrap
 #+BEGIN_SRC emacs-lisp
   (setq .org "~/.emacs.d/emacs-config.org")
   (setq .el (concat (file-name-sans-extension .org) ".el"))
@@ -70,6 +46,7 @@ We need to setup fonts early.
                         charset (font-spec :family "LXGW WenKai Screen")))
     (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
     (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+    (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
     )
 #+END_SRC
 
@@ -130,40 +107,14 @@ We need to setup fonts early.
 #+END_SRC
 
 ** Emacs Server
+
 #+BEGIN_SRC emacs-lisp
   ;;; The server part may not be configured so early.
   (load "server") ; Load and start server if it's not running
   (unless (server-running-p) (server-start))
 #+END_SRC
 
-** Native Compilation
-
-#+BEGIN_SRC emacs-lisp
-  (defun mk/native-compilation-config ()
-    "Basic setups for native compilation."
-    (when (and (fboundp 'native-comp-available-p)
-               (native-comp-available-p))
-      (setq native-comp-async-jobs-number 7) ; Compile at most 7 libs in parallel
-      ;; (message "Native comp is available")
-      ;; Using Emacs.app/Contents/MacOS/bin since it was compiled with
-      ;; ./configure --prefix="$PWD/nextstep/Emacs.app/Contents/MacOS"
-      (add-to-list 'exec-path (concat invocation-directory "bin") t)
-      (setenv "LIBRARY_PATH" (concat (getenv "LIBRARY_PATH")
-                                     (when (getenv "LIBRARY_PATH")
-                                       ":")
-                                     ;; This is where Homebrew puts gcc libraries.
-                                     (car (file-expand-wildcards
-                                           (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
-      (setenv "DYLD_LIBRARY_PATH" (concat (getenv "DYLD_LIBRARY_PATH")
-                                          (when (getenv "DYLD_LIBRARY_PATH") ":")
-                                          ;; This is where Homebrew puts gcc libraries.
-                                          (car (file-expand-wildcards
-                                                (expand-file-name "/usr/local/opt/gcc/lib/gcc/11")))))
-      ;; Only set after LIBRARY_PATH can find gcc libraries.
-      (setq comp-deferred-compilation t))
-    )
-#+END_SRC
-
+** The PATH
 
 #+BEGIN_SRC emacs-lisp
   ;;; Get shell env from user shell.
@@ -173,8 +124,7 @@ We need to setup fonts early.
   ;; The above command works.
   (use-package exec-path-from-shell
     :init
-    (exec-path-from-shell-initialize)
-    (mk/native-compilation-config))
+    (exec-path-from-shell-initialize))
 #+END_SRC
 
 * SETQs
@@ -209,7 +159,6 @@ We need to setup fonts early.
    fill-column 100
    ;; line-spacing 0.1
    )
-  (setq indent-tabs-mode nil)
   (setq enable-recursive-minibuffers t)
   (minibuffer-depth-indicate-mode 1)
   (defun mkvoya/better-wrap ()
@@ -220,10 +169,6 @@ We need to setup fonts early.
       (setq word-wrap nil)
       ))
 
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (blink-cursor-mode 0)
 #+END_SRC
 
@@ -236,103 +181,47 @@ We need to setup fonts early.
     (setq mac-right-option-modifier 'control))
 #+end_src
 
-* Completion & Correction
-
-** Yasnippet: A template system for Emacs
-
-| yasnippet | https://github.com/joaotavora/yasnippet |
+* Basic libraries
 
 #+BEGIN_SRC emacs-lisp
-  (use-package yasnippet
-    :init (yas-global-mode 1))
-  (use-package yasnippet-snippets
-    :after yasnippet)
+  (use-package async :defer t)
+  (use-package bind-key :defer t)
+  (use-package marquee-header :defer t)  ; This is really an interesting package.
+  (use-package dash :defer t)
+  (use-package ts :defer t)
+  (use-package s :defer t)
+  (use-package reveal-in-osx-finder :defer t)
+  (use-package crux :defer t)
+  (use-package ranger :defer t)  ; The ranger mode
+  (use-package vlf :defer t)  ; View large files
 #+END_SRC
 
-** Auto-completion
-
-| company-mode          | https://github.com/company-mode/company-mode |
-| Corfu                 | https://github.com/minad/corfu               |
-| Cape (use with Corfu) | https://github.com/minad/cape                |
+* Private-built Top-bar
 
 #+BEGIN_SRC emacs-lisp
-  (use-package corfu
-    ;; Optional customizations
-    :custom
-    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto t)                 ;; Enable auto completion
-    (corfu-separator ?\s)          ;; Orderless field separator
-    (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-    ;; (corfu-preselect-first nil)    ;; Disable candidate preselection
-    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-    ;; (corfu-echo-documentation nil) ;; Disable documentation in the echo area
-    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-    :bind (:map corfu-map
-                ("C-n"      . corfu-next)
-                ("C-p"      . corfu-previous))
-    :init
-    (global-corfu-mode))
+  (when (eq system-type 'darwin)
 
-  ;; Add extensions
-  (use-package cape
-    :custom
-    (cape-line-buffer-function #'current-buffer)
-    ;; Bind dedicated completion commands
-    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-    :bind (("C-c e p" . completion-at-point) ;; capf
-           ("C-c e t" . complete-tag)        ;; etags
-           ("C-c e d" . cape-dabbrev)        ;; or dabbrev-completion
-           ("C-c e h" . cape-history)
-           ("C-c e f" . cape-file)
-           ("C-c e k" . cape-keyword)
-           ("C-c e s" . cape-symbol)
-           ("C-c e a" . cape-abbrev)
-           ("C-c e i" . cape-ispell)
-           ("C-c e l" . cape-line)
-           ("C-c e w" . cape-dict)
-           ("C-c e \\" . cape-tex)
-           ("C-c e _" . cape-tex)
-           ("C-c e ^" . cape-tex)
-           ("C-c e &" . cape-sgml)
-           ("C-c e r" . cape-rfc1345))
-    :init
-    ;; Add `completion-at-point-functions', used by `completion-at-point'.
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-    (add-to-list 'completion-at-point-functions #'cape-history)
-    (add-to-list 'completion-at-point-functions #'cape-keyword)
-    (add-to-list 'completion-at-point-functions #'cape-tex)
-    (add-to-list 'completion-at-point-functions #'cape-sgml)
-    (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-    (add-to-list 'completion-at-point-functions #'cape-abbrev)
-    ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
-    ;; (add-to-list 'completion-at-point-functions #'cape-dict)
-    ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
-    ;; (add-to-list 'completion-at-point-functions #'cape-line)
+    (require 'top-bar)
+
+    (defun mk/enable-top-bar (frame)
+      "Setup top-bar for FRAME."
+      (set-frame-parameter frame 'top-bar-lines 1)
+      (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
+      )
+
+    (mk/enable-top-bar nil)
+    (add-hook 'after-make-frame-function #'mk/enable-top-bar)
+
+    (set-face-attribute 'top-bar nil
+                        :background "#EFEFEF"
+                        :font "Menlo-12")
     )
-
-  ;; Use Dabbrev with Corfu!
-  (use-package dabbrev
-    ;; Swap M-/ and C-M-/
-    :bind (("M-/" . dabbrev-completion)
-           ("C-M-/" . dabbrev-expand))
-    ;; Other useful Dabbrev configurations.
-    :custom
-    (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
-
-  (use-package kind-icon
-    :ensure t
-    :after corfu
-    :custom
-    (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
-
 #+END_SRC
 
-** Vertico
+
+* M-x and Auto-completion
+
+** M-x: Vertico
 
 Alternatives (Check the selectrum repo README)
 
@@ -494,6 +383,92 @@ Alternatives (Check the selectrum repo README)
 
 #+END_SRC
 
+** Auto-completion
+
+| company-mode          | https://github.com/company-mode/company-mode |
+| Corfu                 | https://github.com/minad/corfu               |
+| Cape (use with Corfu) | https://github.com/minad/cape                |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package corfu
+    ;; Optional customizations
+    :custom
+    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    (corfu-auto t)                 ;; Enable auto completion
+    (corfu-separator ?\s)          ;; Orderless field separator
+    (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    :bind (:map corfu-map
+                ("C-n"      . corfu-next)
+                ("C-p"      . corfu-previous))
+    :init
+    (global-corfu-mode))
+
+  ;; Add extensions
+  (use-package cape
+    :custom
+    (cape-line-buffer-function #'current-buffer)
+    ;; Bind dedicated completion commands
+    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
+    :bind (("C-c e p" . completion-at-point) ;; capf
+           ("C-c e t" . complete-tag)        ;; etags
+           ("C-c e d" . cape-dabbrev)        ;; or dabbrev-completion
+           ("C-c e h" . cape-history)
+           ("C-c e f" . cape-file)
+           ("C-c e k" . cape-keyword)
+           ("C-c e s" . cape-symbol)
+           ("C-c e a" . cape-abbrev)
+           ("C-c e i" . cape-ispell)
+           ("C-c e l" . cape-line)
+           ("C-c e w" . cape-dict)
+           ("C-c e \\" . cape-tex)
+           ("C-c e _" . cape-tex)
+           ("C-c e ^" . cape-tex)
+           ("C-c e &" . cape-sgml)
+           ("C-c e r" . cape-rfc1345))
+    :init
+    ;; Add `completion-at-point-functions', used by `completion-at-point'.
+    (add-to-list 'completion-at-point-functions #'cape-file)
+    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+    (add-to-list 'completion-at-point-functions #'cape-history)
+    (add-to-list 'completion-at-point-functions #'cape-keyword)
+    (add-to-list 'completion-at-point-functions #'cape-tex)
+    (add-to-list 'completion-at-point-functions #'cape-sgml)
+    (add-to-list 'completion-at-point-functions #'cape-rfc1345)
+    (add-to-list 'completion-at-point-functions #'cape-abbrev)
+    ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
+    ;; (add-to-list 'completion-at-point-functions #'cape-dict)
+    ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
+    ;; (add-to-list 'completion-at-point-functions #'cape-line)
+    )
+
+  ;; Use Dabbrev with Corfu!
+  (use-package dabbrev
+    ;; Swap M-/ and C-M-/
+    :bind (("M-/" . dabbrev-completion)
+           ("C-M-/" . dabbrev-expand))
+    ;; Other useful Dabbrev configurations.
+    :custom
+    (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
+
+  (use-package kind-icon
+    :ensure t
+    :after corfu
+    :custom
+    (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
+    :config
+    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
+#+END_SRC
+
+** Templating: Yasnippet
+
+| yasnippet | https://github.com/joaotavora/yasnippet |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yasnippet
+    :init (yas-global-mode 1))
+  (use-package yasnippet-snippets
+    :after yasnippet)
+#+END_SRC
 
 ** LSP
 
@@ -503,11 +478,85 @@ Alternatives (Check the selectrum repo README)
 
 LSP, emmm... who use LSP?
 
-** Language and checking
 
-*** Flycheck
+* A
 
-Better than flymake?
+
+* Language and spelling
+
+** Input method
+
+| pyim       | Emacs input method | https://github.com/tumashu/pyim |
+| sis        | Smart input source |                                 |
+| emacs-rime |                    |                                 |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rime
+    :straight (rime :type git
+                    :host github
+                    :repo "DogLooksGood/emacs-rime"
+                    :files ("*.el" "Makefile" "lib.c"))
+    :custom
+    (default-input-method "rime")
+    (rime-librime-root "~/.emacs.d/librime/dist")
+    (rime-share-data-dir "~/Library/Rime")
+    (rime-user-data-dir "~/Library/Rime")
+    (rime-show-candidate 'posframe)
+    (rime-posframe-properties
+     (list :background-color "#F706FF"  ; 不要在这里设置字体，会影响后面 face 里字体的
+           :foreground-color "#333333"
+           :internal-border-width 10))
+    :config
+    (set-face-attribute 'rime-default-face nil
+                        :background "#FFF7C3"
+                        :foreground "#333333"
+                        :font "Hei-20")
+    (set-face-attribute 'rime-highlight-candidate-face nil
+                        :background "#FFF7C3"
+                        :foreground "#9E2655"
+                        :font "Hei-20")
+    (set-face-attribute 'rime-code-face nil
+                        :font "Hei-20")
+    )
+#+END_SRC
+
+** CJK font jumping
+
+#+BEGIN_SRC emacs-lisp
+  (use-package jieba
+    :delight
+    :after (evil)
+    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
+    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
+    (jieba-mode)
+    (defun mk/forward-word()
+      "mk's better forward-word."
+      (interactive)
+      (let ((char (char-after)))
+        (if (memq char (string-to-list " \n\r\\"))
+            (re-search-forward "\\\s+")
+          (jieba-forward-word))))
+    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
+    )
+#+END_SRC
+
+** CJK font alignment
+#+BEGIN_SRC emacs-lisp
+  (use-package valign
+    :hook (org-mode-hook . valign-mode)
+    )
+#+END_SRC
+
+** Word count
+#+BEGIN_SRC emacs-lisp
+  (load-file "~/.emacs.d/site-lisp/wc.el")
+#+END_SRC
+
+** Spell checking
+
+| flycheck |
+| flymake  |
 
 #+BEGIN_SRC emacs-lisp
   (use-package flycheck
@@ -540,7 +589,7 @@ Better than flymake?
 
 #+END_SRC
 
-*** Flycheck Peripherals
+** Grammar checking
 
 | flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
 | flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
@@ -575,6 +624,8 @@ Better than flymake?
 #+END_SRC
 
 
+
+* Navigation in code
 ** Citre: Tag jumps
 
 #+BEGIN_SRC emacs-lisp
@@ -641,11 +692,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
   ;; (use-package nyan-mode :disabled t :config (nyan-mode t))
 #+END_SRC
 
-** Bind key
-#+BEGIN_SRC emacs-lisp
-  (use-package bind-key :defer t)
-#+END_SRC
-
 ** Magit
 
 | diff-hl | Hightlight uncommitted changes | https://github.com/dgutov/diff-hl |
@@ -692,6 +738,25 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
   ;;  :init (miniedit-install))
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  (use-package blamer
+    :ensure t
+    :bind (("s-i" . blamer-show-commit-info))
+    :defer 20
+    :custom
+    (blamer-idle-time 0.3)
+    (blamer-min-offset 70)
+    :custom-face
+    (blamer-face ((t :foreground "#7a88cf"
+                     :background nil
+                     :height 110
+                     :italic t)))
+    :config
+    ;; (global-blamer-mode 1)
+    )
+#+END_SRC
+
+
 ** Undo
 
 | undo-tree | built-in |
@@ -719,8 +784,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
     ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
     (evil-define-motion evil-lookup ()
-      "Look up the keyword at point.
-  Calls `evil-lookup-func'."
+      "Look up the keyword at point. Calls `evil-lookup-func'."
       (call-interactively #'man))
 
     (setq evil-want-fine-undo t)
@@ -810,9 +874,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 #+BEGIN_SRC emacs-lisp
   (use-package neotree :defer t)
-  ;; (use-package perspective
-  ;;   :config
-  ;;   (persp-mode))
+  ;; (use-package perspective :config (persp-mode))
 #+END_SRC
 
 
@@ -833,35 +895,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :config
     (smart-tabs-insinuate 'c 'javascript))
 #+END_SRC
-
-** Cheatsheet
-
-#+BEGIN_SRC emacs-lisp
-  ;;; MK's cheatsheet
-  (use-package cheatsheet
-    :defer t
-    :config
-    (cheatsheet-add :group 'Emacs
-                    :key "C-x u"
-                    :description "Emacs Undo.")
-    (cheatsheet-add :group 'Emacs
-                    :key "C-x e"
-                    :description "Execute the e-lisp expression under the cursor.")
-    (cheatsheet-add :group 'OrgMode
-                    :key "C-c h"
-                    :description "Open Home Org.")
-    (cheatsheet-add :group 'OrgMode
-                    :key "C-c a"
-                    :description "Open Org Agenda.")
-    (cheatsheet-add :group 'OrgMode
-                    :key "C-c c"
-                    :description "Capture.")
-    )
-
-#+END_SRC
-
-
-
 
 
 ** Which-Key: Emacs package that displays available keybindings in popup
@@ -946,13 +979,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 #+END_SRC
 
 
-** Async
-
-#+BEGIN_SRC emacs-lisp
-  (use-package async :defer t)
-#+END_SRC
-
-
 ** Calender
 
 #+BEGIN_SRC emacs-lisp
@@ -1009,45 +1035,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     )
 #+END_SRC
 
-* Chinese Optimizations
-** CN Fonts
-| cn-fonts | |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package valign
-    :hook (org-mode-hook . valign-mode)
-    )
-#+END_SRC
-
-** CN word jump
-
-#+BEGIN_SRC emacs-lisp
-  (use-package jieba
-    :delight
-    :after (evil)
-    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
-    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
-    (jieba-mode)
-    (defun mk/forward-word()
-      "mk's better forward-word."
-      (interactive)
-      (let ((char (char-after)))
-        (if (memq char (string-to-list " \n\r\\"))
-            (re-search-forward "\\\s+")
-          (jieba-forward-word))))
-    ;; (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    ;; (define-key evil-motion-state-map (kbd "b") #'pyim-backward-word)
-
-    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
-    )
-
-#+END_SRC
-
-** Word count
-#+BEGIN_SRC emacs-lisp
-  (load-file "~/.emacs.d/site-lisp/wc.el")
-#+END_SRC
 
 * Appearance
 
@@ -1226,7 +1213,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
      )
  #+END_SRC
 
-* Languages
+* Programming Languages
 
 ** Programming mode
 
@@ -2330,11 +2317,6 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp
-  (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
-#+END_SRC
-
-
 * Popweb
 
 #+BEGIN_SRC emacs-lisp
@@ -2410,11 +2392,6 @@ Modes to embed one buffer in another buffer and keep them in sync
    (use-package org-sidebar :defer t)
  #+END_SRC
 
-
-* A
-
-| pyim | Emacs input method | https://github.com/tumashu/pyim |
-| sis  | Smart input source |                                 |
 
 * Custom functions
 
@@ -2809,18 +2786,6 @@ Do we still use this?
 
 * Fancy Libraries 
 
-** Small yet useful
-#+BEGIN_SRC emacs-lisp
-  (use-package marquee-header :defer t)  ; This is really an interesting package.
-  (use-package dash :defer t)
-  (use-package ts :defer t)
-  (use-package s :defer t)
-  (use-package reveal-in-osx-finder :defer t)
-  (use-package crux :defer t)
-  (use-package ranger :defer t)  ; The ranger mode
-  (use-package vlf :defer t)  ; View large files
-#+END_SRC
-
 ** Less (if ever) used
 
 
@@ -2873,25 +2838,6 @@ Do we still use this?
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package blamer
-    :ensure t
-    :bind (("s-i" . blamer-show-commit-info))
-    :defer 20
-    :custom
-    (blamer-idle-time 0.3)
-    (blamer-min-offset 70)
-    :custom-face
-    (blamer-face ((t :foreground "#7a88cf"
-                     :background nil
-                     :height 110
-                     :italic t)))
-    :config
-    ;; (global-blamer-mode 1)
-    )
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (defun mk/dired-curl ()
     "Get file from url to dired."
     (interactive)
@@ -2902,7 +2848,6 @@ Do we still use this?
         (url-copy-file url target)
         )))
 #+END_SRC
-
 
 
 #+BEGIN_SRC emacs-lisp
@@ -2969,40 +2914,8 @@ Do we still use this?
 #+END_SRC
 
 
-#+BEGIN_SRC emacs-lisp
-  (use-package rime
-    :straight (rime :type git
-                    :host github
-                    :repo "DogLooksGood/emacs-rime"
-                    :files ("*.el" "Makefile" "lib.c"))
-    :custom
-    (default-input-method "rime")
-    (rime-librime-root "~/.emacs.d/librime/dist")
-    (rime-share-data-dir "~/Library/Rime")
-    (rime-user-data-dir "~/Library/Rime")
-    (rime-show-candidate 'posframe)
-    (rime-posframe-properties
-     (list :background-color "#F706FF"  ; 不要在这里设置字体，会影响后面 face 里字体的
-           :foreground-color "#333333"
-           :internal-border-width 10))
-    :config
-    (set-face-attribute 'rime-default-face nil
-                        :background "#FFF7C3"
-                        :foreground "#333333"
-                        :font "Hei-20")
-    (set-face-attribute 'rime-highlight-candidate-face nil
-                        :background "#FFF7C3"
-                        :foreground "#9E2655"
-                        :font "Hei-20")
-    (set-face-attribute 'rime-code-face nil
-                        :font "Hei-20")
-    )
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   (use-package xcscope)
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  ;; (setq python-shell-completion-native-disabled-interpreters '("python3" "python"))
-#+END_SRC
