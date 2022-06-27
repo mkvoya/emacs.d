@@ -2328,6 +2328,153 @@ Modes to embed one buffer in another buffer and keep them in sync
     :bind (:map biblio-selection-mode-map
                 ("e" . ebib-biblio-selection-import)))
 #+END_SRC
+** Paper and Research
+
+#+BEGIN_SRC emacs-lisp
+  (when mk-feature/bibliography
+    ;; My source code for bib
+    (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
+    (defun mk/normalize-paper-title (title)
+      "Remove bad chars in the paper TITLE."
+      (replace-regexp-in-string
+       "[\s\n]+" " " (replace-regexp-in-string
+                      "/" "" (replace-regexp-in-string
+                              ":" "," title)))
+      )
+
+    (defun paper-root()
+      "Open the paper root."
+      (interactive)
+      (find-file paper-root-dir))
+
+    (defun paper-find (&optional initial)
+      "Search a paper in your Dreamland, by title, with INITIAL input."
+      (interactive "P")
+      (let ((consult-find-args (concat
+                                (expand-file-name "~/.emacs.d/bin/paperfind.sh")
+                                " "
+                                paper-root-dir)))
+        (find-file (concat (file-name-as-directory paper-root-dir)
+                           (consult--find "Dreamland's Paper Find: "
+                                          #'consult--find-builder initial)))))
+
+    (defun paper-open ()
+      "Open the file in PDF Expert. Code borrowed from the crux package."
+      (interactive)
+      (let ((current-file-name
+             (if (eq major-mode 'dired-mode)
+                 (dired-get-file-for-visit)
+               buffer-file-name)))
+        (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
+      )
+
+    ;; Automatically choose the file to link with according to the selected text.
+    (defvar autolink-directory "~/Dropbox/Dreams")
+    (defun autolink--get-candidates (text)
+      "Search for the file name with TEXT."
+      (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
+             (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
+        (completing-read "Choose the one to link: " candidates)))
+    (defun paper-link (start end)
+      "Try to guess the file to link according to the region between START and END."
+      (interactive "r") ; The "r" here will fill the start and end automatically.
+      (let* ((text (buffer-substring start end))
+             (file (autolink--get-candidates text)))
+        (goto-char end)
+        (insert "]]")
+        (goto-char start)
+        (insert (concat "[[" file "]["))))
+
+    (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
+    (defun mk/ebib-series-dir-name (series)
+      "Get the name of dir of SERIES."
+      (string-replace " " "." (string-replace " '" "" series))
+      )
+
+    (defun mk/ebib--format-full-dir (dir title)
+      "Get the full dir name from DIR and TITLE."
+      (format "%s/%s/%s" mk/ebib-dir-root dir title))
+    (defun mk/ebib--get-dir-journal-style-via-journal (title journal year)
+      "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
+      (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
+                        (t "XXXX")))
+             (fulldir (mk/ebib--format-full-dir dir title)))
+        (if (file-exists-p fulldir) fulldir nil)
+        ))
+    (defun mk/ebib--get-dir-conf-style-via-series (title series)
+      "Get the dir name in conf style via TITLE and SERIES."
+      (let ((dir (mk/ebib--format-full-dir
+                  (string-replace " '" "" series)
+                  title)))
+        (if (file-exists-p dir) dir nil)))
+    (defun mk/ebib--get-dir-journal-style-via-series (title series)
+      "Get the dir name in journal style via TITLE and SERIES."
+      (let ((dir (mk/ebib--format-full-dir
+                  (string-replace " " "." series)
+                  title)))
+        (if (file-exists-p dir) dir nil)))
+
+    (defun mk/ebib-get-dir (title series journal year)
+      "Calculate the directory for TITLE and SERIES and JOURNAL."
+      (let* ((cand1 (mk/ebib--get-dir-journal-style-via-series title series))
+             (cand2 (mk/ebib--get-dir-conf-style-via-series title series))
+             (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year)))
+        (cond
+         (cand1 cand1)
+         (cand2 cand2)
+         (cand3 cand3)
+         (t nil))))
+
+    (defun mk/ebib-open-dir (key)
+      "Open the directory for KEY."
+      (interactive (list (ebib--get-key-at-point)))
+      (ebib--execute-when
+        (entries
+         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+                (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
+                (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
+                (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
+                (cand (mk/ebib-get-dir title series journal year)))
+           (if cand (find-file cand)
+             (print "No such dir, creating...")
+             (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
+                    (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+               (make-directory target t)
+               (find-file target)
+               ))))
+        (default
+         (beep))))
+
+    (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
+
+    (defun mk/paper-get-dirs ()
+      "Get all conf dirs."
+      (let* ((cmd (format "find %s -type d -maxdepth 1 -exec realpath --relative-to %s {} \\;" mk/ebib-dir-root mk/ebib-dir-root))
+             (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+             (choice (completing-read "Choose the one to link: " candidates)))
+        (print choice)
+        ))
+
+    (defun mk/ebib-open-file (key)
+      "Open files for KEY."
+      (interactive (list (ebib--get-key-at-point)))
+      (ebib--execute-when
+        (entries
+         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+                (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
+                (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+                (cand (cond
+                       ((= 0 (length candidates)) nil)
+                       ((= 1 (length candidates)) (car candidates))
+                       (t (completing-read "Choose the one to link: " candidates)))))
+           (if cand (find-file cand)
+             ())))
+        (default
+         (beep))))
+    )
+
+#+END_SRC
+
 
 * MISC
 
@@ -2460,150 +2607,6 @@ Modes to embed one buffer in another buffer and keep them in sync
                    (browse-url-interactive-arg "xwidget-webkit URL: ")))
     (xwidget-webkit-browse-url url t)
     )
-#+END_SRC
-
-** Paper and Research
-
-#+BEGIN_SRC emacs-lisp
-  ;; My source code for bib
-  (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
-  (defun mk/normalize-paper-title (title)
-    "Remove bad chars in the paper TITLE."
-    (replace-regexp-in-string
-     "[\s\n]+" " " (replace-regexp-in-string
-                    "/" "" (replace-regexp-in-string
-                            ":" "," title)))
-    )
-
-  (defun paper-root()
-    "Open the paper root."
-    (interactive)
-    (find-file paper-root-dir))
-
-  (defun paper-find (&optional initial)
-    "Search a paper in your Dreamland, by title, with INITIAL input."
-    (interactive "P")
-    (let ((consult-find-args (concat
-                              (expand-file-name "~/.emacs.d/bin/paperfind.sh")
-                              " "
-                              paper-root-dir)))
-      (find-file (concat (file-name-as-directory paper-root-dir)
-                         (consult--find "Dreamland's Paper Find: "
-                                        #'consult--find-builder initial)))))
-
-  (defun paper-open ()
-    "Open the file in PDF Expert. Code borrowed from the crux package."
-    (interactive)
-    (let ((current-file-name
-           (if (eq major-mode 'dired-mode)
-               (dired-get-file-for-visit)
-             buffer-file-name)))
-      (call-process "open" nil 0 nil "-a" "/Applications/PDF Expert.app" current-file-name))
-    )
-
-  ;; Automatically choose the file to link with according to the selected text.
-  (defvar autolink-directory "~/Dropbox/Dreams")
-  (defun autolink--get-candidates (text)
-    "Search for the file name with TEXT."
-    (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
-           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
-      (completing-read "Choose the one to link: " candidates)))
-  (defun paper-link (start end)
-    "Try to guess the file to link according to the region between START and END."
-    (interactive "r") ; The "r" here will fill the start and end automatically.
-    (let* ((text (buffer-substring start end))
-           (file (autolink--get-candidates text)))
-      (goto-char end)
-      (insert "]]")
-      (goto-char start)
-      (insert (concat "[[" file "]["))))
-
-  (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
-  (defun mk/ebib-series-dir-name (series)
-    "Get the name of dir of SERIES."
-    (string-replace " " "." (string-replace " '" "" series))
-    )
-
-  (defun mk/ebib--format-full-dir (dir title)
-    "Get the full dir name from DIR and TITLE."
-    (format "%s/%s/%s" mk/ebib-dir-root dir title))
-  (defun mk/ebib--get-dir-journal-style-via-journal (title journal year)
-    "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
-    (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
-                      (t "XXXX")))
-           (fulldir (mk/ebib--format-full-dir dir title)))
-      (if (file-exists-p fulldir) fulldir nil)
-      ))
-  (defun mk/ebib--get-dir-conf-style-via-series (title series)
-    "Get the dir name in conf style via TITLE and SERIES."
-    (let ((dir (mk/ebib--format-full-dir
-                (string-replace " '" "" series)
-                title)))
-      (if (file-exists-p dir) dir nil)))
-  (defun mk/ebib--get-dir-journal-style-via-series (title series)
-    "Get the dir name in journal style via TITLE and SERIES."
-    (let ((dir (mk/ebib--format-full-dir
-                (string-replace " " "." series)
-                title)))
-      (if (file-exists-p dir) dir nil)))
-
-  (defun mk/ebib-get-dir (title series journal year)
-    "Calculate the directory for TITLE and SERIES and JOURNAL."
-    (let* ((cand1 (mk/ebib--get-dir-journal-style-via-series title series))
-           (cand2 (mk/ebib--get-dir-conf-style-via-series title series))
-           (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year)))
-      (cond
-       (cand1 cand1)
-       (cand2 cand2)
-       (cand3 cand3)
-       (t nil))))
-
-  (defun mk/ebib-open-dir (key)
-    "Open the directory for KEY."
-    (interactive (list (ebib--get-key-at-point)))
-    (ebib--execute-when
-      (entries
-       (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-              (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
-              (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
-              (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
-              (cand (mk/ebib-get-dir title series journal year)))
-         (if cand (find-file cand)
-           (print "No such dir, creating...")
-           (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
-                  (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
-             (make-directory target t)
-             (find-file target)
-             ))))
-      (default
-       (beep))))
-  (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
-
-  (defun mk/paper-get-dirs ()
-    "Get all conf dirs."
-    (let* ((cmd (format "find %s -type d -maxdepth 1 -exec realpath --relative-to %s {} \\;" mk/ebib-dir-root mk/ebib-dir-root))
-           (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
-           (choice (completing-read "Choose the one to link: " candidates)))
-      (print choice)
-      ))
-
-  (defun mk/ebib-open-file (key)
-    "Open files for KEY."
-    (interactive (list (ebib--get-key-at-point)))
-    (ebib--execute-when
-      (entries
-       (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-              (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
-              (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
-              (cand (cond
-                     ((= 0 (length candidates)) nil)
-                     ((= 1 (length candidates)) (car candidates))
-                     (t (completing-read "Choose the one to link: " candidates)))))
-         (if cand (find-file cand)
-           ())))
-      (default
-       (beep))))
-
 #+END_SRC
 
 ** Notionify
