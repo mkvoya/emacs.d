@@ -2907,6 +2907,7 @@ Do we still use this?
 #+BEGIN_SRC emacs-lisp
   ;; (load-file "~/.emacs.d/site-lisp/wc.el")
   (use-package motd
+    :if mk-feature/noteman
     :straight nil
     :ensure nil
     :load-path "~/.emacs.d/site-lisp/"
