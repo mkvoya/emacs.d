@@ -135,6 +135,7 @@ We need to setup fonts early.
   (defvar mk-feature/gui t "Enable GUI-related packages.")
   (defvar mk-feature/noteman t "Enable note management.")
   (defvar mk-feature/light t "Use light mode.")
+  (defvar mk-feature/news-mail t "Enable news and mails.")
 #+END_SRC
 
 * SETQs
@@ -1048,6 +1049,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
             (tab-mark 9 [8594 9] [92 9])))
     (set-face-background 'trailing-whitespace "#ffaf5f")
     (set-face-background 'whitespace-trailing "#ffaf5f")
+    (set-face-background 'whitespace-tab "#FAFAFA")
     ;; (global-whitespace-mode t)
     (add-hook 'prog-mode-hook 'whitespace-mode)
     )
@@ -1392,6 +1394,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 #+BEGIN_SRC emacs-lisp
 
   (use-package pdf-tools :defer t
+    :if mk-feature/gui
     :init
     :mode ("\\.pdf\\'" . pdf-view-mode)
     :magic ("%PDF" . pdf-view-mode)
@@ -1537,6 +1540,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 #+BEGIN_SRC emacs-lisp
   ;; Mails
   (use-package notmuch
+    :if mk-feature/news-mail
     :after (exec-path-from-shell)
     :ensure nil
     :defer 5)  ; start after being idle for 5s
@@ -1547,6 +1551,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 | elfeed | https://github.com/skeeto/elfeed |
 #+BEGIN_SRC emacs-lisp
   (use-package elfeed
+    :if mk-feature/news-mail
     :defer t
     :config
     ;; Global key
