@@ -192,8 +192,9 @@ We need to setup fonts early.
     :if (memq window-system '(mac ns))
     :straight nil
     :init
-    (setq mac-right-command-modifier 'control)
-    (setq mac-right-option-modifier 'control))
+    ;; (setq mac-right-command-modifier 'control)
+    ;; (setq mac-right-option-modifier 'control)
+    )
 #+end_src
 
 * Basic libraries
@@ -223,13 +224,16 @@ We need to setup fonts early.
       (set-frame-parameter frame 'top-bar-lines 1)
       (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
       )
+    (defun mk/disable-top-bar (frame)
+      "Setup top-bar for FRAME."
+      (set-frame-parameter frame 'top-bar-lines 0)
+      )
 
     (mk/enable-top-bar nil)
     (add-hook 'after-make-frame-function #'mk/enable-top-bar)
 
-    (set-face-attribute 'top-bar nil
-                        :background "#EFEFEF"
-                        :font "Menlo-12")
+    ;; (set-face-attribute 'top-bar nil :background "#EFEFEF" :font "Menlo-12")
+    (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
     )
 #+END_SRC
 
@@ -368,7 +372,7 @@ Alternatives (Check the selectrum repo README)
             (left . 0.5)
             (background-color . "ivory")
             ))
-    (mini-frame-mode 1)
+    ;; (mini-frame-mode 1)
     )
 
   (use-package embark
@@ -477,6 +481,7 @@ Alternatives (Check the selectrum repo README)
 ** Templating: Yasnippet
 
 | yasnippet | https://github.com/joaotavora/yasnippet |
+| TempEl    | https://github.com/minad/tempel         |
 
 #+BEGIN_SRC emacs-lisp
   (use-package yasnippet
@@ -485,16 +490,74 @@ Alternatives (Check the selectrum repo README)
     :after yasnippet)
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+  ;; Configure Tempel
+  (use-package tempel
+    ;; Require trigger prefix before template name when completing.
+    ;; :custom
+    ;; (tempel-trigger-prefix "<")
+    ;; :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+    ;;        ("M-*" . tempel-insert))
+
+    :init
+
+    ;; Setup completion at point
+    (defun tempel-setup-capf ()
+      ;; Add the Tempel Capf to `completion-at-point-functions'.
+      ;; `tempel-expand' only triggers on exact matches. Alternatively use
+      ;; `tempel-complete' if you want to see all matches, but then you
+      ;; should also configure `tempel-trigger-prefix', such that Tempel
+      ;; does not trigger too often when you don't expect it. NOTE: We add
+      ;; `tempel-expand' *before* the main programming mode Capf, such
+      ;; that it will be tried first.
+      (setq-local completion-at-point-functions
+                  (cons #'tempel-expand
+                        completion-at-point-functions)))
+
+    (add-hook 'prog-mode-hook 'tempel-setup-capf)
+    (add-hook 'text-mode-hook 'tempel-setup-capf)
+
+    ;; Optionally make the Tempel templates available to Abbrev,
+    ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+    ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+    ;; (global-tempel-abbrev-mode)
+    )
+#+END_SRC
+
 ** LSP
 
 | lsp-mode | https://github.com/emacs-lsp/lsp-mode |
 | elgot    |                                       |
 | nox      |                                       |
+| LSPCE    | https://github.com/zbelial/lspce      |
+|          |                                       |
 
 LSP, emmm... who use LSP?
 
+#+BEGIN_SRC emacs-lisp
+  (use-package lspce
+    :disabled t
+    :straight ( :type git
+                :host github
+                :repo "zbelial/lspce"
+                :files ("*"))
+                ;; :pre-build
+                ;; (shell-command "cargo build --release && mv target/release/liblspce_module.dylib lspce-module.dylib")
+    :config (progn
+              (setq lspce-send-changes-idle-time 1)
 
-* A
+              ;; log file
+              (lspce-set-log-file "/Volumes/ramfs/lspce.log")
+
+              ;; enable lspce in particular buffers
+              ;; (add-hook 'rust-mode-hook 'lspce-mode)
+
+              ;; modify `lspce-server-programs' to add or change a lsp server, see document
+              ;; of `lspce-lsp-type-function' to understand how to get buffer's lsp type.
+              )
+    )
+#+END_SRC
+
 
 
 * Language and spelling
@@ -518,17 +581,17 @@ LSP, emmm... who use LSP?
     (rime-user-data-dir "~/Library/Rime")
     (rime-show-candidate 'posframe)
     (rime-posframe-properties
-     (list :background-color "#F706FF"  ; 不要在这里设置字体，会影响后面 face 里字体的
-           :foreground-color "#333333"
+     (list :background-color "#000000"  ; 不要在这里设置字体，会影响后面 face 里字体的
+           :foreground-color "#f33333"
            :internal-border-width 10))
     :config
     (set-face-attribute 'rime-default-face nil
-                        :background "#FFF7C3"
-                        :foreground "#333333"
+                        :background "#000000"
+                        :foreground "honeydew1"
                         :font "Hei-20")
     (set-face-attribute 'rime-highlight-candidate-face nil
-                        :background "#FFF7C3"
-                        :foreground "#9E2655"
+                        ;; :background "#f33333"
+                        :foreground "#FFFF00"
                         :font "Hei-20")
     (set-face-attribute 'rime-code-face nil
                         :font "Hei-20")
@@ -574,6 +637,9 @@ LSP, emmm... who use LSP?
 | flymake  |
 
 #+BEGIN_SRC emacs-lisp
+  (use-package flyspell-correct
+    :after flyspell
+    :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
   (use-package flycheck
     :delight
     :defer t
@@ -727,7 +793,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     )
   (use-package git-link :defer t)
   (use-package forge :after (magit) :defer t)
-  (use-package git-timemachine)
+  ;; (use-package git-timemachine)
 
   (use-package diff-hl
     :defer t
@@ -841,8 +907,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
                             motd-message-mode
                             special-mode
                             ))
-      (when (boundp nonevil-mode)
-        (evil-set-initial-state nonevil-mode 'emacs)))
+      (evil-set-initial-state nonevil-mode 'emacs))
 
     (evil-mode 1))
 
@@ -1092,62 +1157,78 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 #+BEGIN_SRC emacs-lisp
 
-    (use-package emacs
-      :straight nil
-      :config
-      (setq window-divider-default-right-width 2)
-      (setq window-divider-default-bottom-width 2)
-      (setq window-divider-default-places t)
-      (window-divider-mode 1))
+  (use-package emacs
+    :straight nil
+    :config
+    (setq window-divider-default-right-width 2)
+    (setq window-divider-default-bottom-width 2)
+    (setq window-divider-default-places t)
+    (window-divider-mode 1))
 
-    (defun mk/modeline-setup ()
-      "Setup my modeline."
-      (progn
-        ;; mode line
-        (column-number-mode 1)
-        (set-face-attribute 'mode-line           nil :background "#CF3F1F")
-        (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-        (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-        (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+  (defun mk/modeline-setup ()
+    "Setup my modeline."
+    (progn
+      ;; mode line
+      (column-number-mode 1)
+      (set-face-attribute 'mode-line           nil :background "#CF3F1F")
+      (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+      (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+      (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
 
-        ;; Thank https://emacs.stackexchange.com/a/37270/30542
-        (defun simple-mode-line-render (left right)
-          "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
-          (let ((available-width (- (window-total-width)
-                                    (+ (length (format-mode-line left))
-                                       (length (format-mode-line right))
-                                       ))))
-            (append left
-                    (list (format (format "%%%ds" available-width) ""))
-                    right)))
+      ;; Thank https://emacs.stackexchange.com/a/37270/30542
+      (defun simple-mode-line-render (left right)
+        "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
+        (let ((available-width (- (window-total-width)
+                                  (+ (length (format-mode-line left))
+                                     (length (format-mode-line right))
+                                     ))))
+          (append left
+                  (list (format (format "%%%ds" available-width) ""))
+                  right)))
 
-        (require 'uniquify)
-        (setq uniquify-buffer-name-style 'forward)
+      (require 'uniquify)
+      (setq uniquify-buffer-name-style 'forward)
 
-        (setq-default mode-line-format
-                      '((:eval
-                         (simple-mode-line-render
-                          ;; Left.
-                          '("[%*]"
-                            evil-mode-line-tag
-                            mode-line-buffer-identification
-                            )
-                          ;; Right.
-                          '(" %e %l:%c "
-                            mode-line-frame-identification
-                            ;; mode-line-modes
-                            " %m "
-                            mode-line-misc-info
-                            " ")))))
-        ))
+      (setq-default mode-line-format
+                    '((:eval
+                       (simple-mode-line-render
+                        ;; Left.
+                        '("[%*]"
+                          evil-mode-line-tag
+                          mode-line-buffer-identification
+                          )
+                        ;; Right.
+                        '(" %e %l:%c "
+                          mode-line-frame-identification
+                          ;; mode-line-modes
+                          " %m "
+                          mode-line-misc-info
+                          " ")))))
+      ))
 
-    (use-package hemisu-theme
-      :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
-      :config
-      (load-theme (if mk-feature/light 'hemisu-light 'hemisu-dark) t)
-      (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-      (mk/modeline-setup)
+  (use-package hemisu-theme
+
+    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
+    :config
+    ;; (load-theme (if mk-feature/light 'hemisu-light 'hemisu-dark) t)
+    ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
+    ;; (mk/modeline-setup)
+    )
+  (use-package abyss-theme)
+  (use-package dracula-theme
+    :after (org)
+    :config
+    (load-theme 'dracula t)
+    (set-face-attribute 'org-level-1 nil :height 1.1)
+    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
+    (mk/modeline-setup)
+    (use-package keycast
+      :straight (:type git :host github :repo "tarsius/keycast")
+      :init
+      (keycast-mode)
       )
+    )
+
 #+END_SRC
 
 ** Beacon - A light that follows your cursor around so you don't lose it!
@@ -1312,7 +1393,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 ** LaTeX
 #+BEGIN_SRC emacs-lisp
   (use-package tex
-    :straight auctex
+    :straight (:host github :repo "emacsmirror/auctex")
     :defer t
     :init
     (setq TeX-source-correlate-method 'synctex)
@@ -1348,6 +1429,8 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
                                  (mkvoya/better-wrap)
                                  (flyspell-mode)
                                  (LaTeX-math-mode)))
+    ;; (add-hook 'TeX-output-mode (lambda () (goto-char (point-max))))
+
     (setq reftex-refstyle "\\ref")
     (setq reftex-plug-into-AUCTeX t)
     (setq TeX-PDF-mode t)
@@ -1367,11 +1450,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 
     (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
-    (use-package company-auctex
-      :defer t
-      :after (company)
-      :config
-      (company-auctex-init))
     (use-package reftex
       :defer t
       :config
@@ -1379,13 +1457,12 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
       (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
       (setq reftex-default-bibliography '("./references.bib"))
       )
-    (use-package company-reftex
-      :defer t
-      :after (company reftex)
+    (use-package company-auctex :defer t :after (company) :config (company-auctex-init))
+    (use-package company-reftex :defer t :after (company reftex)
       :config
       (add-to-list 'company-backends 'company-reftex-labels)
       (add-to-list 'company-backends 'company-reftex-citations))
-     (use-package auctex-latexmk)
+    ;; (use-package auctex-latexmk :config (auctex-latexmk-setup))
     )
 #+END_SRC
 
@@ -2188,7 +2265,7 @@ Modes to embed one buffer in another buffer and keep them in sync
       )
     (require 'org-roam-bibtex)
     (setq citar-open-note-function #'(lambda (key entry) (orb-edit-note key)))
-    (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
+    ;; (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
     )
 
 #+END_SRC
@@ -2326,6 +2403,16 @@ Modes to embed one buffer in another buffer and keep them in sync
     (setq ebib-notes-template "%%?%P\n")
     )
 
+  (defun mk/ebib-reading-list-show-entry ()
+    "Jump to the ebib entry from the current reading list item."
+    (interactive)
+    (let ((custom-id (org-entry-get (point) "Custom_id")))
+      (when (string-prefix-p "reading_" custom-id)
+        (let ((ebib-key (substring custom-id 8)))
+          (message "Jumping to ebib entry with key: %s" ebib-key)
+          (ebib nil ebib-key)
+          ))))
+
   (use-package ebib-biblio
     :if mk-feature/bibliography
     :after (ebib biblio)
@@ -2403,6 +2490,8 @@ Modes to embed one buffer in another buffer and keep them in sync
     (defun mk/ebib--get-dir-journal-style-via-journal (title journal year)
       "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
       (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
+                        ((string= journal "commun. acm") (format "commun.acm.%s" year))
+                        ((string= journal "acs nano") (format "acs.nano.%s" year))
                         (t "XXXX")))
              (fulldir (mk/ebib--format-full-dir dir title)))
         (if (file-exists-p fulldir) fulldir nil)
@@ -2823,7 +2912,7 @@ Do we still use this?
   (use-package elquery)
   (use-package citeproc)
   (use-package lua-mode)
-  (use-package xenops)
+  ;; (use-package xenops)  ; the package causes highlighting issues for latex
   (use-package org-download)
   (use-package symbol-overlay)
   (use-package read-aloud
@@ -2948,4 +3037,48 @@ Do we still use this?
 #+BEGIN_SRC emacs-lisp
   (use-package xcscope)
 #+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (setq python-shell-completion-native-disabled-interpreters nil)
+#+END_SRC
+
+** Rust
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rustic
+    :custom
+    (rustic-lsp-setup-p . nil))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-pandoc)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+(defun mk/dired-open-pdf ()
+  "In dired, open the file named on this line."
+  (interactive)
+  (let* ((file (dired-get-filename nil t)))
+    (message "Opening %s..." file)
+    (call-process "open" nil 0 nil "-a" "PDF Expert" file)
+    (message "Opening %s done" file)))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+
+  (use-package linux-kernel-coding-style
+    :straight (:type git :host github :repo "mkvoya/linux-kernel-coding-style.el")
+    )
+  (use-package tree-sitter
+    :init
+    (use-package tree-sitter-langs)
+    (global-tree-sitter-mode)
+    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+    )
+#+END_SRC
+
+
 

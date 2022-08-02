@@ -100,7 +100,7 @@ Recent Submission Deadlines:
     (set-frame-position f
                         (/ (frame-inner-width) 10)
                         (/ (frame-inner-height) 6))
-    (set-frame-parameter f 'background-color "lightgreen")
+    (set-frame-parameter f 'background-color "black")
     (set-frame-parameter f 'border-color "grey")
     (set-window-buffer win buffer)
     (set-window-dedicated-p win t)
