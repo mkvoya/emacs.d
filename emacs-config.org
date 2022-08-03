@@ -1219,14 +1219,20 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (org)
     :config
     (load-theme 'dracula t)
+    )
+
+  (use-package emacs
+    :after (org dracula-theme)
+    :config
     (set-face-attribute 'org-level-1 nil :height 1.1)
     (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
     (mk/modeline-setup)
-    (use-package keycast
-      :straight (:type git :host github :repo "tarsius/keycast")
-      :init
-      (keycast-mode)
-      )
+    )
+
+  (use-package keycast
+    :straight (:type git :host github :repo "tarsius/keycast")
+    :init
+    (keycast-mode)
     )
 
 #+END_SRC
@@ -1800,7 +1806,22 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
     (use-package org-contrib :disabled)
     (use-package org-inline-pdf :defer t)
-    (use-package org-super-agenda)
+    (use-package org-super-agenda
+      :init
+      (org-super-agenda-mode)
+      :config
+      (setq org-super-agenda-groups
+            '((:name "Next Items"
+                     :time-grid t
+                     :tag ("NEXT" "outbox"))
+              (:name "Important"
+                     :priority "A")
+              (:name "Quick Picks"
+                     :effort< "0:30")
+              (:priority<= "B"
+                           :scheduled future
+                           :order 1)))
+      )
     )
 #+END_SRC
 
@@ -1898,6 +1919,7 @@ An example:
     ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
 
     (set-face-attribute 'outline-1 nil :foreground "purple2")
+    (set-face-attribute 'org-level-1 nil :height 1.2)
     (set-face-attribute 'outline-2 nil :foreground "violetRed2")
     (set-face-attribute 'outline-3 nil :foreground "cyan4")
     (set-face-attribute 'outline-4 nil :foreground "springgreen4")
@@ -2509,15 +2531,24 @@ Modes to embed one buffer in another buffer and keep them in sync
                   title)))
         (if (file-exists-p dir) dir nil)))
 
-    (defun mk/ebib-get-dir (title series journal year)
-      "Calculate the directory for TITLE and SERIES and JOURNAL."
+    (defun mk/ebib--get-dir-arxiv (title publisher year)
+      "Get the dir name in journal style via TITLE and PUBLISHER and YEAR."
+      (print publisher)
+      (if (string= publisher "arxiv")
+        (let ((dir (mk/ebib--format-full-dir (format "arxiv%s" year) title)))
+          (if (file-exists-p dir) dir nil)) nil))
+
+    (defun mk/ebib-get-dir (title series journal year publisher)
+      "Calculate the directory for TITLE and SERIES and JOURNAL and PUBLISHER."
       (let* ((cand1 (mk/ebib--get-dir-journal-style-via-series title series))
              (cand2 (mk/ebib--get-dir-conf-style-via-series title series))
-             (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year)))
+             (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year))
+             (cand4 (mk/ebib--get-dir-arxiv title publisher year)))
         (cond
          (cand1 cand1)
          (cand2 cand2)
          (cand3 cand3)
+         (cand4 cand4)
          (t nil))))
 
     (defun mk/ebib-open-dir (key)
@@ -2527,11 +2558,12 @@ Modes to embed one buffer in another buffer and keep them in sync
         (entries
          (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
                 (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
+                (publisher (downcase (ebib-get-field-value "publisher" key ebib--cur-db "no-publisher" t)))
                 (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
                 (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
-                (cand (mk/ebib-get-dir title series journal year)))
+                (cand (mk/ebib-get-dir title series journal year publisher)))
            (if cand (find-file cand)
-             (print "No such dir, creating...")
+             (print "No such dir, creating with prompt...")
              (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
                     (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
                (make-directory target t)
@@ -2895,7 +2927,7 @@ Do we still use this?
   (use-package peep-dired :disabled t)  ; Preview files in dired, but we use ranger instead.
   (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
   (use-package telega :disabled t)  ; Prefer the GUI
-  (use-package elgantt :disabled t
+  (use-package elgantt
     :straight (:type git :host github :repo "legalnonsense/elgantt"))
   (use-package paper :disabled t
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
@@ -3079,6 +3111,5 @@ Do we still use this?
     (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
     )
 #+END_SRC
-
 
 
