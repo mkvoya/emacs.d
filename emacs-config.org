@@ -1399,7 +1399,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 ** LaTeX
 #+BEGIN_SRC emacs-lisp
   (use-package tex
-    :straight (:host github :repo "emacsmirror/auctex")
+    :straight auctex
     :defer t
     :init
     (setq TeX-source-correlate-method 'synctex)
@@ -2015,7 +2015,6 @@ An example:
 
 ** Calender sync
 #+BEGIN_SRC emacs-lisp
-          ;;; https://www.pengmeiyu.com/blog/sync-org-mode-agenda-to-calendar-apps/
   (use-package ox-icalendar
     :defer t
     :straight nil
@@ -2035,13 +2034,31 @@ An example:
     :defer t
     :after (async)
     :init
-    (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+    ;; (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
     ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/Calendar")
-    (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
-    (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
-    (setq org-caldav-files '("~/Dropbox/Dreams/Org/Main.org"
-                             "~/Dropbox/Dreams/Org/Inbox.org"
-                             ))
+    (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
+    (setq org-caldav-calendars
+          '(
+            (:calendar-id "OrgSync"
+                          :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
+                          :files ("~/Dropbox/Dreams/Org/Main.org"
+                                  "~/Dropbox/Dreams/Org/Inbox.org"
+                                  )
+                          :type-regex "VEVENT")
+            (:calendar-id "Tasks"
+                          :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
+                          :files (
+                                  ;; "~/Dropbox/Dreams/Org/Main.org"
+                                  ;; "~/Dropbox/Dreams/Org/Inbox.org"
+                                  "~/Dropbox/Dreams/Org/Ebib-ReadingList.org"
+                                  )
+                          :type-regex "VTODO")
+            ))
+    ;; (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
+    ;; (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
+    ;; (setq org-caldav-files '("~/Dropbox/Dreams/Org/Main.org"
+    ;;                          "~/Dropbox/Dreams/Org/Inbox.org"
+    ;;                          ))
     ;; (setq org-icalendar-timezone "America/Los_Angeles")
     (setq org-icalendar-timezone "Asia/Shanghai")
     )
@@ -2514,6 +2531,7 @@ Modes to embed one buffer in another buffer and keep them in sync
       (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
                         ((string= journal "commun. acm") (format "commun.acm.%s" year))
                         ((string= journal "acs nano") (format "acs.nano.%s" year))
+                        ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
                         (t "XXXX")))
              (fulldir (mk/ebib--format-full-dir dir title)))
         (if (file-exists-p fulldir) fulldir nil)
@@ -3113,3 +3131,6 @@ Do we still use this?
 #+END_SRC
 
 
+#+BEGIN_SRC emacs-lisp
+  (use-package swift-mode)
+#+END_SRC

@@ -9,14 +9,14 @@
 (setq gc-cons-threshold (* 400 (expt 2 20))
       gc-cons-percentage 0.6)
 
- (let* ((file-name-handler-alist nil)
-        (read-process-output-max (expt 2 22)))
+(let* (;; (file-name-handler-alist nil)  ; This causes loading issues. Check: https://lists.gnu.org/archive/html/emacs-devel/2022-08/msg00218.html
+       (read-process-output-max (expt 2 22)))
 
-    (load "~/.emacs.d/emacs-config.el")
+  (load "~/.emacs.d/emacs-config.el")
 
-    ;; Collect garbage when all else is done
-    ;; (garbage-collect)
-    )
+  ;; Collect garbage when all else is done
+  ;; (garbage-collect)
+  )
 
 (setq gc-cons-threshold (expt 2 23)
       gc-cons-percentage 0.1)
