@@ -180,7 +180,7 @@ We need to setup fonts early.
       (setq word-wrap nil)
       ))
 
-  (blink-cursor-mode 0)
+  (blink-cursor-mode 1)
 
   (when (> emacs-major-version 28)
     (pixel-scroll-precision-mode))
@@ -232,8 +232,8 @@ We need to setup fonts early.
     (mk/enable-top-bar nil)
     (add-hook 'after-make-frame-function #'mk/enable-top-bar)
 
-    ;; (set-face-attribute 'top-bar nil :background "#EFEFEF" :font "Menlo-12")
-    (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
+    (set-face-attribute 'top-bar nil :background "#EFEFEF" :font "Menlo-12") ;; default
+    ;; (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
     )
 #+END_SRC
 
@@ -364,6 +364,7 @@ Alternatives (Check the selectrum repo README)
   ;;             (lambda (&rest _) (mini-popup--setup)) 99)
   ;;   (mini-popup-mode 1))
   (use-package mini-frame
+    :disabled
     :init
     (setq mini-frame-internal-border-color "blue")
     (setq mini-frame-show-parameters
@@ -376,6 +377,7 @@ Alternatives (Check the selectrum repo README)
     )
 
   (use-package embark
+    :disabled
     :demand
     :bind
     (("C-." . embark-act)         ;; pick some comfortable binding
@@ -393,6 +395,7 @@ Alternatives (Check the selectrum repo README)
 
   ;; Consult users will also want the embark-consult package.
   (use-package embark-consult
+    :disabled
     :after (embark consult)
     :demand t ; only necessary if you have the hook below
     ;; if you want to have consult previews as you move around an
@@ -764,6 +767,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 #+BEGIN_SRC emacs-lisp
   (use-package yascroll
+    :disabled t  ; This sometimes causes 99% CPU usage.
     :delight
     :config
     ;; (advice-add :after 'pixel-scroll-up 'run-window-scroll-functions)
@@ -995,9 +999,11 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :init
     (setq which-key-show-remaining-keys t)
 
-    (setq which-key-idle-delay 1)
+    (setq which-key-show-early-on-C-h t)
+    (setq which-key-idle-delay 2)
+    (setq which-key-allow-imprecise-window-fit t)
     (setq which-key-sort-order 'which-key-prefix-then-key-order)
-    (which-key-setup-minibuffer)
+    ;; (which-key-setup-minibuffer)
     (which-key-mode)
     )
 #+END_SRC
@@ -1170,10 +1176,22 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (progn
       ;; mode line
       (column-number-mode 1)
-      (set-face-attribute 'mode-line           nil :background "#CF3F1F")
-      (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-      (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-      (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+      (if mk-feature/light
+          (progn
+            ;; light theme
+            (set-face-attribute 'mode-line           nil :background "#CFEF9F")
+            (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+            (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+            (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+            (set-face-attribute 'top-bar nil :background "#EFEFEF" :foreground "#333333" :font "Menlo-12")
+            )
+        ;; dark theme
+        (set-face-attribute 'mode-line           nil :background "#CF3F1F")
+        (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
+        (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
+        (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
+        (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
+        )
 
       ;; Thank https://emacs.stackexchange.com/a/37270/30542
       (defun simple-mode-line-render (left right)
@@ -1198,7 +1216,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
                           mode-line-buffer-identification
                           )
                         ;; Right.
-                        '(" %e %l:%c "
+                        '(" %e %o %l:%c "
                           mode-line-frame-identification
                           ;; mode-line-modes
                           " %m "
@@ -1207,22 +1225,21 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       ))
 
   (use-package hemisu-theme
-
     :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
+    :disabled
     :config
     ;; (load-theme (if mk-feature/light 'hemisu-light 'hemisu-dark) t)
-    ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-    ;; (mk/modeline-setup)
     )
   (use-package abyss-theme)
   (use-package dracula-theme
     :after (org)
     :config
-    (load-theme 'dracula t)
+    ;; (load-theme 'dracula t)
+    ;; (setq mk-feature/light nil)
     )
 
   (use-package emacs
-    :after (org dracula-theme)
+    :after (org)
     :config
     (set-face-attribute 'org-level-1 nil :height 1.1)
     (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
@@ -1230,6 +1247,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     )
 
   (use-package keycast
+    :disabled
     :straight (:type git :host github :repo "tarsius/keycast")
     :init
     (keycast-mode)
@@ -1280,10 +1298,11 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     ;;(setq dashboard-startup-banner "/path/to/image")
     (setq dashboard-projects-backend 'project-el)
     (setq dashboard-items '((recents  . 10)
-                            (bookmarks . 10)
-                            (agenda . 5)
+                            ;; (bookmarks . 10)
                             (projects . 5)
-                            (registers . 5)))
+                            (agenda . 5)
+                            ;; (registers . 5)
+                            ))
     (setq dashboard-set-heading-icons t)
     (setq dashboard-set-file-icons t)
     (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
@@ -1461,7 +1480,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
       :config
       (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
       (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
-      (setq reftex-default-bibliography '("./references.bib"))
+      ;; (setq reftex-default-bibliography '("./references.bib"))
       )
     (use-package company-auctex :defer t :after (company) :config (company-auctex-init))
     (use-package company-reftex :defer t :after (company reftex)
@@ -2032,20 +2051,21 @@ An example:
     )
   (use-package org-caldav
     :defer t
-    :after (async)
+    ;; :after (async)
     :init
+    (require 'async)
     ;; (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
-    ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/Calendar")
-    (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
+    ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
+    (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
     (setq org-caldav-calendars
           '(
-            (:calendar-id "OrgSync"
+            (:calendar-id "9d6f9f39-cba5-fe5b-bd49-c61168d64f81"
                           :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
                           :files ("~/Dropbox/Dreams/Org/Main.org"
                                   "~/Dropbox/Dreams/Org/Inbox.org"
                                   )
                           :type-regex "VEVENT")
-            (:calendar-id "Tasks"
+            (:calendar-id "e08e1f91-e359-0e59-3a72-b8b0ea70a783"
                           :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
                           :files (
                                   ;; "~/Dropbox/Dreams/Org/Main.org"
@@ -2069,6 +2089,7 @@ An example:
   (use-package org-roam
     :if mk-feature/noteman
     :after (org)
+    :defer
     :init
     (setq org-roam-directory "~/Dropbox/Dreams/")
     (setq org-roam-link-file-path-type 'relative)
@@ -2227,6 +2248,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   (use-package bibtex
     :if mk-feature/bibliography
     :straight nil  ; built in
+    :defer
     :init
     (setq bibtex-dialect 'biblatex)
     ;; Bibtex autokey is used by Ebib.
@@ -2260,6 +2282,7 @@ Modes to embed one buffer in another buffer and keep them in sync
           (lambda (fpath) (call-process "open" nil 0 nil fpath)))
     :config
     (use-package bibtex-completion
+      :defer
       :config
       (bibtex-completion-init)  ; This will set the XXX-format-internal variable
       )
@@ -2277,6 +2300,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   (use-package citar
     :if mk-feature/bibliography
     :straight (:host github :repo "bdarcus/citar")
+    :defer
     :demand
     :bind (("C-c b" . citar-insert-citation)
            :map minibuffer-local-map
@@ -2293,10 +2317,15 @@ Modes to embed one buffer in another buffer and keep them in sync
             (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
             (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
     (setq citar-symbol-separator "  ")
-    (require 'embark)
-    (setq citar-at-point-function 'embark-act)
+    ;; (require 'embark)
+    ;; (setq citar-at-point-function 'embark-act)
+    ;; (use-package citar-embark
+    ;;   :after citar embark
+    ;;   :no-require
+    ;;   :config (citar-embark-mode))
     :config
     (use-package org-roam-bibtex
+      :defer
       :after org-roam
       :config
       (setq orb-roam-ref-format 'org-cite)
@@ -2316,6 +2345,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package biblio
     :if mk-feature/bibliography
+    :defer
     :init
 
     (setq biblio-arxiv-bibtex-header "misc")
@@ -2341,8 +2371,12 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package ebib
     :if mk-feature/bibliography
-    :after (biblio)
+    :defer
+    ;; :after (biblio bibtex citar)
     :init
+    (require 'biblio)
+    (require 'bibtex)
+    (require 'citar)
     (require 'dbus)  ; A function from dbus is used in ebib.
     (defun mk/ebib-create-org-schedule (_key _db)
       (format "SCHEDULED: <%s>" (org-read-date nil nil "+1d"))
@@ -2440,6 +2474,7 @@ Modes to embed one buffer in another buffer and keep them in sync
                                            (?U . ebib-create-org-url-link)
                                            (?P . mk/ebib-complete-rest-note-content)))
     (setq ebib-notes-template "%%?%P\n")
+
     )
 
   (defun mk/ebib-reading-list-show-entry ()
@@ -2463,7 +2498,10 @@ Modes to embed one buffer in another buffer and keep them in sync
 ** Paper and Research
 
 #+BEGIN_SRC emacs-lisp
-  (when mk-feature/bibliography
+  (use-package emacs
+    :if mk-feature/bibliography
+    :after (ebib)
+    :init
     ;; My source code for bib
     (setq paper-root-dir (expand-file-name "~/Dropbox/Dreams/Research/Papers"))
     (defun mk/normalize-paper-title (title)
@@ -2532,6 +2570,8 @@ Modes to embed one buffer in another buffer and keep them in sync
                         ((string= journal "commun. acm") (format "commun.acm.%s" year))
                         ((string= journal "acs nano") (format "acs.nano.%s" year))
                         ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
+                        ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
+                        ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
                         (t "XXXX")))
              (fulldir (mk/ebib--format-full-dir dir title)))
         (if (file-exists-p fulldir) fulldir nil)
@@ -2553,8 +2593,8 @@ Modes to embed one buffer in another buffer and keep them in sync
       "Get the dir name in journal style via TITLE and PUBLISHER and YEAR."
       (print publisher)
       (if (string= publisher "arxiv")
-        (let ((dir (mk/ebib--format-full-dir (format "arxiv%s" year) title)))
-          (if (file-exists-p dir) dir nil)) nil))
+          (let ((dir (mk/ebib--format-full-dir (format "arxiv%s" year) title)))
+            (if (file-exists-p dir) dir nil)) nil))
 
     (defun mk/ebib-get-dir (title series journal year publisher)
       "Calculate the directory for TITLE and SERIES and JOURNAL and PUBLISHER."
@@ -2573,22 +2613,22 @@ Modes to embed one buffer in another buffer and keep them in sync
       "Open the directory for KEY."
       (interactive (list (ebib--get-key-at-point)))
       (ebib--execute-when
-        (entries
-         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-                (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
-                (publisher (downcase (ebib-get-field-value "publisher" key ebib--cur-db "no-publisher" t)))
-                (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
-                (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
-                (cand (mk/ebib-get-dir title series journal year publisher)))
-           (if cand (find-file cand)
-             (print "No such dir, creating with prompt...")
-             (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
-                    (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
-               (make-directory target t)
-               (find-file target)
-               ))))
-        (default
-         (beep))))
+       (entries
+        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+               (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
+               (publisher (downcase (ebib-get-field-value "publisher" key ebib--cur-db "no-publisher" t)))
+               (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
+               (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
+               (cand (mk/ebib-get-dir title series journal year publisher)))
+          (if cand (find-file cand)
+            (print "No such dir, creating with prompt...")
+            (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
+                   (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+              (make-directory target t)
+              (find-file target)
+              ))))
+       (default
+        (beep))))
 
     (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
 
@@ -2604,18 +2644,18 @@ Modes to embed one buffer in another buffer and keep them in sync
       "Open files for KEY."
       (interactive (list (ebib--get-key-at-point)))
       (ebib--execute-when
-        (entries
-         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-                (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
-                (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
-                (cand (cond
-                       ((= 0 (length candidates)) nil)
-                       ((= 1 (length candidates)) (car candidates))
-                       (t (completing-read "Choose the one to link: " candidates)))))
-           (if cand (find-file cand)
-             ())))
-        (default
-         (beep))))
+       (entries
+        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+               (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
+               (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+               (cand (cond
+                      ((= 0 (length candidates)) nil)
+                      ((= 1 (length candidates)) (car candidates))
+                      (t (completing-read "Choose the one to link: " candidates)))))
+          (if cand (find-file cand)
+            ())))
+       (default
+        (beep))))
     )
 
 #+END_SRC
@@ -2946,6 +2986,7 @@ Do we still use this?
   (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
   (use-package telega :disabled t)  ; Prefer the GUI
   (use-package elgantt
+    :disabled
     :straight (:type git :host github :repo "legalnonsense/elgantt"))
   (use-package paper :disabled t
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
@@ -2959,14 +3000,14 @@ Do we still use this?
 
 #+BEGIN_SRC emacs-lisp
   (use-package chronos :defer t)
-  (use-package elquery)
-  (use-package citeproc)
-  (use-package lua-mode)
+  (use-package elquery :defer)
+  (use-package citeproc :defer)
+  (use-package lua-mode :defer)
   ;; (use-package xenops)  ; the package causes highlighting issues for latex
-  (use-package org-download)
-  (use-package symbol-overlay)
+  (use-package org-download :defer)
+  (use-package symbol-overlay :defer)
   (use-package read-aloud
-    :defer t
+    :disabled
     :config
     (setq read-aloud-engine "say"))
   (use-package emacs-badge
@@ -2974,6 +3015,7 @@ Do we still use this?
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     )
   (use-package elnode
+    :defer
     :straight (:type git :host github :repo "jcaw/elnode"))
   (use-package multiple-cursors
     :bind (("C-!" . mc/mark-next-like-this)))
@@ -3057,6 +3099,14 @@ Do we still use this?
     :ensure nil
     :load-path "~/.emacs.d/site-lisp/"
     :config
+    (if mk-feature/light
+        (progn
+          (setq motd-background-color "#EFE0C0")
+          (setq motd-border-color "#910471")
+          )
+      (setq motd-background-color "#204230")
+      (setq motd-border-color "#444444")
+      )
     (setq motd--git-commit-dir "~/Dropbox/Dreams")
     (motd-start-timer)
     )
@@ -3096,13 +3146,13 @@ Do we still use this?
 ** Rust
 
 #+BEGIN_SRC emacs-lisp
-  (use-package rustic
-    :custom
-    (rustic-lsp-setup-p . nil))
+  ;; (use-package rustic
+  ;;   :custom
+  ;;   (rustic-lsp-setup-p . nil))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package ox-pandoc)
+  ;; (use-package ox-pandoc)
 #+END_SRC
 
 
@@ -3133,4 +3183,16 @@ Do we still use this?
 
 #+BEGIN_SRC emacs-lisp
   (use-package swift-mode)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-timeline
+    :after org
+    :config
+    (add-hook 'org-agenda-finalize-hook 'org-timeline-insert-timeline :append)
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package darkroom)
 #+END_SRC

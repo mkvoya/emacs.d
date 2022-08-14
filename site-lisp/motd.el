@@ -12,6 +12,16 @@
   :type 'number
   :group 'motd)
 
+(defcustom motd-background-color "#FFFFFF"
+  "The background color."
+  :type 'string
+  :group 'motd)
+
+(defcustom motd-border-color "#000000"
+  "The border color."
+  :type 'string
+  :group 'motd)
+
 (defvar motd--today nil)
 (defvar motd--buffer-name " *motd-message*")
 (defvar motd--popup-frame nil)
@@ -100,8 +110,8 @@ Recent Submission Deadlines:
     (set-frame-position f
                         (/ (frame-inner-width) 10)
                         (/ (frame-inner-height) 6))
-    (set-frame-parameter f 'background-color "black")
-    (set-frame-parameter f 'border-color "grey")
+    (set-frame-parameter f 'background-color motd-background-color)
+    (set-frame-parameter f 'border-color motd-border-color)
     (set-window-buffer win buffer)
     (set-window-dedicated-p win t)
   f
