@@ -1290,6 +1290,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
   (use-package all-the-icons
     :if (display-graphic-p))
   (use-package dashboard
+    :if (< (length command-line-args) 2)
     :diminish dashboard-mode
     :init
     (use-package page-break-lines :ensure t :defer nil)
