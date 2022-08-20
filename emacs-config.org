@@ -1120,7 +1120,10 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
             (tab-mark 9 [8594 9] [92 9])))
     (set-face-background 'trailing-whitespace "#ffaf5f")
     (set-face-background 'whitespace-trailing "#ffaf5f")
-    (set-face-background 'whitespace-tab "#FAFAFA")
+    (if mk-feature/gui
+        (set-face-background 'whitespace-tab "#FAFAFA")
+      (set-face-background 'whitespace-tab "undefined")
+      )
     ;; (global-whitespace-mode t)
     (add-hook 'prog-mode-hook 'whitespace-mode)
     )
@@ -1183,14 +1186,18 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
             (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
             (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
             (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
-            (set-face-attribute 'top-bar nil :background "#EFEFEF" :foreground "#333333" :font "Menlo-12")
+            (when (eq system-type 'darwin)
+              (set-face-attribute 'top-bar nil :background "#EFEFEF" :foreground "#333333" :font "Menlo-12")
+              )
             )
         ;; dark theme
         (set-face-attribute 'mode-line           nil :background "#CF3F1F")
         (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
         (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
         (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
-        (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
+        (when (eq system-type 'darwin)
+          (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
+          )
         )
 
       ;; Thank https://emacs.stackexchange.com/a/37270/30542
@@ -1792,21 +1799,23 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 
     (require 'color)
-    (set-face-attribute 'org-block nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
-    (set-face-attribute 'org-code nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
-    (set-face-attribute 'org-quote nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
+
+    (when mk-feature/gui
+      (set-face-attribute 'org-block nil :background
+                          (color-darken-name
+                           (face-attribute 'default :background) 3))
+      (set-face-attribute 'org-code nil :background
+                          (color-darken-name
+                           (face-attribute 'default :background) 3))
+      (set-face-attribute 'org-quote nil :background
+                          (color-darken-name
+                           (face-attribute 'default :background) 3))
+      (set-face-attribute 'org-block-begin-line nil :background
+                          "#F1E6F8")
+      (set-face-attribute 'org-block-end-line nil :background
+                          (color-darken-name
+                           (face-attribute 'default :background) 4)))
     (setq org-fontify-quote-and-verse-blocks t)
-    (set-face-attribute 'org-block-begin-line nil :background
-                        "#F1E6F8")
-    (set-face-attribute 'org-block-end-line nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 4))
 
     (add-hook 'org-mode-hook
               (lambda ()
