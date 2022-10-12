@@ -669,6 +669,7 @@ LSP, emmm... who use LSP?
                 (message) line-end))
       :modes (text-mode markdown-mode gfm-mode org-mode))
     (add-to-list 'flycheck-checkers 'proselint)
+    (setq flycheck-clang-args "-std=c++20")
     )
 
 #+END_SRC
@@ -1461,7 +1462,11 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     (add-hook 'LaTeX-mode-hook (lambda()
                                  (mkvoya/better-wrap)
                                  (flyspell-mode)
-                                 (LaTeX-math-mode)))
+                                 (LaTeX-math-mode)
+                                 (darkroom-mode)
+                                 (visual-line-mode)
+                                 (visual-line-mode)
+                                 ))
     ;; (add-hook 'TeX-output-mode (lambda () (goto-char (point-max))))
 
     (setq reftex-refstyle "\\ref")
@@ -1876,6 +1881,13 @@ An example:
      :after (svg-lib org)
      :straight (:host github :repo "rougier/svg-tag-mode" :files ("svg-tag-mode.el"))
      :config
+
+     (defun mk/svg-prop-drawer(props)
+       (let* ((svg (svg-create 14 14)))
+         (svg-rectangle svg 0 0 14 14 :fill 'white :rx 2 :stroke-width 2.5 :stroke-color 'black)
+         (svg-image svg :ascent 'center)
+         ))
+
      (defun mk/svg-checkbox-empty()
        (let* ((svg (svg-create 14 14)))
          (svg-rectangle svg 0 0 14 14 :fill 'white :rx 2 :stroke-width 2.5 :stroke-color 'black)
@@ -1909,8 +1921,14 @@ An example:
                     (search-forward "[ ]" end-pos)
                     (replace-match "[X]")))
                  ))))
+
+
      (setq svg-tag-tags
-           '(
+           '(("^:PROPERTIES:\n\\(:ID:.*\n\\)*?:END:$" . ((lambda (tag)
+                                                           (string-match ":ID:[[:space:]]*\\(.*\\)$" tag)
+                                                     (svg-tag-make (concat "ID: " (match-string 1 tag))))))
+             (":TODO:" . ((lambda (tag)
+                            (svg-tag-make tag :beg 1 :end -1))))
              ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
                                           (svg-tag-make tag :beg 2))))
              ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
@@ -1922,7 +1940,8 @@ An example:
              ("\\(\\[[Xx]\\]\\)" . ((lambda (_tag) (mk/svg-checkbox-filled))
                                     (lambda () (interactive) (mk/svg-checkbox-toggle))
                                     "Click to toggle."))
-             )))
+             ))
+     )
 
 #+END_SRC
 
@@ -2065,8 +2084,7 @@ An example:
     :init
     (require 'async)
     ;; (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
-    ;; (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
-    (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+    (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
     (setq org-caldav-calendars
           '(
             (:calendar-id "9d6f9f39-cba5-fe5b-bd49-c61168d64f81"
@@ -2249,7 +2267,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   (setq mk/bib-main-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
   (setq mk/bib-pdf-dir "~/Dropbox/Dreams/Research/Papers/")
 
-  (setq reftex-default-bibliography mk/bib-main-file)
+  (setq reftex-default-bibliography `("paper.bib" ,mk/bib-main-file))
 #+END_SRC
 
 ** Bibtex
@@ -2370,6 +2388,23 @@ Modes to embed one buffer in another buffer and keep them in sync
     (defun biblio--completing-read-function ()
       "Override to always return the defualt one"
       completing-read-function)
+
+    ;; Override to add url
+    (defun biblio-arxiv--build-bibtex-1 (metadata)
+      "Create an unformated BibTeX record for METADATA."
+      (let-alist metadata
+        (format "@%s{NO_KEY,
+  author = {%s},
+  title = {{%s}},
+  year = {%s},
+  url = {%s},
+  series = {arXiv %s},
+  archivePrefix = {arXiv},
+  eprint = {%s},
+  primaryClass = {%s}}"
+                biblio-arxiv-bibtex-header
+                (biblio-join-1 " AND " .authors)
+                .title .year .url .year .identifier .category)))
     )
 #+END_SRC
 
@@ -2582,6 +2617,8 @@ Modes to embed one buffer in another buffer and keep them in sync
                         ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
                         ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
                         ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
+                        ((string= journal "ieee transactions on computers") (format "tc.%s" year))
+                        ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
                         (t "XXXX")))
              (fulldir (mk/ebib--format-full-dir dir title)))
         (if (file-exists-p fulldir) fulldir nil)
@@ -3156,9 +3193,9 @@ Do we still use this?
 ** Rust
 
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package rustic
-  ;;   :custom
-  ;;   (rustic-lsp-setup-p . nil))
+  (use-package rustic
+    :custom
+    (rustic-lsp-setup-p . nil))
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -3174,6 +3211,12 @@ Do we still use this?
     (message "Opening %s..." file)
     (call-process "open" nil 0 nil "-a" "PDF Expert" file)
     (message "Opening %s done" file)))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package diredfl
+    :config
+    (diredfl-global-mode))
 #+END_SRC
 
 
