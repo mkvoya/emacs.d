@@ -530,34 +530,21 @@ Alternatives (Check the selectrum repo README)
 ** LSP
 
 | lsp-mode | https://github.com/emacs-lsp/lsp-mode |
-| elgot    |                                       |
+| eglot    | Built-in since Emacs 29               |
 | nox      |                                       |
 | LSPCE    | https://github.com/zbelial/lspce      |
-|          |                                       |
-
-LSP, emmm... who use LSP?
 
 #+BEGIN_SRC emacs-lisp
-  (use-package lspce
+  (use-package eglot
     :disabled t
-    :straight ( :type git
-                :host github
-                :repo "zbelial/lspce"
-                :files ("*"))
-                ;; :pre-build
-                ;; (shell-command "cargo build --release && mv target/release/liblspce_module.dylib lspce-module.dylib")
-    :config (progn
-              (setq lspce-send-changes-idle-time 1)
-
-              ;; log file
-              (lspce-set-log-file "/Volumes/ramfs/lspce.log")
-
-              ;; enable lspce in particular buffers
-              ;; (add-hook 'rust-mode-hook 'lspce-mode)
-
-              ;; modify `lspce-server-programs' to add or change a lsp server, see document
-              ;; of `lspce-lsp-type-function' to understand how to get buffer's lsp type.
-              )
+    :straight (:type built-in)  ; built-in
+    ;; :init
+    ;; (use-package eglot-grammarly
+    ;;   :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
+    ;;   :defer t  ; defer package loading
+    ;;   :hook ((text-mode markdown-mode). (lambda ()
+    ;;                                       (require 'eglot-grammarly)
+    ;;                                       (eglot-ensure))))
     )
 #+END_SRC
 
@@ -1856,6 +1843,12 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                            :scheduled future
                            :order 1)))
       )
+    (set-face-attribute 'outline-1 nil :foreground "purple2")
+    (set-face-attribute 'org-level-1 nil :height 1.2)
+    (set-face-attribute 'org-level-1 nil :height 1.1)
+    (set-face-attribute 'outline-2 nil :foreground "violetRed2")
+    (set-face-attribute 'outline-3 nil :foreground "cyan4")
+    (set-face-attribute 'outline-4 nil :foreground "springgreen4")
     )
 #+END_SRC
 
@@ -1922,17 +1915,53 @@ An example:
                     (replace-match "[X]")))
                  ))))
 
+     (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+     (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+     (defconst day-re "[A-Za-z]\\{3\\}")
+     (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
 
      (setq svg-tag-tags
-           '(("^:PROPERTIES:\n\\(:ID:.*\n\\)*?:END:$" . ((lambda (tag)
-                                                           (string-match ":ID:[[:space:]]*\\(.*\\)$" tag)
-                                                     (svg-tag-make (concat "ID: " (match-string 1 tag))))))
-             (":TODO:" . ((lambda (tag)
-                            (svg-tag-make tag :beg 1 :end -1))))
-             ("\\(:#[A-Za-z0-9]+\\)" . ((lambda (tag)
-                                          (svg-tag-make tag :beg 2))))
-             ("\\(:#[A-Za-z0-9]+:\\)$" . ((lambda (tag)
-                                            (svg-tag-make tag :beg 2 :end -1))))
+           `(
+             ;; Properties
+             ;; ("^:PROPERTIES:\n\\(:ID:.*\n\\)*?:END:$" . ((lambda (tag)
+             ;;                                               (string-match ":ID:[[:space:]]*\\(.*\\)$" tag)
+             ;;                                               (svg-tag-make (concat "⚙ ID: " (match-string 1 tag))))))
+             ;; Org tags
+             ;; (":\\([A-Za-z0-9]+\\)" . ((lambda (tag) (svg-tag-make tag))))
+             ;; (":\\([A-Za-z0-9]+[ \-]\\)" . ((lambda (tag) tag)))
+
+             ;; Task priority
+             ("\\[#[A-Z]\\]" . ( (lambda (tag)
+                                   (svg-tag-make tag :face 'org-priority
+                                                 :beg 2 :end -1 :margin 0))))
+
+             ;; TODO / DONE
+             ("TODO" . ((lambda (tag) (svg-tag-make "TODO" :face 'org-todo :inverse t :margin 0))))
+             ("DONE" . ((lambda (tag) (svg-tag-make "DONE" :face 'org-done :margin 0))))
+
+             ;; Active date (with or without day name, with or without time)
+             (,(format "\\(<%s>\\)" date-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+             (,(format "\\(<%s \\)%s>" date-re day-time-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0))))
+             (,(format "<%s \\(%s>\\)" date-re day-time-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0))))
+
+             ;; Inactive date  (with or without day name, with or without time)
+             (,(format "\\(\\[%s\\]\\)" date-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+             (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'org-date))))
+             (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
+              ((lambda (tag)
+                 (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'org-date))))
+
+             ;; TODO-list
              ("\\[ \\]" . ((lambda (_tag) (mk/svg-checkbox-empty))
                            (lambda () (interactive) (mk/svg-checkbox-toggle))
                            "Click to toggle."
@@ -1951,6 +1980,7 @@ An example:
   (setq org-startup-indented t)
   (use-package org-superstar
     :defer t
+    :disabled t  ; disable for now
     :after (org)
     :hook (org-mode . org-superstar-mode)
     :config
@@ -1966,15 +1996,11 @@ An example:
             (?- . ?▪))) ; - ; previously used: 8211
     ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
 
-    (set-face-attribute 'outline-1 nil :foreground "purple2")
-    (set-face-attribute 'org-level-1 nil :height 1.2)
-    (set-face-attribute 'outline-2 nil :foreground "violetRed2")
-    (set-face-attribute 'outline-3 nil :foreground "cyan4")
-    (set-face-attribute 'outline-4 nil :foreground "springgreen4")
 
     (setq org-superstar-headline-bullets-list
           '(9673 9675 ?◇ 10047 10040))
     )
+
 
   (use-package org-bars
     :straight (:host github :repo "tonyaldon/org-bars")
@@ -2267,7 +2293,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   (setq mk/bib-main-file "~/Dropbox/Dreams/Research/Papers/Papers.bib")
   (setq mk/bib-pdf-dir "~/Dropbox/Dreams/Research/Papers/")
 
-  (setq reftex-default-bibliography `("paper.bib" ,mk/bib-main-file))
+  (setq reftex-default-bibliography `("paper.bib" "references.bib" ,mk/bib-main-file))
 #+END_SRC
 
 ** Bibtex
@@ -2335,7 +2361,7 @@ Modes to embed one buffer in another buffer and keep them in sync
            ("M-b" . citar-insert-preset))
     :init
     (setq citar-notes-paths '("~/Dropbox/Dreams/Org/PaperNotes"))
-    (setq org-cite-global-bibliography `(,mk/bib-main-file))
+    (setq org-cite-global-bibliography `(,(expand-file-name mk/bib-main-file)))
     (setq org-cite-insert-processor 'citar)
     (setq org-cite-follow-processor 'citar)
     (setq org-cite-activate-processor 'citar)
@@ -2613,6 +2639,7 @@ Modes to embed one buffer in another buffer and keep them in sync
       "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
       (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
                         ((string= journal "commun. acm") (format "commun.acm.%s" year))
+                        ((string= journal "nature communications") (format "nat.comm.%s" year))
                         ((string= journal "acs nano") (format "acs.nano.%s" year))
                         ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
                         ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
@@ -3249,3 +3276,15 @@ Do we still use this?
 #+BEGIN_SRC emacs-lisp
   (use-package darkroom)
 #+END_SRC
+
+
+** Anki-like
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-drill
+    :disabled t)
+
+  (use-package org-anki)
+
+#+END_SRC
+
