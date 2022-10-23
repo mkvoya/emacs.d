@@ -3288,3 +3288,35 @@ Do we still use this?
 
 #+END_SRC
 
+
+#+BEGIN_SRC emacs-lisp
+  (use-package define-word)
+  (use-package sdcv
+    :disabled t)
+
+  ;; via http://www.emacswiki.org/emacs/ThesauriAndSynonyms
+  ;; The file names are absolute, not relative, locations
+  ;;     - e.g. /foobar/mthesaur.txt.cache, not mthesaur.txt.cache
+  (use-package synonyms
+    :ensure t ;; install package if not found
+    :init ;; executed before loading package
+    (setq synonyms-file        "~/.emacs.d/data/mthesaur.txt")
+    (setq synonyms-cache-file  "~/.emacs.d/data/synonyms.cache")
+    :config
+    (defun my-synonym-current-word ()
+      "Lookup synonyms for current word."
+      (interactive)
+      (synonyms-lookup (thing-at-point 'word) nil nil))
+    :bind (:map my-map ("s" . my-synonym-current-word))
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-hugo
+    :after ox
+    :init
+    (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
+      (shell-command "cd ~/Dropbox/Public/essay && hugo -D && rsync -rvP ~/Dropbox/Public/essay/public/ dong.mk:/srv/http/essay"))
+    (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
+    )
+#+END_SRC
