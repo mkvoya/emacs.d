@@ -534,11 +534,38 @@ Alternatives (Check the selectrum repo README)
 | nox      |                                       |
 | LSPCE    | https://github.com/zbelial/lspce      |
 
+| flycheck | popular alternative to flymake                    |
+| flymake  | The rewritten built-in flymake is sufficient good |
+| flyspell | This is the real spell checker                    |
+
+| flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
+| flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
+| lsp-ltex              | https://github.com/emacs-languagetool/lsp-ltex/             |
+| languagetool          | https://github.com/PillFall/Emacs-LanguageTool.el           |
+
 #+BEGIN_SRC emacs-lisp
+
+  (use-package flymake
+    :straight (:type built-in)  ; built-in
+    (setq flymake-no-changes-timeout 2)
+    )
+
+  (use-package flyspell-correct
+    :after flyspell
+    :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
+
+  (use-package grammarly
+    :straight (:host github :repo "emacs-grammarly/grammarly")
+    :config
+    ;; (require 'grammarly)
+    (grammarly-load-from-authinfo)
+    )
   (use-package eglot
     :straight (:type built-in)  ; built-in
+    :after (flymake)
     :init
     (use-package eglot-grammarly
+      :after (grammarly)
       :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
       ;; :defer t  ; defer package loading
       ;; :hook ((text-mode markdown-mode). (lambda ()
@@ -551,6 +578,31 @@ Alternatives (Check the selectrum repo README)
         (require 'eglot-grammarly)
         (eglot-ensure))
       )
+    )
+
+  ;; Two other flymake grammarly checkers
+  (use-package flymake-grammarly
+    :disabled t  ; use eglot
+    :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
+    :init
+    :config
+    ;; (flymake-grammarly-setup)
+    (setq flymake-grammarly-check-time 2)
+    )
+  (use-package flymake-languagetool
+    :disabled t
+    :hook ((text-mode       . flymake-languagetool-load)
+           (latex-mode      . flymake-languagetool-load)
+           (org-mode        . flymake-languagetool-load)
+           (markdown-mode   . flymake-languagetool-load))
+    :init
+    ;; Remote server config with LanguageTool's free API
+    ;; (setq flymake-languagetool-url "https://api.languagetool.org")
+    ;; (setq flymake-languagetool-server-port nil)
+    ;; (setq flymake-languagetool-server-jar nil)
+
+    ;; Local server config
+    (setq flymake-languagetool-server-jar "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
     )
 #+END_SRC
 
@@ -626,59 +678,6 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   (load-file "~/.emacs.d/site-lisp/wc.el")
 #+END_SRC
-
-** Spell and checker
-
-| flycheck | popular alternative to flymake                    |
-| flymake  | The rewritten built-in flymake is sufficient good |
-| flyspell | This is the real spell checker                    |
-
-| flycheck-languagetool | https://github.com/emacs-languagetool/flycheck-languagetool |
-| flycheck-grammarly    | https://github.com/emacs-grammarly/flycheck-grammarly       |
-| lsp-ltex              | https://github.com/emacs-languagetool/lsp-ltex/             |
-| languagetool          | https://github.com/PillFall/Emacs-LanguageTool.el           |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package flyspell-correct
-    :after flyspell
-    :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
-  (use-package flymake
-    :straight (:type built-in)  ; built-in
-    (setq flymake-no-changes-timeout 2)
-    )
-  (use-package flymake-grammarly
-    :disabled t  ; use eglot
-    :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
-    :init
-    :config
-    ;; (flymake-grammarly-setup)
-    (setq flymake-grammarly-check-time 2)
-    )
-  (use-package grammarly
-    :disabled t
-    :straight (:host github :repo "emacs-grammarly/grammarly")
-    :config
-    ;; (require 'grammarly)
-    (grammarly-load-from-authinfo)
-    )
-  (use-package flymake-languagetool
-    :ensure t
-    :hook ((text-mode       . flymake-languagetool-load)
-           (latex-mode      . flymake-languagetool-load)
-           (org-mode        . flymake-languagetool-load)
-           (markdown-mode   . flymake-languagetool-load))
-    :init
-    ;; Remote server config with LanguageTool's free API
-    ;; (setq flymake-languagetool-url "https://api.languagetool.org")
-    ;; (setq flymake-languagetool-server-port nil)
-    ;; (setq flymake-languagetool-server-jar nil)
-
-    ;; Local server config
-    (setq flymake-languagetool-server-jar "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
-    )
-#+END_SRC
-
-
 
 * Navigation in code
 ** Citre: Tag jumps
