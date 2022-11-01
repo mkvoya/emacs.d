@@ -547,6 +547,7 @@ Alternatives (Check the selectrum repo README)
 
   (use-package flymake
     :straight (:type built-in)  ; built-in
+    :config
     (setq flymake-no-changes-timeout 2)
     )
 
@@ -562,12 +563,12 @@ Alternatives (Check the selectrum repo README)
     )
   (use-package eglot
     :straight (:type built-in)  ; built-in
-    :after (flymake)
+    ;; :after (flymake)
     :init
     (use-package eglot-grammarly
       :after (grammarly)
       :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
-      ;; :defer t  ; defer package loading
+      :defer t  ; defer package loading
       ;; :hook ((text-mode markdown-mode). (lambda ()
       ;;                                     (require 'eglot-grammarly)
       ;;                                     (eglot-ensure)))
@@ -590,7 +591,8 @@ Alternatives (Check the selectrum repo README)
     (setq flymake-grammarly-check-time 2)
     )
   (use-package flymake-languagetool
-    :disabled t
+    ;; :disabled t
+    :after flymake
     :hook ((text-mode       . flymake-languagetool-load)
            (latex-mode      . flymake-languagetool-load)
            (org-mode        . flymake-languagetool-load)
@@ -602,7 +604,7 @@ Alternatives (Check the selectrum repo README)
     ;; (setq flymake-languagetool-server-jar nil)
 
     ;; Local server config
-    (setq flymake-languagetool-server-jar "/usr/local/Cellar/languagetool/5.4/libexec/languagetool-server.jar")
+    (setq flymake-languagetool-server-jar "/usr/local/Cellar/languagetool/5.9/libexec/languagetool-server.jar")
     )
 #+END_SRC
 
@@ -1661,7 +1663,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :defer 2
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
-           ("C-c c" . #'org-capture)
+           ;; ("C-c c" . #'org-capture)
            )
     :init
     ;; (setq org-latex-create-formula-image-program 'dvisvgm)
@@ -2138,6 +2140,7 @@ An example:
            ("C-c n g" . org-roam-graph)
            ("C-c n i" . org-roam-node-insert)
            ("C-c n c" . org-roam-capture)
+           ("C-c c" . #'org-roam-capture)
            ;; Dailies
            ("C-c n j" . org-roam-dailies-capture-today))
     :config
@@ -2165,6 +2168,9 @@ An example:
              :target (file+head "Org/News/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+link: \n")
              :unnarrowed t
+             )
+            ("r" "People" plain "** ${title}\n%?"
+             :target (file+head "Org/People/General.org" "People")
              )
             ))
 
@@ -2631,6 +2637,7 @@ Modes to embed one buffer in another buffer and keep them in sync
                         ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
                         ((string= journal "ieee transactions on computers") (format "tc.%s" year))
                         ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
+                        ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
                         (t "XXXX")))
              (fulldir (mk/ebib--format-full-dir dir title)))
         (if (file-exists-p fulldir) fulldir nil)
