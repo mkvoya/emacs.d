@@ -1725,12 +1725,14 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setf org-todo-keyword-faces
           '(
             ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
-            ("TODO" . (:foreground "#ff39a3" :weight bold))
+            ;; ("TODO" . (:foreground "#ff39a3" :weight bold))
+            ("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
             ("HAND"  . "orangered")
             ("WAIT" . "pink")
-            ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold :strike-through "#0d0d0d"))
+            ;; ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold :strike-through "#0d0d0d"))
+            ("CANCELED" . (:foreground "white" :background "#4d4d4d"))
             ;; ("DONE" . "#008080")
-            ("DONE" . (:foreground "#808080"))
+            ("DONE" . (:foreground "#008080"))
             ("DELEGATE"  . "DeepSkyBlue")
             ))
 
@@ -1854,6 +1856,7 @@ An example:
  #+BEGIN_SRC emacs-lisp
    (use-package svg-lib :demand t)
    (use-package svg-tag-mode
+     :disabled t
      :if mk-feature/gui
      :commands svg-tag-mode
      :hook (org-mode . svg-tag-mode)
@@ -3276,7 +3279,23 @@ Do we still use this?
   (use-package org-drill
     :disabled t)
 
-  (use-package org-anki)
+  (use-package org-anki
+    :after (org)
+    :config
+    ;; Override the cloze function
+    (defun org-anki--region-to-cloze (begin end arg hint)
+      "Cloze region from BEGIN to END with number ARG."
+      (let ((region (buffer-substring begin end)))
+        (save-excursion
+          (delete-region begin end)
+          (insert (with-output-to-string
+                    (princ (format "{{c%d::%s" (or arg 1) region))
+                    (unless (string-blank-p hint) (princ (format "::%s" hint)))
+                    (princ "}}")))
+          (org-end-of-subtree)
+          (insert "\n" region ": " hint)
+          )))
+    )
 
 #+END_SRC
 
