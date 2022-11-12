@@ -2138,6 +2138,19 @@ An example:
     (setq org-roam-directory "~/Dropbox/Dreams/")
     (setq org-roam-link-file-path-type 'relative)
     (setq org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
+
+
+    (defun mk/dailies-goto-today (&optional keys)
+      "Call org-roam-goto-today and narrow and jump to the end.
+
+    ELisp programs can set KEYS to a string associated with a template.
+    In this case, interactive selection will be bypassed."
+      (interactive)
+      (org-roam-dailies-capture-today t keys)
+      (org-narrow-to-subtree)
+      (goto-char (point-max))
+      )
+
     :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n g" . org-roam-graph)
@@ -2145,6 +2158,8 @@ An example:
            ("C-c n c" . org-roam-capture)
            ("C-c c" . #'org-roam-capture)
            ;; Dailies
+           ;; ("C-c j" . org-roam-dailies-goto-today)
+           ("C-c j" . mk/dailies-goto-today)
            ("C-c n j" . org-roam-dailies-capture-today))
     :config
     ;; If you're using a vertical completion framework, you might want a more informative completion interface
@@ -2162,11 +2177,6 @@ An example:
                                 "#+title: ${title}\n#+link: \n")
              :unnarrowed t
              )
-            ("p" "Paper Notes" plain "%?"
-             :target (file+head "Org/PaperNotes/%<%Y%m%d%H%M%S>-${slug}.org"
-                                "#+TITLE: Notes on /${title}/\n#+DATE: %<%FT%T%z>\n%[~/.emacs.d/snippets/plain/PaperNotes]")
-             :unnarrowed t
-             )
             ("n" "News" plain "%?"
              :target (file+head "Org/News/%<%Y%m%d%H%M%S>-${slug}.org"
                                 "#+title: ${title}\n#+link: \n")
@@ -2176,6 +2186,12 @@ An example:
              :target (file+head "Org/People/General.org" "People")
              )
             ))
+    (setq org-roam-dailies-capture-templates
+          '(("d" "default" entry
+             "* %?"
+             :if-new (file+datetree "Dailies.org" day)
+             :unnarrowed nil
+             )))
 
     ;; If using org-roam-protocol
     (require 'org-roam-protocol))
@@ -3283,18 +3299,19 @@ Do we still use this?
     :after (org)
     :config
     ;; Override the cloze function
-    (defun org-anki--region-to-cloze (begin end arg hint)
-      "Cloze region from BEGIN to END with number ARG."
-      (let ((region (buffer-substring begin end)))
-        (save-excursion
-          (delete-region begin end)
-          (insert (with-output-to-string
-                    (princ (format "{{c%d::%s" (or arg 1) region))
-                    (unless (string-blank-p hint) (princ (format "::%s" hint)))
-                    (princ "}}")))
-          (org-end-of-subtree)
-          (insert "\n" region ": " hint)
-          )))
+    ;; The below function does not work since Anki does not show the back of the card for clozes.
+    ;; (defun org-anki--region-to-cloze (begin end arg hint)
+    ;;   "Cloze region from BEGIN to END with number ARG."
+    ;;   (let ((region (buffer-substring begin end)))
+    ;;     (save-excursion
+    ;;       (delete-region begin end)
+    ;;       (insert (with-output-to-string
+    ;;                 (princ (format "{{c%d::%s" (or arg 1) region))
+    ;;                 (unless (string-blank-p hint) (princ (format "::%s" hint)))
+    ;;                 (princ "}}")))
+    ;;       (org-end-of-subtree)
+    ;;       (insert "\n" region ": " hint)
+    ;;       )))
     )
 
 #+END_SRC
