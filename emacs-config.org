@@ -73,11 +73,11 @@ We need to setup fonts early.
   (defvar bootstrap-version)
   (let ((bootstrap-file
          (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-        (bootstrap-version 5))
+        (bootstrap-version 6))
     (unless (file-exists-p bootstrap-file)
       (with-current-buffer
           (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
            'silent 'inhibit-cookies)
         (goto-char (point-max))
         (eval-print-last-sexp)))
@@ -2637,83 +2637,60 @@ Modes to embed one buffer in another buffer and keep them in sync
         (insert (concat "[[" file "]["))))
 
     (setq mk/ebib-dir-root "~/Dropbox/Dreams/Research/Papers")
-    (defun mk/ebib-series-dir-name (series)
-      "Get the name of dir of SERIES."
-      (string-replace " " "." (string-replace " '" "" series))
-      )
 
     (defun mk/ebib--format-full-dir (dir title)
       "Get the full dir name from DIR and TITLE."
       (format "%s/%s/%s" mk/ebib-dir-root dir title))
-    (defun mk/ebib--get-dir-journal-style-via-journal (title journal year)
-      "Get the dir name in journal style via TITLE, JOURNAL and YEAR."
-      (let* ((dir (cond ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
-                        ((string= journal "commun. acm") (format "commun.acm.%s" year))
-                        ((string= journal "nature communications") (format "nat.comm.%s" year))
-                        ((string= journal "acs nano") (format "acs.nano.%s" year))
-                        ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
-                        ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
-                        ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
-                        ((string= journal "ieee transactions on computers") (format "tc.%s" year))
-                        ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
-                        ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
-                        (t "XXXX")))
-             (fulldir (mk/ebib--format-full-dir dir title)))
-        (if (file-exists-p fulldir) fulldir nil)
-        ))
-    (defun mk/ebib--get-dir-conf-style-via-series (title series)
-      "Get the dir name in conf style via TITLE and SERIES."
-      (let ((dir (mk/ebib--format-full-dir
-                  (string-replace " '" "" series)
-                  title)))
-        (if (file-exists-p dir) dir nil)))
-    (defun mk/ebib--get-dir-journal-style-via-series (title series)
-      "Get the dir name in journal style via TITLE and SERIES."
-      (let ((dir (mk/ebib--format-full-dir
-                  (string-replace " " "." series)
-                  title)))
-        (if (file-exists-p dir) dir nil)))
 
-    (defun mk/ebib--get-dir-arxiv (title publisher year)
-      "Get the dir name in journal style via TITLE and PUBLISHER and YEAR."
-      (print publisher)
-      (if (string= publisher "arxiv")
-          (let ((dir (mk/ebib--format-full-dir (format "arxiv%s" year) title)))
-            (if (file-exists-p dir) dir nil)) nil))
+    (defun mk/ebib-get-series-dirname-candidate (title series journal year publisher)
+      "Form the name of given TITLE, SERIES, JOURNAL, YEAR, PUBLISHER"
+      (cond
+       ;; Use series if set
+       ((not (string= series "no-series")) (string-replace " " "." (string-replace " '" "" series)))
+       ;; Hard coded
+       ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
+       ((string= journal "commun. acm") (format "commun.acm.%s" year))
+       ((string= journal "nature communications") (format "nat.comm.%s" year))
+       ((string= journal "acs nano") (format "acs.nano.%s" year))
+       ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
+       ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
+       ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
+       ((string= journal "ieee transactions on computers") (format "tc.%s" year))
+       ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
+       ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
+
+       ;; arXiv
+       ((string= publisher "arxiv") (format "arxiv%s" year))
+       (t "XXXX")))
 
     (defun mk/ebib-get-dir (title series journal year publisher)
       "Calculate the directory for TITLE and SERIES and JOURNAL and PUBLISHER."
-      (let* ((cand1 (mk/ebib--get-dir-journal-style-via-series title series))
-             (cand2 (mk/ebib--get-dir-conf-style-via-series title series))
-             (cand3 (mk/ebib--get-dir-journal-style-via-journal title journal year))
-             (cand4 (mk/ebib--get-dir-arxiv title publisher year)))
-        (cond
-         (cand1 cand1)
-         (cand2 cand2)
-         (cand3 cand3)
-         (cand4 cand4)
-         (t nil))))
+      (let* ((series-dir (mk/ebib-get-series-dirname-candidate title series journal year publisher))
+             (fulldir (mk/ebib--format-full-dir series-dir title)))
+        (if (file-exists-p fulldir) fulldir nil)
+        ))
 
     (defun mk/ebib-open-dir (key)
       "Open the directory for KEY."
       (interactive (list (ebib--get-key-at-point)))
       (ebib--execute-when
-       (entries
-        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-               (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
-               (publisher (downcase (ebib-get-field-value "publisher" key ebib--cur-db "no-publisher" t)))
-               (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
-               (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
-               (cand (mk/ebib-get-dir title series journal year publisher)))
-          (if cand (find-file cand)
-            (print "No such dir, creating with prompt...")
-            (let* ((conf (string-trim (read-string "The conf abbr: " (mk/ebib-series-dir-name series))))
-                   (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
-              (make-directory target t)
-              (find-file target)
-              ))))
-       (default
-        (beep))))
+        (entries
+         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+                (series (downcase (ebib-get-field-value "series" key ebib--cur-db "no-series" t)))
+                (publisher (downcase (ebib-get-field-value "publisher" key ebib--cur-db "no-publisher" t)))
+                (journal (downcase (ebib-get-field-value "journal" key ebib--cur-db "no-journal" t)))
+                (year (ebib-get-field-value "year" key ebib--cur-db "0000" t))
+                (series-dirname (mk/ebib-get-series-dirname-candidate title series journal year publisher))
+                (cand (mk/ebib-get-dir title series journal year publisher)))
+           (if cand (find-file cand)
+             (print "No such dir, creating with prompt...")
+             (let* ((conf (string-trim (read-string "The conf abbr: " series-dirname)))
+                    (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+               (make-directory target t)
+               (find-file target)
+               ))))
+        (default
+         (beep))))
 
     (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
 
@@ -2729,18 +2706,18 @@ Modes to embed one buffer in another buffer and keep them in sync
       "Open files for KEY."
       (interactive (list (ebib--get-key-at-point)))
       (ebib--execute-when
-       (entries
-        (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
-               (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
-               (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
-               (cand (cond
-                      ((= 0 (length candidates)) nil)
-                      ((= 1 (length candidates)) (car candidates))
-                      (t (completing-read "Choose the one to link: " candidates)))))
-          (if cand (find-file cand)
-            ())))
-       (default
-        (beep))))
+        (entries
+         (let* ((title (mk/normalize-paper-title (ebib-get-field-value "title" key ebib--cur-db nil t)))
+                (cmd (format "find %s -type d -iname \"%s\"" mk/ebib-dir-root title))
+                (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n"))))
+                (cand (cond
+                       ((= 0 (length candidates)) nil)
+                       ((= 1 (length candidates)) (car candidates))
+                       (t (completing-read "Choose the one to link: " candidates)))))
+           (if cand (find-file cand)
+             ())))
+        (default
+         (beep))))
     )
 
 #+END_SRC
