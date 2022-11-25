@@ -1663,7 +1663,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :defer 2
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
-           ;; ("C-c c" . #'org-capture)
+           ("C-c c" . #'org-capture)
            )
     :init
     ;; (setq org-latex-create-formula-image-program 'dvisvgm)
@@ -1714,7 +1714,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
              "LONG-TERM(l)"  ; Long-term
              "DELEGATE(g)"   ; Delegated
              "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
-             "CONFDDL(c)"
+             "CONFDDL(C)"
              "PROJECT(p)"
              "GOAL(G)"
              "|"
@@ -2131,6 +2131,7 @@ An example:
 ** OrgRoam
 #+BEGIN_SRC emacs-lisp
   (use-package org-roam
+    :disabled
     :if mk-feature/noteman
     :after (org)
     :defer
@@ -2202,6 +2203,7 @@ An example:
   (use-package websocket :defer t)
   (use-package simple-httpd :defer t)
   (use-package org-roam-ui
+    :disabled
     :if mk-feature/noteman
     :defer t
     :after (org-roam)
@@ -2220,6 +2222,7 @@ An example:
   ;; Since the org module lazy loads org-protocol (waits until an org URL is
   ;; detected), we can safely chain `org-roam-protocol' to it.
   (use-package org-roam-protocol
+    :disabled
     :defer t
     :straight nil
     :after (org-protocol org-roam))
@@ -2293,6 +2296,76 @@ Modes to embed one buffer in another buffer and keep them in sync
     (setq notdeft-extension "org")
     (setq notdeft-secondary-extensions '("md" "txt" "scrbl"))
     (setq notdeft-allow-org-property-drawers t)
+    )
+#+END_SRC
+** Denote
+#+BEGIN_SRC emacs-lisp
+
+  (use-package denote
+    :straight (:type git :host github :repo "protesilaos/denote")
+    :config
+    ;; Remember to check the doc strings of those variables.
+    (setq denote-directory (expand-file-name "~/Dropbox/Dreams/Org/"))
+    (setq denote-known-keywords '("emacs" "philosophy" "research" "economics"))
+    (setq denote-infer-keywords t)
+    (setq denote-sort-keywords t)
+    (setq denote-file-type nil) ; Org is the default, set others here
+    (setq denote-prompts '(title keywords))
+    (setq denote-excluded-directories-regexp nil)
+    (setq denote-date-prompt-use-org-read-date t) ; Pick dates, where relevant, with Org's advanced interface
+    (setq denote-allow-multi-word-keywords t) ; Allow multi-word keywords
+    (setq denote-date-format nil) ; read doc string
+
+    ;; By default, we do not show the context of links.  We just display
+    ;; file names.  This provides a more informative view.
+    (setq denote-backlinks-show-context t)
+    ;; We use different ways to specify a path for demo purposes.
+    (setq denote-dired-directories
+          (list denote-directory
+                (thread-last denote-directory (expand-file-name "attachments"))
+                (expand-file-name "~/Documents/books")))
+    (add-hook 'dired-mode-hook #'denote-dired-mode-in-directories)
+    ;; Here is a custom, user-level command from one of the examples we
+    ;; showed in this manual.  We define it here and add it to a key binding
+    ;; below.
+    (defun my-denote-journal ()
+      "Create an entry tagged 'journal', while prompting for a title."
+      (interactive)
+      (denote
+       (denote--title-prompt)
+       '("journal")))
+    )
+  (use-package org-capture
+    :straight nil
+    :after (denote)
+    :config
+    (setq denote-org-capture-specifiers "%l\n%i\n%?")
+    (defvar mk/org-capture-people-path)
+    (defun mk/org-capture-people ()
+      (interactive)
+      (format "* %s\n%%?" (read-string "姓名: " nil))
+      )
+
+    (setq org-capture-templates
+          '(("n" "New DeNote" plain (file denote-last-path)
+             #'denote-org-capture
+             :no-save t
+             :immediate-finish nil
+             :kill-buffer t
+             :jump-to-captured t)
+            ("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
+             #'mk/org-capture-people
+             )))
+    )
+  (use-package consult-notes
+    :straight (:type git :host github :repo "mclear-tools/consult-notes")
+    :commands (consult-notes
+               consult-notes-search-in-all-notes)
+    :bind ("C-c d f" . consult-notes)
+    :config
+    (setq consult-notes-sources
+          '(("denote"          ?d "~/Dropbox/Dreams/Org")
+            ))
     )
 #+END_SRC
 
