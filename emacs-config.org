@@ -2129,137 +2129,12 @@ An example:
 #+END_SRC
 
 ** OrgRoam
-#+BEGIN_SRC emacs-lisp
-  (use-package org-roam
-    :disabled
-    :if mk-feature/noteman
-    :after (org)
-    :defer
-    :init
-    (setq org-roam-directory "~/Dropbox/Dreams/")
-    (setq org-roam-link-file-path-type 'relative)
-    (setq org-roam-file-exclude-regexp "flycheck_.*\\.org$") ;; Avoid false duplication caused by flycheck temporary files.
 
+| org-roam        |   |
+| org-roam-ui     |   |
+| org-roam-server | (use org-roam-ui) |
 
-    (defun mk/dailies-goto-today (&optional keys)
-      "Call org-roam-goto-today and narrow and jump to the end.
-
-    ELisp programs can set KEYS to a string associated with a template.
-    In this case, interactive selection will be bypassed."
-      (interactive)
-      (org-roam-dailies-capture-today t keys)
-      (org-narrow-to-subtree)
-      (goto-char (point-max))
-      )
-
-    :bind (("C-c n l" . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n g" . org-roam-graph)
-           ("C-c n i" . org-roam-node-insert)
-           ("C-c n c" . org-roam-capture)
-           ("C-c c" . #'org-roam-capture)
-           ;; Dailies
-           ;; ("C-c j" . org-roam-dailies-goto-today)
-           ("C-c j" . mk/dailies-goto-today)
-           ("C-c n j" . org-roam-dailies-capture-today))
-    :config
-    ;; If you're using a vertical completion framework, you might want a more informative completion interface
-    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
-    (setq org-roam-rename-file-on-title-change nil)
-    (setq org-roam-dailies-directory "Org/Daily/")
-    (org-roam-db-autosync-mode)
-    (setq org-roam-capture-templates
-          '(("d" "default" plain "%?"
-             :target (file+head "Org/Notes/%<%Y%m%d%H%M%S>-${slug}.org"
-                                "#+title: ${title}\n")
-             :unnarrowed t)
-            ("l" "LWN" plain "%?"
-             :target (file+head "Org/LWNs/%<%Y%m%d%H%M%S>-${slug}.org"
-                                "#+title: ${title}\n#+link: \n")
-             :unnarrowed t
-             )
-            ("n" "News" plain "%?"
-             :target (file+head "Org/News/%<%Y%m%d%H%M%S>-${slug}.org"
-                                "#+title: ${title}\n#+link: \n")
-             :unnarrowed t
-             )
-            ("r" "People" plain "** ${title}\n%?"
-             :target (file+head "Org/People/General.org" "People")
-             )
-            ))
-    (setq org-roam-dailies-capture-templates
-          '(("d" "default" entry
-             "* %?"
-             :if-new (file+datetree "Dailies.org" day)
-             :unnarrowed nil
-             )))
-
-    ;; If using org-roam-protocol
-    (require 'org-roam-protocol))
-#+END_SRC
-** OrgRoam UI
-# org-roam-server does not support org-roam v2, use org-roam-ui instead.
-#+BEGIN_SRC emacs-lisp
-  (use-package websocket :defer t)
-  (use-package simple-httpd :defer t)
-  (use-package org-roam-ui
-    :disabled
-    :if mk-feature/noteman
-    :defer t
-    :after (org-roam)
-    :straight (:host github :repo "org-roam/org-roam-ui" :files ("*.el" "out"))
-    ;; :hook
-    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
-    ;;         a hookable mode anymore, you're advised to pick something yourself
-    ;;         if you don't care about startup time, use
-    ;; :hook (after-init . org-roam-ui-mode)
-    :config
-    (setq org-roam-ui-sync-theme t
-          org-roam-ui-follow t
-          org-roam-ui-update-on-save t
-          org-roam-ui-open-on-start t))
-
-  ;; Since the org module lazy loads org-protocol (waits until an org URL is
-  ;; detected), we can safely chain `org-roam-protocol' to it.
-  (use-package org-roam-protocol
-    :disabled
-    :defer t
-    :straight nil
-    :after (org-protocol org-roam))
-#+END_SRC
-** Org-Mindmap
-#+BEGIN_SRC emacs-lisp
-  ;; This is an Emacs package that creates graphviz directed graphs from
-  ;; the headings of an org file
-  (use-package org-mind-map
-    :defer t
-    :after (ox-org)
-    ;; Uncomment the below if 'ensure-system-packages` is installed
-    ;;:ensure-system-package (gvgen . graphviz)
-    :config
-    (setq org-mind-map-engine "dot")       ; Default. Directed Graph
-    ;; (setq org-mind-map-engine "neato")  ; Undirected Spring Graph
-    ;; (setq org-mind-map-engine "twopi")  ; Radial Layout
-    ;; (setq org-mind-map-engine "fdp")    ; Undirected Spring Force-Directed
-    ;; (setq org-mind-map-engine "sfdp")   ; Multiscale version of fdp for the layout of large graphs
-    ;; (setq org-mind-map-engine "twopi")  ; Radial layouts
-    ;; (setq org-mind-map-engine "circo")  ; Circular Layout
-    (setq org-mind-map-default-edge-attribs '(("color" . "blue")
-                                              ("headport" . "w")
-                                              ("tailport" . "e")
-                                              ("tailclip" . "no")
-                                              ("headclip" . "no")
-                                              ("arrowhead" . "none")))
-    (setq org-mind-map-default-node-attribs '(("shape" . "plain")
-                                              ("color" . "white")))
-    (setq org-mind-map-default-graph-attribs '(("nodesep" . "0.75")
-                                               ("overlap" . "false")
-                                               ("spline" . "true")
-                                               ("rankdir" . "LR")))
-    (setq org-mind-map-unflatten-command "unflatten -l1")
-    )
-#+END_SRC
-
+  | org-mindmap | creates graphviz directed graphs from headings of an org file |
 
 ** Org-transclusion
 
@@ -2299,9 +2174,13 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
 #+END_SRC
 ** Denote
+
 #+BEGIN_SRC emacs-lisp
 
+  (use-package websocket :defer t)
+  (use-package simple-httpd :defer t)
   (use-package denote
+    :if mk-feature/noteman
     :straight (:type git :host github :repo "protesilaos/denote")
     :config
     ;; Remember to check the doc strings of those variables.
@@ -2336,6 +2215,7 @@ Modes to embed one buffer in another buffer and keep them in sync
        '("journal")))
     )
   (use-package org-capture
+    :if mk-feature/noteman
     :straight nil
     :after (denote)
     :config
