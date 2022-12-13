@@ -555,43 +555,41 @@ Alternatives (Check the selectrum repo README)
     :after flyspell
     :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
-  (use-package grammarly
-    :straight (:host github :repo "emacs-grammarly/grammarly")
-    :config
-    ;; (require 'grammarly)
-    (grammarly-load-from-authinfo)
-    )
+  ;; eglot-grammarly uses its own languageserver
+  ;; (use-package grammarly
+  ;;   :straight (:host github :repo "emacs-grammarly/grammarly")
+  ;;   :config
+  ;;   ;; (require 'grammarly)
+  ;;   (grammarly-load-from-authinfo)
+  ;;   )
   (use-package eglot
-    :straight (:type built-in)  ; built-in
-    ;; :after (flymake)
+    ;; :straight (:type built-in)  ; built-in
+    :after (flymake)
     :init
     (use-package eglot-grammarly
-      :after (grammarly)
+      ;; :after (grammarly)
       :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
       :defer t  ; defer package loading
-      ;; :hook ((text-mode markdown-mode). (lambda ()
-      ;;                                     (require 'eglot-grammarly)
-      ;;                                     (eglot-ensure)))
-      :config
-      (defun mk/enable-grammarly ()
-        "Enable grammarly for the current buffer."
-        (interactive)
-        (require 'eglot-grammarly)
-        (eglot-ensure))
+      ;; :hook ((TeX-mode . (lambda () (require 'eglot-grammarly) (eglot-ensure))))
       )
+    (defun mk/enable-grammarly ()
+      "Enable grammarly for the current buffer."
+      (interactive)
+      (require 'eglot-grammarly)
+      (eglot-ensure))
     )
 
-  ;; Two other flymake grammarly checkers
-  (use-package flymake-grammarly
-    :disabled t  ; use eglot
-    :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
-    :init
-    :config
-    ;; (flymake-grammarly-setup)
-    (setq flymake-grammarly-check-time 2)
-    )
+  ;; ;; Two other flymake grammarly checkers
+  ;; (use-package flymake-grammarly
+  ;;   :disabled t  ; use eglot
+  ;;   :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
+  ;;   :init
+  ;;   :config
+  ;;   ;; (flymake-grammarly-setup)
+  ;;   (setq flymake-grammarly-check-time 2)
+  ;;   )
   (use-package flymake-languagetool
-    ;; :disabled t
+    :disabled t
     :after flymake
     :hook ((text-mode       . flymake-languagetool-load)
            (latex-mode      . flymake-languagetool-load)
@@ -1435,6 +1433,8 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
                                  (flyspell-mode)
                                  (LaTeX-math-mode)
                                  (darkroom-mode)
+                                 (setq buffer-face-mode-face '(:family "iA Writer Quattro V"))
+                                 (buffer-face-mode)
                                  (visual-line-mode)
                                  (visual-line-mode)
                                  ))
@@ -3125,6 +3125,20 @@ Do we still use this?
     (setq motd--git-commit-dir "~/Dropbox/Dreams")
     (motd-start-timer)
     )
+  (use-package xwidget-apps
+    :if mk-feature/noteman
+    :straight nil
+    :ensure nil
+    :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
+    )
+  (use-package xwidget-apps
+    :if mk-feature/noteman
+    :straight nil
+    :ensure nil
+    :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
+    :init
+    (xwidget-dict-mode)
+    )
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -3193,12 +3207,12 @@ Do we still use this?
   (use-package linux-kernel-coding-style
     :straight (:type git :host github :repo "mkvoya/linux-kernel-coding-style.el")
     )
-  (use-package tree-sitter
-    :init
-    (use-package tree-sitter-langs)
-    (global-tree-sitter-mode)
-    (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-    )
+  ;; (use-package tree-sitter
+  ;;   :init
+  ;;   (use-package tree-sitter-langs)
+  ;;   (global-tree-sitter-mode)
+  ;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+  ;;   )
 #+END_SRC
 
 
