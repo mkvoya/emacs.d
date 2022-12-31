@@ -879,6 +879,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
                             minibuffer-mode
                             corfu-mode
                             motd-message-mode
+                            elfeed-search-mode
+                            elfeed-show-mode
                             special-mode
                             ))
       (evil-set-initial-state nonevil-mode 'emacs))
@@ -1639,16 +1641,27 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
   (use-package elfeed
     :if mk-feature/news-mail
     :defer t
+    :bind ("C-c f" . elfeed)
     :config
-    ;; Global key
-    (global-set-key (kbd "C-x w") 'elfeed)
     ;; The feed list
     (setq elfeed-feeds
           '(("http://nullprogram.com/feed/" blog emacs)
             "http://www.50ply.com/atom.xml"  ; no autotagging
+            ;; Apple news
+            ("https://feeds.macrumors.com/MacRumors-All" apple)
+            ;; storage news
+            ("https://thessdguy.com/feed/" storage)
+            ("https://thememoryguy.com/feed/" storage)
+            ("https://blocksandfiles.com/feed/" storage)
+            ;; ("https://thesanguy.com/feed/" storage) website down
+            ;;
+            ("https://www.nextplatform.com/feed/" it)
+            ("https://devclass.com/feed/" it)
+            ("https://www.theregister.com/headlines.atom" it)
+            ("http://ithare.com/rssfeed/" it)
             ("http://nedroid.com/feed/" webcomic)
             "http://planet.emacsen.org/atom.xml"))
-    ;; (setq-default elfeed-search-filter "@1-week-ago +unread ")
+    (setq-default elfeed-search-filter "@1-week-ago +unread ")
     )
 #+END_SRC
 
@@ -1735,6 +1748,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ("DONE" . (:foreground "#008080"))
             ("DELEGATE"  . "DeepSkyBlue")
             ))
+    (setq org-log-into-drawer t)
 
     ;; Strike through the whole line with DONE entry
     ;; (font-lock-add-keywords
@@ -2031,16 +2045,21 @@ An example:
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;;; Paste Image From https://emacs-china.org/t/topic/6601/4
+  ;; Paste Image From https://emacs-china.org/t/topic/6601/4
   (defun org-insert-image ()
     "Insert a image from clipboard."
     (interactive)
-    (let* ((path (concat default-directory
-                         (buffer-name)
+    (let* ((buf-name (if (and (fboundp 'denote-file-is-note-p)
+                              (fboundp 'denote-retrieve-filename-identifier)
+                              (denote-file-is-note-p (buffer-file-name)))
+                         (denote-retrieve-filename-identifier (buffer-name))
+                       (buffer-name)))
+           (path (concat default-directory
+                         buf-name
                          ".assets/"))
            (image-file (concat
                         path
-                        (buffer-name)
+                        buf-name
                         (format-time-string "_%Y%m%d_%H%M%S.png"))))
       (if (not (file-exists-p path))
           (mkdir path))
@@ -2148,9 +2167,10 @@ Modes to embed one buffer in another buffer and keep them in sync
     :defer t
     :after org
     :config
+    (setq org-transclusion-fringe-bitmap 'empty-line)
     (set-face-attribute
      'org-transclusion-fringe nil
-     :foreground "lightgrey"
+     :foreground "green"
      :background "lightgreen")
     (set-face-attribute
      'org-transclusion-source-fringe nil
@@ -2227,6 +2247,9 @@ Modes to embed one buffer in another buffer and keep them in sync
             ("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
              #'mk/org-capture-people
              )))
+    (defun mk/link-to-people ()
+      (interactive)
+      )
     )
   (use-package consult-notes
     :straight (:type git :host github :repo "mclear-tools/consult-notes")
@@ -2236,6 +2259,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     :config
     (setq consult-notes-sources
           '(("denote"          ?d "~/Dropbox/Dreams/Org")
+            ("People"          ?d "~/Dropbox/Dreams/Org/People")
             ))
     )
   (use-package org-journal
@@ -2609,6 +2633,7 @@ Modes to embed one buffer in another buffer and keep them in sync
        ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
        ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
        ((string= journal "ieee transactions on computers") (format "tc.%s" year))
+       ((string= journal "ieee transactions on information theory") (format "tit.%s" year))
        ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
        ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
 
@@ -3296,3 +3321,27 @@ Do we still use this?
 #+BEGIN_SRC emacs-lisp
   (use-package org-pomodoro)
 #+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package wwg
+    :straight (:type git :host github :repo "ag91/writer-word-goals")
+    :config
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package whisper
+    :straight (:type git :host github :repo "natrys/whisper.el")
+    ;; :bind ("C-H-r" . whisper-run)
+    :config
+    (setq ;; whisper-install-directory "/tmp/"
+          whisper-model "base"
+          ;; whisper-language "en"
+          whisper-language "zh"
+          whisper--ffmpeg-input-device ":0"
+          whisper-translate nil))
+#+END_SRC
+
+
