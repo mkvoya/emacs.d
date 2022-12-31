@@ -27,6 +27,10 @@
 (defvar motd--popup-frame nil)
 (defvar motd--git-commit-dir nil)
 
+
+(defvar motd--timer nil)
+(defvar motd--fade-timer nil)
+
 (defun motd--git-commit ()
   "Generate git commit when motd message is shown."
   (when motd--git-commit-dir
@@ -84,6 +88,51 @@ Recent Submission Deadlines:
                       ("Love You 😘 .x..." . t)) t)
   )
 
+(defun motd--fade-timeout-handler ()
+  "Adjust the frame alpha."
+  (when (and motd--popup-frame (frame-live-p motd--popup-frame))
+    (when motd--fade-timer
+      (let ((alp (or (frame-parameter motd--popup-frame 'alpha) 100)))
+        (if (> alp 10)
+            (set-frame-parameter motd--popup-frame 'alpha (- alp 10))
+          (cancel-timer motd--fade-timer)
+          (setq motd-fade-timer nil)
+          (motd--remove-popup)
+          )))))
+
+(defun motd--create-notify-frame (buffer)
+  "Create an auto-dispel floating popup frame with BUFFER as content."
+  (let*  ((parent (window-frame))
+          (f (make-frame `((parent-frame . ,parent)
+                           (undecorated . 1)
+                           (name . "*Motd Frame*")
+                           (border-width . 5)
+                           (internal-border-width . 10)
+                           (minibuffer . ,(minibuffer-window parent))
+                           (left-fringe . 0)
+                           (right-fringe . 0)
+                           (menu-bar-lines . 0)
+                           (tool-bar-lines . 0)
+                           (tab-bar-lines . 0)
+                           (top-bar-lines . 0)
+                           (mode-line-format . nil)
+                           (header-line-format . nil)
+                           )))
+          (win (frame-root-window f))
+          (width (/ (* (frame-inner-width) 1) 3))
+          (height (/ (* (frame-inner-height) 1) 5))
+          )
+    (set-frame-position f (- (frame-inner-width) width) 0)
+    (set-frame-size f width height t)
+    (set-frame-parameter f 'background-color motd-background-color)
+    (set-frame-parameter f 'border-color motd-border-color)
+    (set-window-buffer win buffer)
+    (set-window-dedicated-p win t)
+    (setq motd--fade-timer
+          (run-with-timer 1 0.2 #'motd--fade-timeout-handler))
+  f
+  ))
+
 (defun motd--create-frame (buffer)
   "Create a floating popup frame with BUFFER as content."
   (let*  ((parent (window-frame))
@@ -139,6 +188,27 @@ Recent Submission Deadlines:
   (setq motd--popup-frame
         (motd--create-frame motd--buffer-name)))
 
+(defun motd--notify (text)
+  "Show TEXT in the popup frame."
+  (with-current-buffer (get-buffer-create motd--buffer-name)
+    (read-only-mode -1)
+    (erase-buffer)
+    (insert text)
+    (insert "\n")
+    (let ((padding (/ (- (frame-width) 40) 2)))
+      (insert (format (format "%%%ds" padding) ""))
+      (insert "[ OK ]")
+      (insert (format (format "%%%ds" padding) ""))
+      (insert "\n"))
+    (insert "\n")
+    (insert "\n")
+    (setq mode-line-format nil)
+    (when evil-mode
+      (evil-change-state 'emacs))
+    (read-only-mode t))
+  (setq motd--popup-frame
+        (motd--create-notify-frame motd--buffer-name)))
+
 (defun motd--timeout-handler ()
   "Remind you important things upon the first touch of Emacs in the day."
   (let ((day (format-time-string "%d")))
@@ -150,13 +220,12 @@ Recent Submission Deadlines:
       (motd--git-commit)
       (setq motd--today day))))
 
-(defvar motd--timer nil)
-
 (defun motd-start-timer ()
   "Start the timer for the motd daemon."
   (interactive)
   (setq motd--timer
-        (run-with-idle-timer 0 'motd-timer-interval #'motd--timeout-handler)))
+        (run-with-idle-timer 0 'motd-timer-interval #'motd--timeout-handler))
+  )
 
 (defun motd-stop-timer ()
   "Stop the timer for the motd daemon."
