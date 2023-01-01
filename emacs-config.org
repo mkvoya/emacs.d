@@ -2531,24 +2531,6 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
-* Popweb
-
-#+BEGIN_SRC emacs-lisp
-  (use-package popweb
-    :if mk-feature/gui
-    :defer t
-    :disabled t
-    :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
-    :config
-    (setq popweb-root (file-name-directory (locate-library "popweb.el")))
-    (add-to-list 'load-path (concat popweb-root "extension/latex"))
-    (require 'popweb-latex)
-    (add-to-list 'load-path (concat popweb-root "extension/dict"))
-    (require 'popweb-dict-bing)
-    (require 'popweb-dict-youdao)
-    )
-#+END_SRC
-
 * vterm
 
 #+BEGIN_SRC emacs-lisp
@@ -2778,6 +2760,23 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
+* Popweb
+
+#+BEGIN_SRC emacs-lisp
+  (use-package popweb
+    :if mk-feature/gui
+    :defer t
+    :disabled t
+    :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
+    :init
+    (setq popweb-root (file-name-directory (locate-library "popweb.el")))
+    (add-to-list 'load-path (concat popweb-root "extension/latex"))
+    (require 'popweb-latex)
+    (add-to-list 'load-path (concat popweb-root "extension/dict"))
+    (require 'popweb-dict)
+    )
+#+END_SRC
+
 * Fancy Libraries 
 
 ** Less (if ever) used
@@ -2900,13 +2899,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     :straight nil
     :ensure nil
     :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
-    )
-  (use-package xwidget-apps
-    :if mk-feature/noteman
-    :straight nil
-    :ensure nil
-    :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
-    :init
+    :config
     (xwidget-dict-mode)
     )
 #+END_SRC
