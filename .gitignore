@@ -40,3 +40,9 @@ games
 /request/
 /amx-items
 /projects
+/eaf/
+/forge-database.sqlite
+/.cask/
+/.mc-lists.el
+/xenops/
+/multisession/
