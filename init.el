@@ -24,3 +24,4 @@
 (message "Everything is up. Wish you a nice day. :)")
 
 ;;; init.el ends here
+(put 'narrow-to-region 'disabled nil)

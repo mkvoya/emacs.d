@@ -177,7 +177,7 @@ We need to setup fonts early.
     (interactive)
     (progn
       (visual-line-mode t)
-      (setq word-wrap nil)
+      ;; (setq word-wrap nil)
       ))
 
   (blink-cursor-mode 1)
@@ -836,6 +836,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 | avy             | https://github.com/abo-abo/avy               |
 
 #+BEGIN_SRC emacs-lisp
+  (use-package avy)
   (use-package evil-easymotion
     :after (evil)
     :demand t
@@ -1302,9 +1303,9 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
                                      (statement-case-open . +)))))
   (c-add-style "my-ycsb-c++-style"
                '("stroustrup"
-                 (c-basic-offset . 2)            ; indent by four spaces
-                 (tab-width . 2)
-                 (indent-tabs-mode . nil)        ; use tabs
+                 (c-basic-offset . 4)            ; indent by four spaces
+                 (tab-width . 4)
+                 (indent-tabs-mode . t)        ; use tabs
                  (c-offsets-alist . ((inline-open . 0)  ; custom indentation rules
                                      (brace-list-open . 0)
                                      (innamespace . [0])
@@ -1354,6 +1355,8 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
     (add-to-list 'TeX-command-list '("Make Clean" "make clean" TeX-run-command nil t))
     (add-to-list 'TeX-command-list '("Make Clean & Make" "make clean && make" TeX-run-command nil t))
+    ;; "texcount article.tex -inc -incbib -sum"
+    (add-to-list 'TeX-command-list '("Make Count" "make count" TeX-run-command nil t))
     ;; (setq-default TeX-command-default "Make")
     ;; from https://gist.github.com/stefano-meschiari/9217695
     (setq TeX-auto-save t)
@@ -1374,6 +1377,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     (add-hook 'LaTeX-mode-hook (lambda()
                                  (mkvoya/better-wrap)
                                  (flyspell-mode)
+                                 ;; (add-hook 'after-save-hook #'flyspell-buffer)
                                  (LaTeX-math-mode)
                                  (darkroom-mode)
                                  (setq buffer-face-mode-face '(:family "iA Writer Quattro V"))
@@ -1556,8 +1560,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                           (column-number-mode)
                           (size-indication-mode)
                           ;; better line wrapping for cjk. Try =toggle-word-wrap=
-                          (setq-default word-wrap nil)
-                          (setq word-wrap nil)
+                          ;; (setq-default word-wrap nil)
+                          ;; (setq word-wrap nil)
                           )))
 
 #+END_SRC
@@ -1629,7 +1633,9 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
     (setq org-startup-indented t)
-    (setq org-latex-create-formula-image-program 'imagemagick)
+    (setq org-latex-create-formula-image-program 'dvisvgm)
+
+    ;; (setq org-latex-create-formula-image-program 'dvipng)
     (setq org-support-shift-select t)  ; Use shift to select region when possible.
     (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
     ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
@@ -1649,17 +1655,18 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
       )
     (add-hook 'org-mode-hook #'org-show-link-when-idle)
 
-    (setq org-modules '(ol-doi
-                        ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
-                        ol-bibtex
-                        ol-docview
-                        ol-irc
-                        ol-info))
+    ;; (setq org-modules '(ol-doi
+    ;;                     ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
+    ;;                     ol-bibtex
+    ;;                     ol-docview
+    ;;                     ol-irc
+    ;;                     ol-info))
     (setq org-element-use-cache nil)  ; cache sometimes causes problems
     (use-package org-num-mode
       :defer t
       :straight nil  ; built-in with org-mode
-      :hook (org-mode . org-num-mode))
+      ;; :hook (org-mode . org-num-mode)
+      )
     :config
 
     (setq org-display-remote-inline-images 'download)
@@ -1671,10 +1678,10 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq org-todo-keywords
           '((sequence
              "TODO(t)"  ; New task
-             "HAND(h)"  ; Doing
+             "ONGOING(g)"  ; Doing
              "WAIT(w)"  ; Procrastinated on purpose
              "LONG-TERM(l)"  ; Long-term
-             "DELEGATE(g)"   ; Delegated
+             "DELEGATE(z)"   ; Delegated
              "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "CONFDDL(C)"
              "PROJECT(p)"
@@ -1683,13 +1690,17 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
              "DONE(d!)"      ; Done
              "CANCELED(c@)"  ; Eliminated
              )))
+    ;; Always change the task to IN-PROGRESS.
+    ;; (setq org-clock-in-switch-to-state "IN-PROGRESS")
+    ;; (setq org-clock-out-switch-to-state #'(lambda (_)
+    ;;           (completing-read "Finishing a clock, change task state to?" '("DONE" "TODO"))))
     ;; Keyword colors
     (setf org-todo-keyword-faces
           '(
             ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
             ;; ("TODO" . (:foreground "#ff39a3" :weight bold))
             ("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
-            ("HAND"  . "orangered")
+            ("ONGOING"  . "orangered")
             ("WAIT" . "pink")
             ;; ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold :strike-through "#0d0d0d"))
             ("CANCELED" . (:foreground "white" :background "#4d4d4d"))
@@ -1760,12 +1771,12 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                           (color-darken-name
                            (face-attribute 'default :background) 4))
       )
-    (set-face-attribute 'outline-1 nil :foreground "purple2")
-    (set-face-attribute 'org-level-1 nil :height 1.2)
+    (set-face-attribute 'outline-1 nil :foreground "firebrick")
     (set-face-attribute 'org-level-1 nil :height 1.1)
-    (set-face-attribute 'outline-2 nil :foreground "violetRed2")
-    (set-face-attribute 'outline-3 nil :foreground "cyan4")
-    (set-face-attribute 'outline-4 nil :foreground "springgreen4")
+    (set-face-attribute 'outline-2 nil :foreground "purple2")
+    (set-face-attribute 'outline-3 nil :foreground "violetRed2")
+    (set-face-attribute 'outline-4 nil :foreground "cyan4")
+    ;; (set-face-attribute 'outline-4 nil :foreground "springgreen4")
 
     (setq org-fontify-quote-and-verse-blocks t)
 
@@ -1798,7 +1809,36 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                            :scheduled future
                            :order 1)))
       )
+
+    ;; (setq org-hide-emphasis-markers t)
+    (setq org-emphasis-alist
+          '(("*" bold)
+            ("/" italic)
+            ("_" underline)
+            ("=" org-verbatim verbatim)
+            ;; ("@" (:foreground "red" :background "black"))
+            ("&" (:foreground "red"))
+            ("~" org-code verbatim)
+            ("+"
+             (:strike-through t))))
     )
+
+  (use-package xenops
+    :hook (org-mode-hook . xenops-mode)
+    :config
+    (setq xenops-math-latex-process-alist
+          '((dvisvgm :programs
+                     ("xelatex" "dvisvgm")
+                     :description "xdv > svg"
+                     :message "you need to install the programs: xelatex and dvisvgm."
+                     :image-input-type "xdv"
+                     :image-output-type "svg"
+                     :image-size-adjust (3 . 1.5)
+                     :latex-compiler
+                     ("xelatex -no-pdf -interaction nonstopmode -shell-escape -output-directory %o %f")
+                     :image-converter
+                     ("dvisvgm %f -n -b %B -c %S -o %O"))))
+    )  ; the package causes highlighting issues for latex
 #+END_SRC
 
  #+BEGIN_SRC emacs-lisp
@@ -2079,7 +2119,9 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
   (use-package org-journal
     :defer t
-    :bind ("C-c j" . org-journal-new-entry)
+    :bind (("C-c j" . org-journal-open-current-journal-file)
+           ("C-c J" . org-journal-new-entry)
+           )
     :config
     (setq org-journal-file-format "%Y-%m-%d.org")
     (setq org-journal-enable-agenda-integration t)
@@ -2158,9 +2200,10 @@ Modes to embed one buffer in another buffer and keep them in sync
     :straight (:host github :repo "bdarcus/citar")
     :defer
     :demand
-    :bind (("C-c b" . citar-insert-citation)
-           :map minibuffer-local-map
-           ("M-b" . citar-insert-preset))
+    :bind (;; ("C-c B" . citar-insert-citation)
+           ;; :map minibuffer-local-map
+           ;; ("M-b" . citar-insert-preset)
+           )
     :init
     (setq citar-notes-paths '("~/Dropbox/Dreams/Org/PaperNotes"))
     (setq org-cite-global-bibliography `(,(expand-file-name mk/bib-main-file)))
@@ -2180,14 +2223,14 @@ Modes to embed one buffer in another buffer and keep them in sync
     ;;   :no-require
     ;;   :config (citar-embark-mode))
     :config
-    (use-package org-roam-bibtex
-      :defer
-      :after org-roam
-      :config
-      (setq orb-roam-ref-format 'org-cite)
-      (setq orb-use-bibdesk-attachments 't)
-      )
-    (require 'org-roam-bibtex)
+    ;; (use-package org-roam-bibtex
+    ;;   :defer
+    ;;   :after org-roam
+    ;;   :config
+    ;;   (setq orb-roam-ref-format 'org-cite)
+    ;;   (setq orb-use-bibdesk-attachments 't)
+    ;;   )
+    ;; (require 'org-roam-bibtex)
     (setq citar-open-note-function #'(lambda (key entry) (orb-edit-note key)))
     ;; (citar-filenotify-setup '(LaTeX-mode-hook org-mode-hook))
     )
@@ -2278,8 +2321,10 @@ Modes to embed one buffer in another buffer and keep them in sync
     (setq ebib-keywords-file-save-on-exit 'always)
     ;; ebib-file-associations '(("pdf")) "using Emacs to open pdf"
     (setq ebib-use-timestamp t)  ; recording the time that entries are added
+    (setq ebib-notes-symbol "📘")
     (setq ebib-index-columns '(("Year" 4 t)
                                ("Entry Key" 30 t)
+                               ("Note" 2 nil)
                                ("Title" 50 t)
                                ("Series/Journal" 20 t)
                                ("Author/Editor" 40 nil)))
@@ -2706,6 +2751,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-h c") #'describe-char)
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "C-c i") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Inbox.org")))
   (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
   (global-set-key (kbd "C-c p") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Projects.org")))
   (global-set-key (kbd "M-s-<left>") 'tab-previous)
@@ -2713,7 +2759,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   (global-set-key (kbd "M-s-n") 'tab-new)
   (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
   ;; Open ibuffer upon "C-c i"
-  (global-set-key (kbd "C-c i") 'ibuffer)
+  (global-set-key (kbd "C-c b") 'ibuffer)
   ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
   ;; (global-unset-key [mouse-3])
   ;; (global-set-key [down-mouse-3]
@@ -2787,7 +2833,6 @@ Modes to embed one buffer in another buffer and keep them in sync
   (use-package elquery :defer)
   (use-package citeproc :defer)
   (use-package lua-mode :defer)
-  ;; (use-package xenops)  ; the package causes highlighting issues for latex
   (use-package org-download :defer)
   (use-package symbol-overlay :defer)
   (use-package read-aloud
@@ -2976,6 +3021,7 @@ Modes to embed one buffer in another buffer and keep them in sync
   ;;   (global-tree-sitter-mode)
   ;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
   ;;   )
+
 #+END_SRC
 
 
@@ -3065,3 +3111,38 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
+
+#+BEGIN_SRC emacs-lisp
+  (defun how-many-str (regexp str)
+    (cl-loop with start = 0
+             for count from 0
+             while (string-match regexp str start)
+             do (setq start (match-end 0))
+             finally return count))
+  (defun how-many-checked (str)
+    (+ (how-many-str "\\[[^[:blank:]]\\]" str)
+       (how-many-str "([^[:blank:]])" str)))
+  (defun how-many-unchecked (str)
+    (+ (how-many-str "\\[ \\]" str)
+       (how-many-str "( )" str)))
+  (defun mk/org-columns--summary-pomodoro-count (check-boxes _)
+    "Summarize pomodoro CHECK-BOXES with a check-box cookie."
+    (let ((checked (cl-reduce '+ (cl-mapcar #'how-many-checked check-boxes)))
+          (unchecked (cl-reduce '+ (cl-mapcar #'how-many-unchecked check-boxes))))
+      (format "[%d/%d]" checked (+ checked unchecked))))
+  (setq org-columns-summary-types
+        '(("P/" . mk/org-columns--summary-pomodoro-count))
+        )
+
+  (defun mk/org-clocking-on-state-change ()
+    "Auto clock-in/-out when state changes."
+    (unless (string= org-last-state org-state)
+      (cond
+       ((string= org-state "ONGOING")
+        (org-clock-in))
+       ((string= org-last-state "ONGOING")
+        (org-clock-out)
+        ))))
+  (add-hook 'org-after-todo-state-change-hook #'mk/org-clocking-on-state-change)
+
+#+END_SRC

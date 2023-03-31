@@ -5,6 +5,17 @@
 (defvar wc-regexp-english-word
   "[a-zA-Z0-9-]+")
 
+
+(defun mk/wc (start end)
+  "字数统计"
+  (interactive "r")
+  (save-excursion
+    (save-restriction
+      (narrow-to-region start end)
+      (goto-char (point-min))
+      (buffer-sub
+  ))))
+
 (defun wc ()
   "「較精確地」統計中/日/英文字數。
   - 文章中的註解不算在字數內。
@@ -17,12 +28,14 @@
   。且中日文標點的計算標準要看 Emacs 如何定義特殊標點符號如ヴァランタン・アルカン
   中間的點也被 Emacs 算為一個字而不是標點符號。"
   (interactive)
-  (let* ((v-buffer-string
+  (let* ((start (if mark-active (region-beginning) (point-min)))
+         (end (if mark-active (region-end) (point-max)))
+         (v-buffer-string
           (progn
             (if (eq major-mode 'org-mode) ; 去掉 org 文件的 OPTIONS（以#+開頭）
                 (setq v-buffer-string (replace-regexp-in-string "^#\\+.+" ""
-                                                                (buffer-substring-no-properties (point-min) (point-max))))
-              (setq v-buffer-string (buffer-substring-no-properties (point-min) (point-max))))
+                                                                (buffer-substring-no-properties start end)))
+              (setq v-buffer-string (buffer-substring-no-properties start end)))
             (replace-regexp-in-string (format "^ *%s *.+" comment-start) "" v-buffer-string)))
                                         ; 把註解行刪掉（不把註解算進字數）。
          (chinese-char-and-punc 0)
