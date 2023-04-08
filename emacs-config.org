@@ -574,6 +574,7 @@ Alternatives (Check the selectrum repo README)
     (rime-librime-root "~/.emacs.d/librime/dist")
     (rime-share-data-dir "~/Library/Rime")
     (rime-user-data-dir "~/Library/Rime")
+    (rime-emacs-module-header-root "/opt/homebrew/opt/emacs-plus@30/include")
     (rime-show-candidate 'posframe)
     (rime-posframe-properties
      (list :background-color "#000000"  ; 不要在这里设置字体，会影响后面 face 里字体的
@@ -984,13 +985,14 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       )
     (setq display-time-string-forms
           '((format-time-string "%F %H:%M")
-            (propertize
-              (format " [M:%s]" (mk/notmuch-count-unread))
-              'help-echo  "Unread!"
-              'keymap  (let ((map (make-sparse-keymap)))
-                        (define-key map [mouse-1]
-                                    #'mk/notmuch-open-unread-view)
-                        map))))
+            ;; (propertize
+            ;;  (format " [M:%s]" (mk/notmuch-count-unread))
+            ;;  'help-echo  "Unread!"
+            ;;  'keymap  (let ((map (make-sparse-keymap)))
+            ;;             (define-key map [mouse-1]
+            ;;                         #'mk/notmuch-open-unread-view)
+            ;;             map))
+            ))
     (display-time-mode 1))
 #+END_SRC
 

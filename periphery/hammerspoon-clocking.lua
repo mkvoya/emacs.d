@@ -10,7 +10,7 @@ end
 
 local function eval(sexp, callback)
    hs.task.new(
-      "/usr/local/bin/emacsclient",
+      "/opt/homebrew/bin/emacsclient",
       function(exitCode, stdOut, stdErr)
          if exitCode == 0 then
             callback(trim(stdOut))

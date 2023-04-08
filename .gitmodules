@@ -1,0 +1,6 @@
+[submodule "site-lisp/xwidget-apps"]
+	path = site-lisp/xwidget-apps
+	url = git@github.com:mkvoya/xwidget-apps.git
+[submodule "periphery/raycast-scripts"]
+	path = periphery/raycast-scripts
+	url = git@github.com:mkvoya/raycast-scripts.git
