@@ -712,6 +712,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       :init
       (setq magit-bind-magit-project-status t)
       )
+    (add-hook 'magit-diff-mode-hook #'(lambda () (visual-line-mode t)))
+    (add-hook 'magit-status-mode-hook #'(lambda () (visual-line-mode t)))
     )
   (use-package git-link :defer t)
   (use-package forge :after (magit) :defer t)
@@ -1386,6 +1388,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
                                  (buffer-face-mode)
                                  (visual-line-mode)
                                  (visual-line-mode)
+                                 (darkroom-decrease-margins 0.8)
                                  ))
     ;; (add-hook 'TeX-output-mode (lambda () (goto-char (point-max))))
 
@@ -1823,6 +1826,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ("~" org-code verbatim)
             ("+"
              (:strike-through t))))
+     (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
 
   (use-package xenops
@@ -2310,6 +2314,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     (setq ebib-reading-list-template "* %M %T\n%S\n:PROPERTIES:\n%K\n:END:\n%F\n")
     (setq ebib-autogenerate-keys t)  ; Use bibtex autokey.
     (setq ebib-uniquify-keys t)
+    (setq ebib-file-associations '(("pdf" . "open -a \"PDF Expert\" %s")))
     (setq ebib-bibtex-dialect 'biblatex)  ; biblatex is better than xxx.
     (setq ebib-index-window-size 10)
     (setq ebib-preload-bib-files `(,mk/bib-main-file))
@@ -2996,13 +3001,14 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 
 #+BEGIN_SRC emacs-lisp
-(defun mk/dired-open-pdf ()
-  "In dired, open the file named on this line."
-  (interactive)
-  (let* ((file (dired-get-filename nil t)))
-    (message "Opening %s..." file)
-    (call-process "open" nil 0 nil "-a" "PDF Expert" file)
-    (message "Opening %s done" file)))
+  (defun mk/dired-open-pdf ()
+    "In dired, open the file named on this line."
+    (interactive)
+    (let* ((file (dired-get-filename nil t)))
+      (message "Opening %s..." file)
+      (call-process "open" nil 0 nil "-a" "PDF Expert" file)
+      (message "Opening %s done" file)))
+  (define-key dired-mode-map "E" 'mk/dired-open-pdf)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -3148,3 +3154,4 @@ Modes to embed one buffer in another buffer and keep them in sync
   (add-hook 'org-after-todo-state-change-hook #'mk/org-clocking-on-state-change)
 
 #+END_SRC
+
