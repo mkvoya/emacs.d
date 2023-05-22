@@ -64,7 +64,8 @@
 		(- end post-blanks)
 	     'color t
 	     'face
-	     `((:foreground ,color)))
+	     `((:foreground ,color)
+               (:underline nil)))
 	    (goto-char end))
 	(goto-char limit)
 	nil))))

@@ -1826,6 +1826,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ("~" org-code verbatim)
             ("+"
              (:strike-through t))))
+    (use-package ov)
      (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
 
@@ -2496,6 +2497,7 @@ Modes to embed one buffer in another buffer and keep them in sync
        ((string= journal "commun. acm") (format "commun.acm.%s" year))
        ((string= journal "nature communications") (format "nat.comm.%s" year))
        ((string= journal "acs nano") (format "acs.nano.%s" year))
+       ((string= journal "nano select") (format "nano.%s" year))
        ((string= journal "bmc bioinformatics") (format "bioinfo.%s" year))
        ((string= journal "ieee transactions on computer-aided design of integrated circuits and systems") (format "tcad.%s" year))
        ((string= journal "ieee transactions on parallel and distributed systems") (format "tpds.%s" year))
@@ -2503,6 +2505,8 @@ Modes to embed one buffer in another buffer and keep them in sync
        ((string= journal "ieee transactions on information theory") (format "tit.%s" year))
        ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
        ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
+       ((string= journal "computational and structural biotechnology journal") (format "csbj.%s" year))
+       ((string= journal "the australian universities' review") (format "aur.%s" year))
 
        ;; arXiv
        ((string= publisher "arxiv") (format "arxiv%s" year))
@@ -3155,3 +3159,9 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+END_SRC
 
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package dired+)
+  (use-package format-all)
+#+END_SRC
