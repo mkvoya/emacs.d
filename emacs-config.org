@@ -92,6 +92,9 @@ We need to setup fonts early.
   (setq use-package-compute-statistics t)
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t) ; Ensure :straight t
+
+  (use-package use-package-ensure-system-package :ensure t)
+  (straight-use-package 'org)
 #+END_SRC
 
 
@@ -1282,6 +1285,14 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     ;; (setq-default display-line-numbers-width 3)
     )
 
+  (use-package blackout)
+  (use-package ws-butler
+    :blackout ws-butler-mode
+    :config (progn
+              ;; adding it to prog-mode-hook causes problems for emacsclient
+              (add-hook 'cython-mode-hook     #'ws-butler-mode)
+              (add-hook 'LaTeX-mode-hook      #'ws-butler-mode)
+              (add-hook 'emacs-lisp-mode-hook #'ws-butler-mode)))
 #+END_SRC
 
 ** C
@@ -1320,6 +1331,29 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
   (use-package modern-cpp-font-lock
     :defer t
     :ensure t)
+
+  (use-package c-ts-mode
+    :bind (:map c-ts-base-mode-map
+                ("M-<up>" . drag-stuff-up)
+                ("M-<down>" . drag-stuff-down)
+                ("<home>"  .  malb/beginning-of-line-dwim))
+    :hook ((c-ts-base-mode . hs-minor-mode)
+           (c-ts-base-mode . display-line-numbers-mode)
+           (c-ts-base-mode . ws-butler-mode)
+           (c-ts-base-mode . ggtags-mode)
+           (c-ts-base-mode . helm-gtags-mode)
+           (c-ts-base-mode . malb/lsp-enable)
+           (c-ts-base-mode . clang-format+-mode))
+    :init (progn
+            (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
+            (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
+            (add-to-list 'auto-mode-alist '("\\.inl\\'" . c++-ts-mode))))
+
+  (use-package clang-format
+    :config (setq clang-format-executable "clang-format"))
+
+  (use-package clang-format+
+    :commands clang-format+-mode)
 #+END_SRC
 
 ** Markdown
@@ -1476,6 +1510,40 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 
 #+END_SRC
 
+
+** Golang
+
+#+BEGIN_SRC emacs-lisp
+  (use-package go-ts-mode
+    :mode "\\.go$"
+    :ensure-system-package gopls
+    :hook ((go-ts-mode . eldoc-mode)
+           (go-ts-mode . malb/lsp-enable)
+           (go-ts-mode . display-line-numbers-mode))
+    :init (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
+    :config (when (boundp 'dtrt-indent-hook-mapping-list)
+              (add-to-list 'dtrt-indent-hook-mapping-list
+                           '(go-ts-mode c/c++/java go-ts-mode-indent-offset))))
+#+END_SRC
+
+** Rust
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rustic
+    :custom
+    (rustic-lsp-setup-p . nil))
+
+  (use-package rust-ts-mode
+    :ensure nil
+    :mode "\\.rs$"
+    :hook ((rust-ts-mode . eldoc-mode)
+           (rust-ts-mode . malb/lsp-enable)
+           (rust-ts-mode . display-line-numbers-mode))
+    :init (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
+    :config (when (boundp 'dtrt-indent-hook-mapping-list)
+              (add-to-list 'dtrt-indent-hook-mapping-list
+                           '(rust-ts-mode c/c++/java rust-ts-mode-indent-offset))))
+#+END_SRC
 
 ** Python & Web
 
@@ -1660,18 +1728,13 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
       )
     (add-hook 'org-mode-hook #'org-show-link-when-idle)
 
-    ;; (setq org-modules '(ol-doi
-    ;;                     ;; ol-w3m o-bbdb ol-gnus ol-mhe ol-rmail ol-eww
-    ;;                     ol-bibtex
-    ;;                     ol-docview
-    ;;                     ol-irc
-    ;;                     ol-info))
     (setq org-element-use-cache nil)  ; cache sometimes causes problems
     (use-package org-num-mode
       :defer t
       :straight nil  ; built-in with org-mode
       ;; :hook (org-mode . org-num-mode)
       )
+
     :config
 
     (setq org-display-remote-inline-images 'download)
@@ -1724,7 +1787,9 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     ;;  t)
 
     ;; …, ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵ "↴▾▽▼↩↘↸"
-    (setq org-ellipsis "▾")
+    ;; (setq org-ellipsis "▾")
+    (setq org-ellipsis "↴")
+    ;; org-ellipsis " ••• "
 
     ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
     (defun org-force-open-current-window ()
@@ -1815,6 +1880,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
                            :order 1)))
       )
 
+    (setq org-hide-emphasis-markers nil)      ; don’t hide markers for like *foo*
     ;; (setq org-hide-emphasis-markers t)
     (setq org-emphasis-alist
           '(("*" bold)
@@ -1827,8 +1893,13 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ("+"
              (:strike-through t))))
     (use-package ov)
-     (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
+    (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
+  ;; Org Cite
+  (use-package oc
+    :straight nil
+    :ensure nil
+    :after org)
 
   (use-package xenops
     :hook (org-mode-hook . xenops-mode)
@@ -2991,13 +3062,6 @@ Modes to embed one buffer in another buffer and keep them in sync
   (setq python-shell-completion-native-disabled-interpreters nil)
 #+END_SRC
 
-** Rust
-
-#+BEGIN_SRC emacs-lisp
-  (use-package rustic
-    :custom
-    (rustic-lsp-setup-p . nil))
-#+END_SRC
 
 #+BEGIN_SRC emacs-lisp
   ;; (use-package ox-pandoc)
@@ -3164,4 +3228,42 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package dired+)
   (use-package format-all)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package unkillable-scratch
+    :config (progn (unkillable-scratch 1)))
+  (use-package scratch)
+
+  ;; Speedy reading
+  (use-package spray
+    :config (progn
+              (setq spray-wpm 400
+                    spray-margin-left 4
+                    spray-margin-top 12)
+              (bind-key "+" 'spray-faster spray-mode-map)
+              (bind-key "-" 'spray-slower spray-mode-map)
+              (add-to-list 'spray-unsupported-minor-modes 'beacon-mode)))
+
+  (use-package synosaurus
+    :ensure-system-package ((wn . wordnet))
+    ;; :bind (("C-c w s" . synosaurus-lookup)
+    ;;        ("C-c w S" . synosaurus-choose-and-replace))
+    :config (progn
+              (setq synosaurus-choose-method 'popup)
+              (unbind-key "C-c s l" synosaurus-mode-map)
+              (unbind-key "C-c s r" synosaurus-mode-map)
+              (add-hook 'org-mode-hook #'synosaurus-mode)
+              (add-hook 'LaTeX-mode-hook #'synosaurus-mode)))
+  (use-package powerthesaurus
+    ;; :bind ("C-c w p" . powerthesaurus-lookup-dwim)
+    :config (add-to-list 'display-buffer-alist
+                         `(,(rx bos "*Powerthesaurus - " (0+ any) "*" eos)
+                           (display-buffer-in-side-window)
+                           (side . right)
+                           (slot . 0)
+                           (window-width . 80))))
+
+  (use-package focus)
 #+END_SRC
