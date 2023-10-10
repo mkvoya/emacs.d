@@ -3,7 +3,7 @@
 #+DATE: 2021-02-16T01:16:18+0800
 #+EMAIL: mingkaidong@gmail.com
 
-* Core
+* Core                                                                :emacs:
 ** Literal Configuration Bootstrap
 #+BEGIN_SRC emacs-lisp
   (setq .org "~/.emacs.d/emacs-config.org")
@@ -45,8 +45,12 @@ We need to setup fonts early.
       (set-fontset-font (frame-parameter nil 'font)
                         charset (font-spec :family "LXGW WenKai Screen")))
     (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
-    (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
-    (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
+    ;; (set-face-attribute 'default nil :font (font-spec :family "ia Writer" :size 14))
+    ;; (set-fontset-font t 'unicode (font-spec :family "Noto Color Emoji" :size 14))
+    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "LXGW WenKai Screen" :size 18 :weight 'bold))
+    ;; (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
+    ;; (set-fontset-font t 'unicode-bmp (font-spec :name "JuliaMono" :size 12) nil 'prepend)
     )
 #+END_SRC
 
@@ -531,28 +535,15 @@ Alternatives (Check the selectrum repo README)
     :after flyspell
     :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
-  ;; eglot-grammarly uses its own languageserver
-  ;; (use-package grammarly
-  ;;   :straight (:host github :repo "emacs-grammarly/grammarly")
-  ;;   :config
-  ;;   ;; (require 'grammarly)
-  ;;   (grammarly-load-from-authinfo)
-  ;;   )
-  (use-package eglot
-    ;; :straight (:type built-in)  ; built-in
-    :after (flymake)
-    :init
-    (use-package eglot-grammarly
-      ;; :after (grammarly)
-      :straight (:host github :repo "emacs-grammarly/eglot-grammarly")
-      :defer t  ; defer package loading
-      ;; :hook ((TeX-mode . (lambda () (require 'eglot-grammarly) (eglot-ensure))))
-      )
-    (defun mk/enable-grammarly ()
-      "Enable grammarly for the current buffer."
-      (interactive)
-      (require 'eglot-grammarly)
-      (eglot-ensure))
+  (use-package grammarly
+    :straight (:host github :repo "emacs-grammarly/grammarly")
+    :config
+    (grammarly-load-from-authinfo)
+    )
+  (use-package flymake-grammarly
+    :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
+    :after grammarly
+    :config
     )
 #+END_SRC
 
@@ -621,7 +612,7 @@ Alternatives (Check the selectrum repo README)
 ** CJK font alignment
 #+BEGIN_SRC emacs-lisp
   (use-package valign
-    :hook (org-mode-hook . valign-mode)
+    :hook (org-mode . valign-mode)
     )
 #+END_SRC
 
@@ -749,7 +740,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (blamer-min-offset 70)
     :custom-face
     (blamer-face ((t :foreground "#7a88cf"
-                     :background nil
+                     :background unspecified
                      :height 110
                      :italic t)))
     :config
@@ -781,6 +772,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (undo-fu)
     :init
     (setq evil-want-C-i-jump nil)
+    (setq evil-move-beyond-eol t)
     :config
     ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
     ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -809,7 +801,8 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-ex-define-cmd "quit" 'evil-quit)
     ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
     ;; (setq evil-emacs-state-cursor '(hollow))
-    (setq evil-emacs-state-cursor '(bar . 3))
+    (setq evil-emacs-state-cursor '((bar . 3) "green"))
+    (setq evil-insert-state-cursor '((bar . 1) "blue"))
     ;; Disable Evil in snails-mode
 
     (dolist (nonevil-mode '(snails-mode
@@ -1458,6 +1451,12 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
       (add-to-list 'company-backends 'company-reftex-labels)
       (add-to-list 'company-backends 'company-reftex-citations))
     ;; (use-package auctex-latexmk :config (auctex-latexmk-setup))
+    ;; https://emacs.stackexchange.com/a/63195/30542
+    (defun my-LaTeX-mode-setup ()
+      (font-latex-add-keywords '(("autoref" "*{") ("Autoref" "{") ("nameref" "*{"))
+                               'reference))
+
+    (add-hook 'LaTeX-mode-hook #'my-LaTeX-mode-setup)
     )
 #+END_SRC
 
@@ -1495,10 +1494,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     (pdf-loader-install)
     (add-hook 'pdf-view-mode-hook #'(lambda () (pixel-scroll-precision-mode -1)))
     )
-  ;; (use-package pdf-tools
-  ;;   :magic ("%PDF" . pdf-view-mode)
-  ;;   :config
-  ;;   (pdf-tools-install :no-query))
 #+END_SRC
 
 
@@ -1745,16 +1740,18 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)"  ; New task
+             "TODO(t)"     ; New task
+             "PROJECT(p)"  ; Project
+             "SUBMITTED(s)"; Project
              "ONGOING(g)"  ; Doing
-             "WAIT(w)"  ; Procrastinated on purpose
+             "WAIT(w)"     ; Procrastinated on purpose
              "LONG-TERM(l)"  ; Long-term
              "DELEGATE(z)"   ; Delegated
              "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "CONFDDL(C)"
-             "PROJECT(p)"
              "GOAL(G)"
              "|"
+             "ACCEPTED(a)" ; Project
              "DONE(d!)"      ; Done
              "CANCELED(c@)"  ; Eliminated
              )))
@@ -1769,6 +1766,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
             ;; ("TODO" . (:foreground "#ff39a3" :weight bold))
             ("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
             ("ONGOING"  . "orangered")
+            ("ACCEPTED"  . "darkgreen")
+            ("SUBMITTED"  . "blue")
             ("WAIT" . "pink")
             ;; ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold :strike-through "#0d0d0d"))
             ("CANCELED" . (:foreground "white" :background "#4d4d4d"))
@@ -1902,7 +1901,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :after org)
 
   (use-package xenops
-    :hook (org-mode-hook . xenops-mode)
+    :hook (org-mode . xenops-mode)
     :config
     (setq xenops-math-latex-process-alist
           '((dvisvgm :programs
@@ -1926,32 +1925,66 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;; Org Style
-  ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-  ;; (setq org-startup-indented t)
-  (use-package org-superstar
-    :defer t
-    :disabled t  ; disable for now
-    :after (org)
-    :hook (org-mode . org-superstar-mode)
+  ;; ;; Org Style
+  ;; ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
+  ;; ;; (setq org-startup-indented t)
+  ;; (use-package org-superstar
+  ;;   :defer t
+  ;;   :disabled t  ; disable for now
+  ;;   :after (org)
+  ;;   :hook (org-mode . org-superstar-mode)
+  ;;   :config
+  ;;   ;; Stop cycling bullets to emphasize hierarchy of headlines.
+  ;;   (setq org-superstar-cycle-headline-bullets nil)
+  ;;   ;; Hide away leading stars on terminal.
+  ;;   (setq org-superstar-leading-fallback ?\s)
+  ;;   (setq org-indent-mode-turns-on-hiding-stars nil)
+  ;;   (setq org-hide-leading-stars t)
+  ;;   (setq org-superstar-item-bullet-alist
+  ;;         '((?* . ?⌬) ; * ; previously used: 8226
+  ;;           (?+ . ?⋇) ; + ; previously used: 10210
+  ;;           (?- . ?▪))) ; - ; previously used: 8211
+  ;;   ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
+  ;;   (setq org-superstar-headline-bullets-list
+  ;;         '(9673 9675 ?◇ 10047 10040))
+  ;;   )
+
+  (use-package org-modern
+    :custom ((org-modern-block-name nil "Don't stylise blocks")
+             (org-modern-block-fringe nil "Don't stylise block fringes")
+             (org-modern-priority nil "Don't stylise priorities")
+             (org-modern-tag nil "Don't stylise tags")
+             (org-modern-timestamp nil "Don't stylisee timestamps")
+             (org-modern-todo nil "Don't stylise TODOs")
+             (org-modern-checkbox nil "Don't stylise checkboxes")
+             (org-modern-hide-stars nil "Don't hide leading stars using org-modern")
+             (org-hide-leading-stars t "Hide leading stars using org")
+             (org-modern-keyword nil "I want to see #+")
+             (org-modern-list nil "Don't stylise lists")
+             (org-modern-table nil "I can't see the cursor otherwise")
+             (org-modern-internal-target nil "Stop it!")
+             (org-modern-star ["●" "▲" "■" "◉" "○" "○"]))
+    :config (add-hook 'org-mode-hook #'org-modern-mode))
+
+  (use-package org-habit
+    :straight nil
+    :ensure nil
+    :custom
+    (org-habit-graph-column 1)
+    (org-habit-preceding-days 10)
+    (org-habit-following-days 1)
+    (org-habit-show-habits-only-for-today nil)
+    :config (add-to-list 'org-modules 'org-habit))
+  (use-package emacsql)
+  (use-package org-heatmap
+    :straight (:type git :host github :repo "Elilif/org-heatmap")
+    :after (org emacsql)
+    ;; :custom
+    ;; (org-agenda-files '("/path-to/org-heatmap/examples/examples.org"))
+    ;; (org-heatmap-db-location "/path-to/org-heatmap/examples/org-heatmap.db")
     :config
-    ;; Stop cycling bullets to emphasize hierarchy of headlines.
-    (setq org-superstar-cycle-headline-bullets nil)
-    ;; Hide away leading stars on terminal.
-    (setq org-superstar-leading-fallback ?\s)
-    (setq org-indent-mode-turns-on-hiding-stars nil)
-    (setq org-hide-leading-stars t)
-    (setq org-superstar-item-bullet-alist
-          '((?* . ?⌬) ; * ; previously used: 8226
-            (?+ . ?⋇) ; + ; previously used: 10210
-            (?- . ?▪))) ; - ; previously used: 8211
-    ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
-
-
-    (setq org-superstar-headline-bullets-list
-          '(9673 9675 ?◇ 10047 10040))
-    )
-
+    (org-heatmap-mode))
+  (load-file "~/.emacs.d/site-lisp/lib-svg-tag-mode.el")
 
   (use-package org-bars
     :straight (:host github :repo "tonyaldon/org-bars")
@@ -1960,17 +1993,32 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :config
     (setq org-bars-with-dynamic-stars-p nil)
     )
+  (use-package highlight-indent-guides)
+  (use-package nerd-icons
+    :custom
+    ;; The Nerd Font you want to use in GUI
+    ;; "Symbols Nerd Font Mono" is the default and is recommended
+    ;; but you can use any other Nerd Font if you want
+    (nerd-icons-font-family "Symbols Nerd Font Mono")
+    )
+  (use-package org-tag-beautify
+    :ensure t
+    :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
+    :init (org-tag-beautify-mode 1))
 #+END_SRC
+
 
 #+BEGIN_SRC emacs-lisp
   ;; agenda 里面时间块彩色显示
   ;; From: https://emacs-china.org/t/org-agenda/8679/3
-  (defun ljg/org-agenda-time-grid-spacing ()
+  (defun my:org-agenda-time-grid-spacing ()
     "Set different line spacing w.r.t. time duration."
     (save-excursion
       (let* ((background (alist-get 'background-mode (frame-parameters)))
              (background-dark-p (string= background "dark"))
-             (colors (list "#1ABC9C" "#2ECC71" "#3498DB" "#9966ff"))
+             (colors (if background-dark-p
+                         (list "#aa557f" "DarkGreen" "DarkSlateGray" "DarkSlateBlue")
+                       (list "#F6B1C3" "#FFCF9D" "#BEEB9F" "#ADD5F7")))
              pos
              duration)
         (nconc colors colors)
@@ -1987,9 +2035,13 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
               (setq colors (cdr colors))
               (overlay-put ov 'line-height line-height)
               (overlay-put ov 'line-spacing (1- line-height))))))))
-  (add-hook 'org-agenda-finalize-hook #'ljg/org-agenda-time-grid-spacing)
+
+  (add-hook 'org-agenda-finalize-hook #'my:org-agenda-time-grid-spacing)
+  (setq org-agenda-start-with-log-mode t)
+
 
 #+END_SRC
+
 
 #+BEGIN_SRC emacs-lisp
   ;; Paste Image From https://emacs-china.org/t/topic/6601/4
@@ -2102,14 +2154,15 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
-    :defer t
-    :after org
+    :after (org org-modern)
+    :hook (org-mode . org-transclusion-mode)
     :config
-    (setq org-transclusion-fringe-bitmap 'empty-line)
+    ;; (setq org-transclusion-fringe-bitmap 'empty-line)
+    (setq org-transclusion-fringe-bitmap 'right-triangle)
     (set-face-attribute
      'org-transclusion-fringe nil
-     :foreground "green"
-     :background "lightgreen")
+     :foreground "blue"
+     :background "orange")
     (set-face-attribute
      'org-transclusion-source-fringe nil
      :foreground "lightblue"
@@ -2158,6 +2211,49 @@ Modes to embed one buffer in another buffer and keep them in sync
                 (expand-file-name "~/Documents/books")))
     (add-hook 'dired-mode-hook #'denote-dired-mode-in-directories)
     )
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory (file-truename "~/Dropbox/Dreams/Org/"))
+    (org-roam-dailies-directory "Journals/")
+    (org-roam-dailies-capture-templates '(("d" "default" entry
+                                           "* %<%H:%M>: %?"
+                                           :target (file+datetree "LatestJournal.org" week))))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ;; Dailies
+           ("C-c n j" . org-roam-dailies-capture-today)
+           ("C-c n J" . org-roam-dailies-goto-today)
+           ("C-c j" . org-roam-dailies-capture-today)
+           ("C-c J" . org-roam-dailies-goto-today)
+           )
+    :config
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode)
+    ;; If using org-roam-protocol
+    (require 'org-roam-protocol)
+    )
+
+  (use-package org-roam-ui
+    :straight
+    (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+    :after org-roam
+    ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+    ;;         a hookable mode anymore, you're advised to pick something yourself
+    ;;         if you don't care about startup time, use
+    ;;  :hook (after-init . org-roam-ui-mode)
+    :config
+    (setq org-roam-ui-sync-theme t
+          org-roam-ui-follow t
+          org-roam-ui-update-on-save t
+          org-roam-ui-open-on-start t))
+
+
+
   (use-package org-capture
     :if mk-feature/noteman
     :straight nil
@@ -2195,17 +2291,17 @@ Modes to embed one buffer in another buffer and keep them in sync
             ("People"          ?d "~/Dropbox/Dreams/Org/People")
             ))
     )
-  (use-package org-journal
-    :defer t
-    :bind (("C-c j" . org-journal-open-current-journal-file)
-           ("C-c J" . org-journal-new-entry)
-           )
-    :config
-    (setq org-journal-file-format "%Y-%m-%d.org")
-    (setq org-journal-enable-agenda-integration t)
-    (setq org-journal-file-type 'weekly)
-    (setq org-journal-dir "~/Dropbox/Dreams/Org/Journals/"
-          org-journal-date-format "%A, %d %B %Y"))
+  ;; (use-package org-journal
+  ;;   :defer t
+  ;;   :bind (("C-c j" . org-journal-open-current-journal-file)
+  ;;          ("C-c J" . org-journal-new-entry)
+  ;;          )
+  ;;   :config
+  ;;   (setq org-journal-file-format "%Y-%m-%d.org")
+  ;;   (setq org-journal-enable-agenda-integration t)
+  ;;   (setq org-journal-file-type 'weekly)
+  ;;   (setq org-journal-dir "~/Dropbox/Dreams/Org/Journals/"
+  ;;         org-journal-date-format "%A, %d %B %Y"))
 #+END_SRC
 
 * Bibliography
@@ -2344,7 +2440,7 @@ Modes to embed one buffer in another buffer and keep them in sync
       (let-alist metadata
         (format "@%s{NO_KEY,
   author = {%s},
-  title = {{%s}},
+  title = {%s},
   year = {%s},
   url = {%s},
   series = {arXiv %s},
@@ -2556,7 +2652,9 @@ Modes to embed one buffer in another buffer and keep them in sync
 
     (defun mk/ebib--format-full-dir (dir title)
       "Get the full dir name from DIR and TITLE."
-      (format "%s/%s/%s" mk/ebib-dir-root dir title))
+      (let ((clean-title
+             (string-replace "}" "" (string-replace "{" "" title))))
+        (format "%s/%s/%s" mk/ebib-dir-root dir clean-title)))
 
     (defun mk/ebib-get-series-dirname-candidate (title series journal year publisher)
       "Form the name of given TITLE, SERIES, JOURNAL, YEAR, PUBLISHER"
@@ -2565,6 +2663,7 @@ Modes to embed one buffer in another buffer and keep them in sync
        ((not (string= series "no-series")) (string-replace " " "." (string-replace " '" "" series)))
        ;; Hard coded
        ((string= journal "scientific reports") (format "nat.sci.rep.%s" year))
+       ((string= journal "science") (format "science.%s" year))
        ((string= journal "commun. acm") (format "commun.acm.%s" year))
        ((string= journal "nature communications") (format "nat.comm.%s" year))
        ((string= journal "acs nano") (format "acs.nano.%s" year))
@@ -2576,8 +2675,11 @@ Modes to embed one buffer in another buffer and keep them in sync
        ((string= journal "ieee transactions on information theory") (format "tit.%s" year))
        ((string= journal "briefings in bioinformatics") (format "bib.%s" year))
        ((string= journal "acs synthetic biology") (format "acs.syn.bio.%s" year))
+       ((string= journal "angewandte chemie international edition") (format "anie.%s" year))
        ((string= journal "computational and structural biotechnology journal") (format "csbj.%s" year))
        ((string= journal "the australian universities' review") (format "aur.%s" year))
+       ((string= journal "nature computational science") (format "nat.comput.sci.%s" year))
+       ((string= journal "nature reviews genetics") (format "nat.rev.genet.%s" year))
 
        ;; arXiv
        ((string= publisher "arxiv") (format "arxiv%s" year))
@@ -2605,7 +2707,7 @@ Modes to embed one buffer in another buffer and keep them in sync
            (if cand (find-file cand)
              (print "No such dir, creating with prompt...")
              (let* ((conf (string-trim (read-string "The conf abbr: " series-dirname)))
-                    (target (format "%s/%s/%s" mk/ebib-dir-root conf title)))
+                    (target (mk/ebib--format-full-dir conf title)))
                (make-directory target t)
                (find-file target)
                ))))
@@ -3267,3 +3369,99 @@ Modes to embed one buffer in another buffer and keep them in sync
 
   (use-package focus)
 #+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-tidy
+    :disabled t
+    :ensure t
+    :hook (org-mode . org-tidy-mode)
+    :config
+    (setq org-tidy-top-property-style 'keep
+          org-tidy-properties-style 'fringe)
+    (add-hook 'org-mode-hook #'org-tidy-mode)
+    )
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package elm-mode)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-excalidraw
+    :straight (:type git :host github :repo "wdavew/org-excalidraw")
+    :config
+    (setq org-excalidraw-directory "~/Dropbox/Dreams/Org/Excalidraws/")
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package holo-layer
+    :straight (:type git :host github :repo "manateelazycat/holo-layer" :files ("*"))
+    :config
+    (setq holo-layer-enable-cursor-animation t)
+    (setq holo-layer-enable-place-info nil)
+    (setq holo-layer-cursor-color "Goldenrod")
+    (holo-layer-enable)
+    )
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package eaf
+    :disabled t
+    :straight (:type git :host github :repo "emacs-eaf/emacs-application-framework" :files ("*"))
+    :custom
+    ;; See https://github.com/emacs-eaf/emacs-application-framework/wiki/Customization
+    (eaf-browser-continue-where-left-off t)
+    (eaf-browser-enable-adblocker t)
+    (browse-url-browser-function 'eaf-open-browser)
+    :config
+    (require 'eaf-browser)
+    ;; (require 'eaf-pdf-viewer)
+    ;; (defalias 'browse-web #'eaf-open-browser)
+    ;; (eaf-bind-key scroll_up "C-n" eaf-pdf-viewer-keybinding)
+    ;; (eaf-bind-key scroll_down "C-p" eaf-pdf-viewer-keybinding)
+    ;; (eaf-bind-key take_photo "p" eaf-camera-keybinding)
+    (eaf-bind-key nil "M-q" eaf-browser-keybinding)
+    ) ;; unbind, see more in the Wiki
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package send-to-osx-grammarly
+    :straight (:type git :host github :repo "mkvoya/send-to-osx-grammarly" :files ("*"))
+    )
+  (use-package gptel)
+#+END_SRC
+
+
+
+#+BEGIN_SRC emacs-lisp
+
+  (defun mk/count-today-todos ()
+    "Count the number of today's to-do tasks."
+    (interactive)
+    (let ((count 0)
+          (today (format-time-string "%Y-%m-%d")))
+      (org-compile-prefix-format 'todo)
+      (org-map-entries
+       (lambda ()
+         (when (and (string= (org-get-todo-state) "TODO")
+                    (or (string= (org-entry-get nil "SCHEDULED") today)
+                        (and (org-entry-get nil "DEADLINE")
+                             (string< today (org-entry-get nil "DEADLINE")))
+                        ))
+           (setq count (1+ count))))
+       nil 'agenda)
+      count)
+    )
+  (require 'emacs-badge)
+  (setq emacs-badge-timer
+        (run-with-timer
+         1 1
+         '(lambda()
+            (emacs-badge-update (format "%s" (mk/count-today-todos))))))
+
+#+END_SRC
+
