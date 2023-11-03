@@ -389,6 +389,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package corfu
+    :disabled t
     ;; Optional customizations
     :custom
     (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
@@ -403,6 +404,7 @@ Alternatives (Check the selectrum repo README)
 
   ;; Add extensions
   (use-package cape
+    :disabled t
     :custom
     (cape-line-buffer-function #'current-buffer)
     ;; Bind dedicated completion commands
@@ -545,6 +547,14 @@ Alternatives (Check the selectrum repo README)
     :after grammarly
     :config
     )
+
+
+  (use-package lsp-bridge
+    :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+                           :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                           :build (:not compile))
+    :init
+    (global-lsp-bridge-mode))
 #+END_SRC
 
 
@@ -772,7 +782,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (undo-fu)
     :init
     (setq evil-want-C-i-jump nil)
-    (setq evil-move-beyond-eol t)
+    ;; (setq evil-move-beyond-eol t)
     :config
     ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
     ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -1788,6 +1798,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     ;; …, ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵ "↴▾▽▼↩↘↸"
     ;; (setq org-ellipsis "▾")
     (setq org-ellipsis "↴")
+    ;; (setq org-ellipsis "...")
+    (set-face-attribute 'org-ellipsis nil :foreground "grey86")
     ;; org-ellipsis " ••• "
 
     ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
@@ -1963,7 +1975,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
              (org-modern-list nil "Don't stylise lists")
              (org-modern-table nil "I can't see the cursor otherwise")
              (org-modern-internal-target nil "Stop it!")
-             (org-modern-star ["●" "▲" "■" "◉" "○" "○"]))
+             ;; (org-modern-star ["●" "▲" "■" "◉" "○" "○"])
+             )
     :config (add-hook 'org-mode-hook #'org-modern-mode))
 
   (use-package org-habit
@@ -2275,7 +2288,11 @@ Modes to embed one buffer in another buffer and keep them in sync
              :jump-to-captured t)
             ("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
              #'mk/org-capture-people
-             )))
+             )
+            ("r" "New Research Snippet" entry (file+headline "~/Dropbox/Dreams/Research/Snippets.org" "Research Snippets")
+             "* %?\n%i %a"
+             )
+            ))
     (defun mk/link-to-people ()
       (interactive)
       )
@@ -2587,6 +2604,11 @@ Modes to embed one buffer in another buffer and keep them in sync
     :demand
     :bind (:map biblio-selection-mode-map
                 ("e" . ebib-biblio-selection-import)))
+  (use-package zotra
+    :config
+    (setq zotra-backend 'zotra-server)
+    (setq zotra-local-server-directory "~/.emacs.d/third-parties/zotra-server/")
+    )
 #+END_SRC
 ** Paper and Research
 
@@ -2965,6 +2987,37 @@ Modes to embed one buffer in another buffer and keep them in sync
       (async-shell-command "cd ~/Dropbox/Public/essay && hugo -D && rsync -rvP ~/Dropbox/Public/essay/public/ dong.mk:/srv/http/essay"))
     (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
     )
+#+END_SRC
+
+
+* Try
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-brain
+    :ensure t
+    :init
+    (setq org-brain-path "~/Dropbox/Dreams/Org/")
+    ;; For Evil users
+    (with-eval-after-load 'evil
+      (evil-set-initial-state 'org-brain-visualize-mode 'emacs))
+    :config
+    (bind-key "C-c b" 'org-brain-prefix-map org-mode-map)
+    (setq org-id-track-globally t)
+    (setq org-id-locations-file "~/.emacs.d/.org-id-locations")
+    (add-hook 'before-save-hook #'org-brain-ensure-ids-in-buffer)
+    (push '("b" "Brain" plain (function org-brain-goto-end)
+            "* %i%?" :empty-lines 1)
+          org-capture-templates)
+    (setq org-brain-visualize-default-choices 'all)
+    (setq org-brain-title-max-length 12)
+    (setq org-brain-include-file-entries nil
+          org-brain-file-entries-use-title nil))
+
+  ;; Allows you to edit entries directly from org-brain-visualize
+  ;; (use-package polymode
+  ;;   :config
+  ;;   (add-hook 'org-brain-visualize-mode-hook #'org-brain-polymode))
+
 #+END_SRC
 
 * Disabled Pool
@@ -3402,9 +3455,14 @@ Modes to embed one buffer in another buffer and keep them in sync
     :config
     (setq holo-layer-enable-cursor-animation t)
     (setq holo-layer-enable-place-info nil)
+    (setq holo-layer-sort-tab-ui t)
     (setq holo-layer-cursor-color "Goldenrod")
     (holo-layer-enable)
     )
+  (use-package sort-tab
+    :ensure t
+    :init
+    (sort-tab-mode 1))
 #+END_SRC
 
 
@@ -3465,3 +3523,8 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+END_SRC
 
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package dirvish)
+#+END_SRC

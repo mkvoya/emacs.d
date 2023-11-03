@@ -4,3 +4,6 @@
 [submodule "periphery/raycast-scripts"]
 	path = periphery/raycast-scripts
 	url = git@github.com:mkvoya/raycast-scripts.git
+[submodule "third-parties/zotra-server"]
+	path = third-parties/zotra-server
+	url = https://github.com/mpedramfar/zotra-server.git
