@@ -1,7 +1,7 @@
 ;;; init.el --- -*- lexical-binding: t -*-
-  ;;; Commentary:
+;;; Commentary:
 
-  ;;; Code:
+;;; Code:
 
 
 (setq gc-cons-threshold (* 400 (expt 2 20))
@@ -16,21 +16,7 @@
   (let ((dir (locate-user-emacs-file "lisp")))
     (add-to-list 'load-path (file-name-as-directory dir)))
 
-  ;; (load "~/.emacs.d/emacs-config.el")
-  ;; 加载各模块化配置
-  ;; 不要在`*message*'缓冲区显示加载模块化配置的信息
-  (with-temp-message ""
-    (require 'init-base)
-    (require 'init-topbar)
-    (require 'init-completion)
-    (require 'init-coding)
-    (require 'init-writing)
-    (require 'init-org)
-    (require 'init-ui)
-    (require 'init-gui)
-    (require 'init-biblio)
-    (require 'init-misc)
-    )
+  (load "~/.emacs.d/emacs-config.el")
 
   ;; Collect garbage when all else is done
   ;; (garbage-collect)
@@ -43,4 +29,4 @@
 (put 'narrow-to-region 'disabled nil)
 
 (provide 'init)
-  ;;; init.el ends here
+;;; init.el ends here
