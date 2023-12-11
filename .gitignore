@@ -46,3 +46,4 @@ games
 /.mc-lists.el
 /xenops/
 /multisession/
+/init-lisp/

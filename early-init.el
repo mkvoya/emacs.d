@@ -1,6 +1,4 @@
-;;; early-init.el -- Early Emacs configuration cloned from https://github.com/angrybacon/dotemacs/blob/master/early-init.el
-;;; Also many hints from <https://github.com/sachac/.emacs.d>.
-
+;;; early-init.el --- Early Emacs configuration  -*- lexical-binding: t -*-
 ;;; Commentary:
 
 ;;; Code:
@@ -8,9 +6,24 @@
 ;; (setq debug-on-error t)
 ;; (setq debug-on-signal t)
 (setq-default
+ ;; Package
  load-prefer-newer t ; Load newer packages when available.
- package-enable-at-startup nil
- package-native-compile t)
+ package-enable-at-startup nil  ; do not load packege.el
+ package-quickstart nil
+ package-native-compile nil
+ ;; GC
+ gc-cons-threshold most-positive-fixnum
+ gc-cons-percentage 0.6
+ ;; Resizing the Emacs frame can be a terribly expensive part of changing the
+ ;; font. By inhibiting this, we easily halve startup times with fonts that are
+ ;; larger than the system default.
+ frame-inhibit-implied-resize t
+ )
+
+(fset 'yes-or-no-p 'y-or-n-p)
+(setq confirm-kill-emacs 'y-or-n-p)
+
+(setq comp-deferred-compilation nil)
 
 (when (display-graphic-p)
   (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
@@ -36,18 +49,18 @@
   )
 
 (defvar mk/default-frame-top-bar-format
- '((:eval
-    (simple-top-bar-render
-     ;; Left.
-     `("           "
-       "MK's EMACS "
-       ,(format "[%s]"
-                (buffer-name
-                 (window-buffer
-                  (get-mru-window top-bar-current-frame)))))
-     ;; Right.
-     '(mode-line-misc-info
-       )))))
+  '((:eval
+     (simple-top-bar-render
+      ;; Left.
+      `("           "
+        "MK's EMACS "
+        ,(format "[%s]"
+                 (buffer-name
+                  (window-buffer
+                   (get-mru-window top-bar-current-frame)))))
+      ;; Right.
+      '(mode-line-misc-info
+        )))))
 ;; (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
 
 (setq-default
@@ -78,13 +91,6 @@
 
 ;; (when window-system (set-frame-size (selected-frame) 100 80))
 
-;;; Thank https://github.com/Eason0210/emacs.d/blob/master/early-init.el
-(setq load-prefer-newer t)
-(setq package-enable-at-startup nil)
-;; Resizing the Emacs frame can be a terribly expensive part of changing the
-;; font. By inhibiting this, we easily halve startup times with fonts that are
-;; larger than the system default.
-(setq frame-inhibit-implied-resize t)
 
 ;; UTF-8
 (prefer-coding-system 'utf-8)
@@ -102,15 +108,8 @@
 (setq current-language-environment "UTF-8")
 ;; (setq default-input-method "rfc1345")
 
-(prefer-coding-system 'utf-8)
-
-
-;; lazy answer
-(fset 'yes-or-no-p 'y-or-n-p)
-
-(setq confirm-kill-emacs 'y-or-n-p)
-
 ;; Sentence
 (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
+(provide 'early-init)
 ;;; early-init.el ends here
