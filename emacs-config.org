@@ -388,59 +388,6 @@ Alternatives (Check the selectrum repo README)
 | Cape (use with Corfu) | https://github.com/minad/cape                |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package corfu
-    :disabled t
-    ;; Optional customizations
-    :custom
-    (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-    (corfu-auto t)                 ;; Enable auto completion
-    (corfu-separator ?\s)          ;; Orderless field separator
-    (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-    :bind (:map corfu-map
-                ("C-n"      . corfu-next)
-                ("C-p"      . corfu-previous))
-    :init
-    (global-corfu-mode))
-
-  ;; Add extensions
-  (use-package cape
-    :disabled t
-    :custom
-    (cape-line-buffer-function #'current-buffer)
-    ;; Bind dedicated completion commands
-    ;; Alternative prefix keys: C-c p, M-p, M-+, ...
-    :bind (("C-c e p" . completion-at-point) ;; capf
-           ("C-c e t" . complete-tag)        ;; etags
-           ("C-c e d" . cape-dabbrev)        ;; or dabbrev-completion
-           ("C-c e h" . cape-history)
-           ("C-c e f" . cape-file)
-           ("C-c e k" . cape-keyword)
-           ("C-c e s" . cape-symbol)
-           ("C-c e a" . cape-abbrev)
-           ("C-c e i" . cape-ispell)
-           ("C-c e l" . cape-line)
-           ("C-c e w" . cape-dict)
-           ("C-c e \\" . cape-tex)
-           ("C-c e _" . cape-tex)
-           ("C-c e ^" . cape-tex)
-           ("C-c e &" . cape-sgml)
-           ("C-c e r" . cape-rfc1345))
-    :init
-    ;; Add `completion-at-point-functions', used by `completion-at-point'.
-    (add-to-list 'completion-at-point-functions #'cape-file)
-    (add-to-list 'completion-at-point-functions #'cape-dabbrev)
-    (add-to-list 'completion-at-point-functions #'cape-history)
-    (add-to-list 'completion-at-point-functions #'cape-keyword)
-    (add-to-list 'completion-at-point-functions #'cape-tex)
-    (add-to-list 'completion-at-point-functions #'cape-sgml)
-    (add-to-list 'completion-at-point-functions #'cape-rfc1345)
-    (add-to-list 'completion-at-point-functions #'cape-abbrev)
-    ;; (add-to-list 'completion-at-point-functions #'cape-ispell)
-    ;; (add-to-list 'completion-at-point-functions #'cape-dict)
-    ;; (add-to-list 'completion-at-point-functions #'cape-symbol)
-    ;; (add-to-list 'completion-at-point-functions #'cape-line)
-    )
-
   ;; Use Dabbrev with Corfu!
   (use-package dabbrev
     ;; Swap M-/ and C-M-/
@@ -449,14 +396,6 @@ Alternatives (Check the selectrum repo README)
     ;; Other useful Dabbrev configurations.
     :custom
     (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
-
-  (use-package kind-icon
-    :ensure t
-    :after corfu
-    :custom
-    (kind-icon-default-face 'corfu-default) ; to compute blended backgrounds correctly
-    :config
-    (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter))
 #+END_SRC
 
 ** Templating: Yasnippet
@@ -471,39 +410,7 @@ Alternatives (Check the selectrum repo README)
     :after yasnippet)
 #+END_SRC
 
-| templ |
 #+BEGIN_SRC emacs-lisp
-  ;; Configure Tempel
-  (use-package tempel
-    ;; Require trigger prefix before template name when completing.
-    ;; :custom
-    ;; (tempel-trigger-prefix "<")
-    ;; :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
-    ;;        ("M-*" . tempel-insert))
-
-    :init
-
-    ;; Setup completion at point
-    (defun tempel-setup-capf ()
-      ;; Add the Tempel Capf to `completion-at-point-functions'.
-      ;; `tempel-expand' only triggers on exact matches. Alternatively use
-      ;; `tempel-complete' if you want to see all matches, but then you
-      ;; should also configure `tempel-trigger-prefix', such that Tempel
-      ;; does not trigger too often when you don't expect it. NOTE: We add
-      ;; `tempel-expand' *before* the main programming mode Capf, such
-      ;; that it will be tried first.
-      (setq-local completion-at-point-functions
-                  (cons #'tempel-expand
-                        completion-at-point-functions)))
-
-    (add-hook 'prog-mode-hook 'tempel-setup-capf)
-    (add-hook 'text-mode-hook 'tempel-setup-capf)
-
-    ;; Optionally make the Tempel templates available to Abbrev,
-    ;; either locally or globally. `expand-abbrev' is bound to C-x '.
-    ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
-    ;; (global-tempel-abbrev-mode)
-    )
 #+END_SRC
 
 ** LSP
@@ -547,13 +454,20 @@ Alternatives (Check the selectrum repo README)
     :after grammarly
     :config
     )
-
+  (use-package lsp-grammarly
+    :disabled t
+    :ensure t
+    :hook (text-mode . (lambda ()
+                         (require 'lsp-grammarly)
+                         (lsp))))  ; or lsp-deferred
 
   (use-package lsp-bridge
     :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
                            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
                            :build (:not compile))
     :init
+    ;; (setq lsp-bridge-tex-lsp-server "texlab-grammarly")
+    (setq lsp-bridge-enable-hover-diagnostic t)
     (global-lsp-bridge-mode))
 #+END_SRC
 
@@ -782,7 +696,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (undo-fu)
     :init
     (setq evil-want-C-i-jump nil)
-    ;; (setq evil-move-beyond-eol t)
+    (setq evil-move-beyond-eol t)
     :config
     ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
     ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -1345,7 +1259,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
            (c-ts-base-mode . ws-butler-mode)
            (c-ts-base-mode . ggtags-mode)
            (c-ts-base-mode . helm-gtags-mode)
-           (c-ts-base-mode . malb/lsp-enable)
            (c-ts-base-mode . clang-format+-mode))
     :init (progn
             (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
@@ -1455,11 +1368,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
       (add-hook 'latex-mode-hook 'turn-on-reftex)   ; with Emacs latex mode
       ;; (setq reftex-default-bibliography '("./references.bib"))
       )
-    (use-package company-auctex :defer t :after (company) :config (company-auctex-init))
-    (use-package company-reftex :defer t :after (company reftex)
-      :config
-      (add-to-list 'company-backends 'company-reftex-labels)
-      (add-to-list 'company-backends 'company-reftex-citations))
     ;; (use-package auctex-latexmk :config (auctex-latexmk-setup))
     ;; https://emacs.stackexchange.com/a/63195/30542
     (defun my-LaTeX-mode-setup ()
@@ -1523,7 +1431,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :mode "\\.go$"
     :ensure-system-package gopls
     :hook ((go-ts-mode . eldoc-mode)
-           (go-ts-mode . malb/lsp-enable)
            (go-ts-mode . display-line-numbers-mode))
     :init (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
     :config (when (boundp 'dtrt-indent-hook-mapping-list)
@@ -1542,7 +1449,6 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :ensure nil
     :mode "\\.rs$"
     :hook ((rust-ts-mode . eldoc-mode)
-           (rust-ts-mode . malb/lsp-enable)
            (rust-ts-mode . display-line-numbers-mode))
     :init (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
     :config (when (boundp 'dtrt-indent-hook-mapping-list)
@@ -1827,7 +1733,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
      'org-babel-load-languages
      '((dot . t)
        (C . t)
-       (python . t)))
+       (python . t)
+       (shell . t)))
 
     ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
     ;; Always redisplay inline images after executing SRC block
@@ -1913,6 +1820,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :after org)
 
   (use-package xenops
+    :disabled t
     :hook (org-mode . xenops-mode)
     :config
     (setq xenops-math-latex-process-alist
@@ -2100,8 +2008,31 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     :config
     ;; Org export code style
     (setq org-html-htmlize-output-type 'css)
+    (setq org-src-preserve-indentation nil)
     (setq-default org-html-doctype "html5")
     (setq-default org-html-html5-fancy t)
+    (setq org-html-validation-link nil)
+
+    ;; https://emacs.stackexchange.com/a/3512/30542
+    (defun my-org-inline-css-hook (exporter)
+      "Insert custom inline css"
+      (when (eq exporter 'html)
+        (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
+               (path (concat dir "style.css"))
+               (homestyle (or (null dir) (null (file-exists-p path))))
+               (final (if homestyle "~/.emacs.d/misc/ox-html-code-style.css" path)))
+          (setq org-html-head-include-default-style t)
+          (setq org-html-head (concat
+                               "<style type=\"text/css\">\n"
+                               "<!--/*--><![CDATA[/*><!--*/\n"
+                               (with-temp-buffer
+                                 (insert-file-contents final)
+                                 (buffer-string))
+                               "/*]]>*/-->\n"
+                               "</style>\n")))))
+
+    (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
+
     )
 #+END_SRC
 
@@ -3381,7 +3312,10 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package dired+)
+  (use-package dired+
+    :config
+    (setq diredp-hide-details-propagate-flag t)
+    )
   (use-package format-all)
 #+END_SRC
 
@@ -3527,4 +3461,63 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
 (use-package dirvish)
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-reveal
+    :config
+    (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
+    )
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package htmlize)
+  (setq org-tags-column 0)
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (defun org-babel-C-execute/filter-args (args)
+    (when-let* ((params (cadr args))
+                (stdin (cdr (assoc :stdin params)))
+                (res (org-babel-ref-resolve stdin))
+                (stdin (org-babel-temp-file "c-stdin-")))
+      (with-temp-file stdin (insert res))
+      (let* ((cmdline (assoc :cmdline params))
+             (cmdline-val (or (cdr cmdline) "")))
+        (when cmdline (setq params (delq cmdline params)))
+        (setq params
+              (cons (cons :cmdline (concat cmdline-val " <" stdin))
+                    params))
+        (setf (cadr args) params)))
+    args)
+
+  (with-eval-after-load 'ob-C
+    (advice-add 'org-babel-C-execute :filter-args
+                #'org-babel-C-execute/filter-args))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (use-package tabspaces
+    :disabled t
+    ;; use this next line only if you also use straight, otherwise ignore it.
+    :straight (:type git :host github :repo "mclear-tools/tabspaces")
+    :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup.
+    :commands (tabspaces-switch-or-create-workspace
+               tabspaces-open-or-create-project-and-workspace)
+    :custom
+    (tabspaces-use-filtered-buffers-as-default t)
+    (tabspaces-default-tab "Default")
+    (tabspaces-remove-to-default t)
+    (tabspaces-include-buffers '("*scratch*"))
+    (tabspaces-initialize-project-with-todo t)
+    (tabspaces-todo-file-name "project-todo.org")
+    ;; sessions
+    (tabspaces-session t)
+    (tabspaces-session-auto-restore t))
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+(use-package typescript-mode)
 #+END_SRC
