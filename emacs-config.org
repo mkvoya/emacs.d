@@ -7,6 +7,11 @@
 * Options
 
 #+BEGIN_SRC emacs-lisp
+  ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
+  ;;; Commentary:
+
+  ;;; Code:
+
   (defvar mk-feature/bibliography t "Enable bibliography.")
   (defvar mk-feature/gui t "Enable GUI-related packages.")
   (defvar mk-feature/noteman t "Enable note management.")
@@ -180,8 +185,8 @@
 * Base and Core :emacs:
 ** Literal Configuration Bootstrap
 #+BEGIN_SRC emacs-lisp
-  (setq .org "~/.emacs.d/emacs-config.org")
-  (setq .el (concat (file-name-sans-extension .org) ".el"))
+  (defvar mkconfig/.org "~/.emacs.d/emacs-config.org")
+  (defvar mkconfig/.el (concat (file-name-sans-extension mkconfig/.org) ".el"))
   (defun mk/sync-emacs-config()
     "Synchronize config from org to el and compile to elc."
     (interactive)
@@ -189,43 +194,16 @@
     (let ((prog-mode-hook nil))
       (require 'ob-tangle)
       ;; Tangle the file. It's fast.
-      (org-babel-tangle-file .org .el "emacs-lisp")
+      (org-babel-tangle-file mkconfig/.org)
       (message "[CONFIG] Config is synchronized.")
       ;; Async compile the config.
-      (async-start
-       ;; What to do in the child process
-       ;; the backquote and the set are necessary to capture vars
-       `(lambda () ; ` is necessary to capture vars.
-          (set 'el-file ,.el) ; Get the captured var.
-          (byte-compile-file el-file) ; Compile the el file.
-          el-file) ; Return the file name.
-       ;; What to do when it finishes
-       (lambda (res) (message "[CONFIG] Config %s is async-compiled." res))
-       )))
+      (async-byte-compile-file mkconfig/.el)))
 
   ;; Sync config when the config file is saved.
   (add-hook 'after-save-hook
             (lambda ()
-              (if (equal (buffer-file-name) (expand-file-name .org))
+              (if (equal (buffer-file-name) (expand-file-name mkconfig/.org))
                   (mk/sync-emacs-config))))
-#+END_SRC
-
-** Fonts
-We need to setup fonts early.
-
-#+BEGIN_SRC emacs-lisp
-  (when (eq system-type 'darwin)
-    (dolist (charset '(kana han symbol cjk-misc bopomofo))
-      (set-fontset-font (frame-parameter nil 'font)
-                        charset (font-spec :family "LXGW WenKai Screen")))
-    (setq face-font-rescale-alist '(("LXGW WenKai Screen" . 1.24)))
-    ;; (set-face-attribute 'default nil :font (font-spec :family "ia Writer" :size 14))
-    ;; (set-fontset-font t 'unicode (font-spec :family "Noto Color Emoji" :size 14))
-    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "LXGW WenKai Screen" :size 18 :weight 'bold))
-    ;; (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
-    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
-    ;; (set-fontset-font t 'unicode-bmp (font-spec :name "JuliaMono" :size 12) nil 'prepend)
-    )
 #+END_SRC
 
 ** Bootstrap
@@ -267,10 +245,9 @@ We need to setup fonts early.
 | use-package | https://github.com/jwiegley/use-package |
 
 #+BEGIN_SRC emacs-lisp
-  (setq use-package-compute-statistics t)
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t) ; Ensure :straight t
-
+  (setq use-package-compute-statistics t)
   (use-package use-package-ensure-system-package :ensure t)
   (straight-use-package 'org)
 #+END_SRC
@@ -367,6 +344,95 @@ We need to setup fonts early.
     ;; (setq mac-right-option-modifier 'control)
     )
 #+end_src
+
+** Fonts
+We need to setup fonts early.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package fontaine
+    :ensure t
+    :when (display-graphic-p)
+    ;; :hook (kill-emacs . fontaine-store-latest-preset)
+    :config
+    (setq fontaine-latest-state-file
+          (locate-user-emacs-file "etc/fontaine-latest-state.eld"))
+    (setq fontaine-presets
+          '((regular
+             :default-height 120
+             :default-weight regular
+             :fixed-pitch-height 1.0
+             :variable-pitch-height 1.0
+             )
+            (large
+             :default-height 140
+             :default-weight normal
+             :fixed-pitch-height 1.0
+             :variable-pitch-height 1.05
+             )
+            (t
+             :default-family "Monaco"
+             :fixed-pitch-family "Monaco"
+             :variable-pitch-family "Monaco"
+             :italic-family "Monaco"
+             :variable-pitch-weight normal
+             :bold-weight normal
+             :italic-slant italic
+             :line-spacing 0.1)
+            ))
+    ;; (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular))
+    (fontaine-set-preset 'regular)
+
+    ;; set emoji font
+    (set-fontset-font
+     t
+     (if (version< emacs-version "28.1")
+         '(#x1f300 . #x1fad0)
+       'emoji)
+     (cond
+      ((member "Noto Emoji" (font-family-list)) "Noto Emoji")
+      ((member "Symbola" (font-family-list)) "Symbola")
+      ((member "Apple Color Emoji" (font-family-list)) "Apple Color Emoji")
+      ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
+      ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")
+      ))
+
+    ;; set Chinese font
+    (dolist (charset '(kana han symbol cjk-misc bopomofo))
+      (set-fontset-font
+       (frame-parameter nil 'font)
+       charset
+       (font-spec :family
+                  (cond
+                   ((member "LXGW WenKai Screen" (font-family-list)) "LXGW WenKai Screen")
+                   ((member "Sarasa Mono SC Nerd" (font-family-list)) "Sarasa Mono SC Nerd")
+                   ((member "PingFang SC" (font-family-list)) "PingFang SC")
+                   ((member "WenQuanYi Zen Hei" (font-family-list)) "WenQuanYi Zen Hei")
+                   ((member "Microsoft YaHei" (font-family-list)) "Microsoft YaHei")
+                   ))))
+
+    ;; (set-face-attribute 'default nil :font (font-spec :family "ia Writer" :size 14))
+    ;; (set-fontset-font t 'unicode (font-spec :family "Noto Color Emoji" :size 14))
+    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :family "LXGW WenKai Screen" :size 18 :weight 'bold))
+    ;; (set-fontset-font t 'emoji (font-spec :family "Apple Color Emoji") nil 'prepend)
+    ;; (set-fontset-font t '(#x2ff0 . #x9ffc) (font-spec :name "TsangerJinKai01" :size 14))
+    ;; (set-fontset-font t 'unicode-bmp (font-spec :name "JuliaMono" :size 12) nil 'prepend)
+
+    ;; set Chinese font scale
+    (setq face-font-rescale-alist `(
+                                    ("LXGW WenKai Screen"  . 1.24)
+                                    ("Symbola"             . 1.3)
+                                    ("Microsoft YaHei"     . 1.2)
+                                    ("WenQuanYi Zen Hei"   . 1.2)
+                                    ("Sarasa Mono SC Nerd" . 1.2)
+                                    ("PingFang SC"         . 1.16)
+                                    ("Lantinghei SC"       . 1.16)
+                                    ("Kaiti SC"            . 1.16)
+                                    ("Yuanti SC"           . 1.16)
+                                    ("Apple Color Emoji"   . 0.91)
+                                    ))
+    )
+#+END_SRC
+
 
 ** Basic libraries
 
@@ -581,7 +647,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       (interactive (list (read-char "char: " t)
                          current-prefix-arg))
       (if (= ?  char)
-          (counsel-M-x)
+          (call-interactively 'execute-extended-command)
         (avy-with avy-goto-char
           (avy-jump
            (if (= 13 char)
@@ -1146,7 +1212,7 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
             (lambda() (setq tab-width 8
                             c-default-style "linux"
                             c-basic-offset 8
-                            c-indent-tabs-mode t)))
+                            indent-tabs-mode t)))
 #+END_SRC
 ** C++
 #+BEGIN_SRC emacs-lisp
@@ -3581,7 +3647,14 @@ Publish & Blog
 
  #+BEGIN_SRC emacs-lisp
    (defun mk/notionify-turn-to-page (@begin @end)
-     "Turn the selected text to a page link. If the function is called in the page =file.org=, a directory called =file.org.dir= will be auto created if not exists. A new file will be created with the name of selected text + '.org' (@BEGIN -to- @END .org) suffix. This mimics the action of turning the selected line into a new page in Notion.so, while this function is better since the page does not need to be a single line. The text will be turned into a hyperlink to the new file."
+     "Turn the selected text to a page link. If the function is called
+      in the page =file.org=, a directory called =file.org.dir= will be
+      auto created if not exists. A new file will be created with the
+      name of selected text + '.org' (@BEGIN -to- @END .org) suffix.
+      This mimics the action of turning the selected line into a new
+      page in Notion.so, while this function is better since the page
+      does not need to be a single line. The text will be turned into
+      a hyperlink to the new file."
      (interactive
       (if (use-region-p)
           (list (region-beginning) (region-end))
@@ -3590,53 +3663,16 @@ Publish & Blog
        (save-restriction
          (narrow-to-region @begin @end)
          (let (($dir (concat (string-trim-right (buffer-name) ".dir"))
-                     ($subpage (buffer-substring-no-properties (point-min) (point-max))))
-               (make-directory $dir t)
-               (goto-char (point-min))
-               (insert (concat "[[file:./" $dir "/" $subpage) ".org][")
-               (goto-char (point-max))
-               (insert "]]")))
-         )))
+                     ($subpage (buffer-substring-no-properties (point-min) (point-max)))))
+           (make-directory $dir t)
+           (goto-char (point-min))
+           (insert (concat "[[file:./" $dir "/" $subpage) ".org][")
+           (goto-char (point-max))
+           (insert "]]")))
+       ))
  #+END_SRC
 
-** Launcher
-
 #+BEGIN_SRC emacs-lisp
-  (defun is-floating-frame(f)
-    (equal (frame-parameter f 'name) "*Floating*")
-    )
-  (defun get-floating-frame()
-    (car (filtered-frame-list #'is-floating-frame)))
-
-  (defun toggle-floating-frame ()
-    "Make/Delete a frame that is floating."
-    (interactive)
-    ;; ((w (display-pixel-width))
-    ;; (h (/ (display-pixel-height) 2)))
-    (let* ((geo (cdr (assq 'geometry (car (display-monitor-attributes-list)))))
-           (x (nth 0 geo))
-           (y (nth 1 geo))
-           (w (nth 2 geo))
-           (h (nth 3 geo))
-           (f (get-floating-frame)))
-      (if f
-          (progn
-            ;; (keyboard-quit)
-            ;; (make-frame-invisible f)
-            (delete-frame)
-            )
-        (progn
-          (setq f (make-frame '((undecorated . 1)
-                                (name . "*Floating*"))))  ; TODO: do not make-frame every time.
-          (set-frame-position f 0 0)
-          (set-frame-size f w (/ h 2) t)
-          (make-frame-visible f)
-          (select-frame f)
-          (select-frame-set-input-focus f)
-          (switch-to-buffer "*scratch*")
-          ;; (call-interactively (global-key-binding "\M-x"))
-          ))))
-
   (use-package popwin
     :disabled t
     :config
@@ -3692,14 +3728,4 @@ Publish & Blog
     :straight (:type git :host github :repo "legalnonsense/elgantt"))
   (use-package paper :disabled t
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
-
-#+END_SRC
-
-
-
-** Footer
-
-#+BEGIN_SRC emacs-lisp
-  (provide 'init-misc)
-  ;;; init-misc.el ends here
 #+END_SRC
