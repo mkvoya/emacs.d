@@ -44,37 +44,6 @@
 
   (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@30--git"))
 
-  (defun simple-top-bar-render (left right)
-    "Return a string of `frame-width' length. Containing LEFT, and RIGHT aligned respectively."
-    (let ((available-width (- (frame-width top-bar-current-frame)
-                              (+ (length (format-mode-line left))
-                                 (length (format-mode-line right))
-                                 )
-                              15)))
-      (append left
-              (list (format (format "%%%ds" available-width) ""))
-              right)))
-  (defun mk/set-frame-top-bar-format (format)
-    (dolist (frame (frame-list))
-      (set-frame-parameter frame 'top-bar-format format)
-      )
-    )
-
-  (defvar mk/default-frame-top-bar-format
-    '((:eval
-       (simple-top-bar-render
-        ;; Left.
-        `("           "
-          "MK's EMACS "
-          ,(format "[%s]"
-                   (buffer-name
-                    (window-buffer
-                     (get-mru-window top-bar-current-frame)))))
-        ;; Right.
-        '(mode-line-misc-info
-          )))))
-  ;; (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
-
   (setq-default
    default-frame-alist
    `(
@@ -84,8 +53,6 @@
      (right-fringe . 3)                   ;; Thin right fringe
      (tool-bar-lines . 0)                 ; No tool bar
      (tab-bar-lines . 0)                  ; No tab bar
-     (top-bar-lines . 1)                  ; Enable top bar
-     (top-bar-format . ,mk/default-frame-top-bar-format)   ; Enable top bar
      ;; (undecorated . 1)                 ; this will completely remove the titlebar
      (ns-titlebar-height-adjust . -10)    ; this is actually not used
      (ns-title-hidden . 1)                ; hide the title text in the titlebar
@@ -94,8 +61,8 @@
      (vertical-scroll-bars . nil)         ; No vertical scroll-bars
      (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
      (undecorated . t)
-     (width . 150)
-     (height . 100)
+     (width . 120)
+     (height . 50)
      (font . "Monaco-12")
      (minibuffer . t)
      ))
@@ -104,7 +71,7 @@
 
   ) ; End of unless mk-android
 
-;; (when window-system (set-frame-size (selected-frame) 100 80))
+;; (when window-system (set-frame-size (selected-frame) 120 50))
 
 ;; UTF-8
 (prefer-coding-system 'utf-8)

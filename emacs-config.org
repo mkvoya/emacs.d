@@ -71,37 +71,6 @@
 
     (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@30--git"))
 
-    (defun simple-top-bar-render (left right)
-      "Return a string of `frame-width' length. Containing LEFT, and RIGHT aligned respectively."
-      (let ((available-width (- (frame-width top-bar-current-frame)
-                                (+ (length (format-mode-line left))
-                                   (length (format-mode-line right))
-                                   )
-                                15)))
-        (append left
-                (list (format (format "%%%ds" available-width) ""))
-                right)))
-    (defun mk/set-frame-top-bar-format (format)
-      (dolist (frame (frame-list))
-        (set-frame-parameter frame 'top-bar-format format)
-        )
-      )
-
-    (defvar mk/default-frame-top-bar-format
-      '((:eval
-         (simple-top-bar-render
-          ;; Left.
-          `("           "
-            "MK's EMACS "
-            ,(format "[%s]"
-                     (buffer-name
-                      (window-buffer
-                       (get-mru-window top-bar-current-frame)))))
-          ;; Right.
-          '(mode-line-misc-info
-            )))))
-    ;; (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
-
     (setq-default
      default-frame-alist
      `(
@@ -111,8 +80,6 @@
        (right-fringe . 3)                   ;; Thin right fringe
        (tool-bar-lines . 0)                 ; No tool bar
        (tab-bar-lines . 0)                  ; No tab bar
-       (top-bar-lines . 1)                  ; Enable top bar
-       (top-bar-format . ,mk/default-frame-top-bar-format)   ; Enable top bar
        ;; (undecorated . 1)                 ; this will completely remove the titlebar
        (ns-titlebar-height-adjust . -10)    ; this is actually not used
        (ns-title-hidden . 1)                ; hide the title text in the titlebar
@@ -121,8 +88,8 @@
        (vertical-scroll-bars . nil)         ; No vertical scroll-bars
        (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
        (undecorated . t)
-       (width . 150)
-       (height . 100)
+       (width . 120)
+       (height . 50)
        (font . "Monaco-12")
        (minibuffer . t)
        ))
@@ -131,7 +98,7 @@
 
     ) ; End of unless mk-android
 
-  ;; (when window-system (set-frame-size (selected-frame) 100 80))
+  ;; (when window-system (set-frame-size (selected-frame) 120 50))
 
   ;; UTF-8
   (prefer-coding-system 'utf-8)
@@ -734,7 +701,9 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 #+END_SRC
 
 
-** Which-Key: Emacs package that displays available keybindings in popup
+** Which-Key
+Emacs package that displays available keybindings in popup
+
 | which-key | https://github.com/justbur/emacs-which-key |
 
 #+BEGIN_SRC emacs-lisp
@@ -757,57 +726,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     )
 #+END_SRC
 
-** Calendar
-
-#+BEGIN_SRC emacs-lisp
-  (use-package calendar
-    :init
-    (setq calendar-longitude 121.4737
-          calendar-latitude 31.2304
-          calendar-location-name "SH")
-
-    (use-package celestial-mode-line
-      :disabled
-      :init
-      ;; (defvar celestial-mode-line-phase-representation-alist '((0 . "○") (1 . "☽") (2 . "●") (3 . "☾")))
-      ;; (defvar celestial-mode-line-sunrise-sunset-alist '((sunrise . "☀↑") (sunset . "☀↓")))
-      :config
-      ;; add to end of global-mode-string
-      (if (null global-mode-string)
-          (setq global-mode-string '("" celestial-mode-line-string))
-        (add-to-list 'global-mode-string 'celestial-mode-line-string t))
-      (celestial-mode-line-start-timer)
-      )
-    :config
-    (defun mk/notmuch-open-unread-view()
-      "Open notmuch panel for unread mails."
-      (interactive)
-      (require 'notmuch)
-      (notmuch-search "tag:unread"))
-    (defun mk/notmuch-count-unread()
-      "Get the notmuch unread mail count if notmuch is loaded."
-      (if (fboundp 'notmuch-command-to-string)
-          (replace-regexp-in-string "\n" ""
-                                    (notmuch-command-to-string "count"
-                                                               "tag:unread"))
-        "?"))
-    (defun mk/mode-line-mail ()
-      "Show the unread mail count in the mode line."
-      )
-    (setq display-time-string-forms
-          '((format-time-string "%F %H:%M")
-            ;; (propertize
-            ;;  (format " [M:%s]" (mk/notmuch-count-unread))
-            ;;  'help-echo  "Unread!"
-            ;;  'keymap  (let ((map (make-sparse-keymap)))
-            ;;             (define-key map [mouse-1]
-            ;;                         #'mk/notmuch-open-unread-view)
-            ;;             map))
-            ))
-    (display-time-mode 1))
-#+END_SRC
-
-
 ** Rainbow
 
 #+BEGIN_SRC emacs-lisp
@@ -824,6 +742,10 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 #+BEGIN_SRC emacs-lisp
   ;; https://raw.githubusercontent.com/wowhxj/emacs-from-scratch/master/emacs-config.org
   (use-package calendar
+    :init
+    (setq calendar-longitude 121.4737
+          calendar-latitude 31.2304
+          calendar-location-name "SH")
     :ensure nil
     :hook (calendar-today-visible . calendar-mark-today)
     :custom
@@ -847,7 +769,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     ;; 周一作为一周第一天
     (calendar-week-start-day 0)
     )
-;; 时间解析增加中文拼音
+  ;; 时间解析增加中文拼音
   (use-package parse-time
     :ensure nil
     :defer t
@@ -936,7 +858,7 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
             (holiday-lunar 9 9 "重阳节" 0)))
     ;; 设置日历的节日，通用节日已经包含了所有节日
     (setq calendar-holidays (append cal-china-x-general-holidays)))
-    ;; (setq mark-holidays-in-calendar t)
+  ;; (setq mark-holidays-in-calendar t)
 #+END_SRC
 
 *** Calfw - A calendar framework for Emacs
@@ -983,10 +905,11 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
 
 #+BEGIN_SRC emacs-lisp
   (use-package hl-line
+    :init (global-hl-line-mode t)
     :config
-    (set-face-background 'hl-line "#d0fed0")
-    (set-face-foreground 'hl-line nil)
-    (set-face-foreground 'highlight nil)
+    ;; (set-face-background 'hl-line "#d0fed0")
+    ;; (set-face-foreground 'hl-line nil)
+    ;; (set-face-foreground 'highlight nil)
     ;; (global-hl-line-mode t)
     )
 #+END_SRC
@@ -1012,33 +935,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
    (provide 'init-base)
  #+END_SRC
  
-
-* Private-built Top-bar
-
-#+BEGIN_SRC emacs-lisp
-  (when (eq system-type 'darwin)
-
-    (require 'top-bar)
-
-    (defun mk/enable-top-bar (frame)
-      "Setup top-bar for FRAME."
-      (set-frame-parameter frame 'top-bar-lines 1)
-      (mk/set-frame-top-bar-format mk/default-frame-top-bar-format)
-      )
-    (defun mk/disable-top-bar (frame)
-      "Setup top-bar for FRAME."
-      (set-frame-parameter frame 'top-bar-lines 0)
-      )
-
-    ;; MK: DISABLE topbar
-    ;; (mk/enable-top-bar nil)
-    ;; (add-hook 'after-make-frame-function #'mk/enable-top-bar)
-
-    (set-face-attribute 'top-bar nil :background "#EFEFEF" :font "Menlo-12") ;; default
-    ;; (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
-    )
-  (provide 'init-topbar)
-#+END_SRC
 
 
 * M-x and Auto-completion
@@ -1142,11 +1038,11 @@ Alternatives (Check the selectrum repo README)
       (advice-add #'register-preview :override #'consult-register-window)
       )
 
-    (use-package all-the-icons-completion
-      :after (all-the-icons marginalia)
-      :init
-      (all-the-icons-completion-mode)
-      (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
+    ;; (use-package all-the-icons-completion
+    ;;   :after (all-the-icons marginalia)
+    ;;   :init
+    ;;   (all-the-icons-completion-mode)
+    ;;   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 
     (use-package embark
       :disabled
@@ -1489,6 +1385,13 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 
     (add-hook 'LaTeX-mode-hook #'my-LaTeX-mode-setup)
     )
+(use-package procress
+  :straight (:host github :repo "haji-ali/procress")
+  :commands procress-auctex-mode
+  :init
+  (add-hook 'LaTeX-mode-hook #'procress-auctex-mode)
+  :config
+  (procress-load-default-svg-images))
 #+END_SRC
 
 
@@ -1804,20 +1707,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 ** Theme and modeline
 
-| monokai-theme    |   |
-| grandshell-theme |   |
-| alect-themes     |   |
-| airline-themes   |   |
-| manoj-light      |   |
-| doom-one-light   |   |
-| hemisu-light     |   |
-| doom-modeline    |   |
-| smart-mode-line  |   |
-| awesome-tray     |   |
-| spaceline        |   |
-
-#+BEGIN_SRC emacs-lisp
-
+#+begin_src emacs-lisp
   (use-package emacs
     :straight nil
     :config
@@ -1825,94 +1715,105 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq window-divider-default-bottom-width 2)
     (setq window-divider-default-places t)
     (window-divider-mode 1))
+#+end_src
 
-  (defun mk/modeline-setup ()
-    "Setup my modeline."
-    (progn
-      ;; mode line
-      (column-number-mode 1)
-      (if mk-feature/light
-          (progn
-            ;; light theme
-            (set-face-attribute 'mode-line           nil :background "#CFEF9F")
-            (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-            (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-            (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
-            (when (eq system-type 'darwin)
-              (set-face-attribute 'top-bar nil :background "#EFEFEF" :foreground "#333333" :font "Menlo-12")
-              )
-            )
-        ;; dark theme
-        (set-face-attribute 'mode-line           nil :background "#CF3F1F")
-        (set-face-attribute 'mode-line-buffer-id nil :background "#3F2F1F" :foreground "white")
-        (set-face-attribute 'mode-line-highlight nil :box nil :background "black")
-        (set-face-attribute 'mode-line-inactive  nil :inherit 'default)
-        (when (eq system-type 'darwin)
-          (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
-          )
-        )
+#+begin_src emacs-lisp :tangle yes
 
-      ;; Thank https://emacs.stackexchange.com/a/37270/30542
-      (defun simple-mode-line-render (left right)
-        "Return a string of `window-width' length. Containing LEFT, and RIGHT aligned respectively."
-        (let ((available-width (- (window-total-width)
-                                  (+ (length (format-mode-line left))
-                                     (length (format-mode-line right))
-                                     ))))
-          (append left
-                  (list (format (format "%%%ds" available-width) ""))
-                  right)))
-
-      (require 'uniquify)
-      (setq uniquify-buffer-name-style 'forward)
-
-      (setq-default mode-line-format
-                    '((:eval
-                       (simple-mode-line-render
-                        ;; Left.
-                        '("[%*]"
-                          evil-mode-line-tag
-                          mode-line-buffer-identification
-                          )
-                        ;; Right.
-                        '(" %e %o %l:%c "
-                          mode-line-frame-identification
-                          ;; mode-line-modes
-                          " %m "
-                          mode-line-misc-info
-                          " ")))))
-      ))
-
-  (use-package hemisu-theme
-    :straight (:host github :repo "mkvoya/hemisu-theme" :files ("*.el"))
-    :disabled
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
     :config
-    ;; (load-theme (if mk-feature/light 'hemisu-light 'hemisu-dark) t)
+    (setq inhibit-compacting-font-caches t)
+    (setq mode-line-right-align-edge 'right-fringe)
+
+    (setq doom-modeline-icon t)
+    (setq doom-modeline-major-mode-icon t)
+    (setq doom-modeline-major-mode-color-icon t)
+    (setq doom-modeline-buffer-state-icon t)
+    (setq doom-modeline-buffer-modification-icon t)
+
+    (setq doom-modeline-time t)
+    (setq doom-modeline-time-icon t)
+    (setq doom-modeline-time-live-icon t)
+
+    (setq doom-modeline-minor-modes nil)
+
+
+    (setq doom-modeline-enable-word-count nil)
+    (setq doom-modeline-modal t)
+    (setq doom-modeline-modal-icon t)
+    (setq doom-modeline-modal-modern-icon t)
+    (setq doom-modeline-unicode-fallback t)
+    (setq doom-modeline-enable-word-count t)
+    (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+    (setq doom-modeline-always-show-macro-register t)
+    (setq doom-modeline-support-imenu t)
+    (setq doom-modeline-bar-width 2)
+    ;; (setq doom-modeline-window-width-limit 85)
     )
-  (use-package abyss-theme)
-  (use-package dracula-theme
+
+  (use-package ef-themes :straight (:host github :repo "protesilaos/ef-themes")
+    :after (hl-todo doom-modeline)
+    :config
+    (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
+    (setq ef-themes-headings ; read the manual's entry or the doc string
+          '((0 variable-pitch light 1.9)
+            (1 variable-pitch light 1.8)
+            (2 variable-pitch regular 1.7)
+            (3 variable-pitch regular 1.6)
+            (4 variable-pitch regular 1.5)
+            (5 variable-pitch 1.4) ; absence of weight means `bold'
+            (6 variable-pitch 1.3)
+            (7 variable-pitch 1.2)
+            (t variable-pitch 1.1)))
+    (setq ef-themes-mixed-fonts t
+          ef-themes-variable-pitch-ui t)
+
+    (defun my-ef-themes-hl-todo-faces ()
+      "Configure `hl-todo-keyword-faces' with Ef themes colors.
+    The exact color values are taken from the active Ef theme."
+      (ef-themes-with-colors
+        (setq hl-todo-keyword-faces
+              `(("HOLD" . ,yellow)
+                ("TODO" . ,red)
+                ("NEXT" . ,blue)
+                ("THEM" . ,magenta)
+                ("PROG" . ,cyan-warmer)
+                ("OKAY" . ,green-warmer)
+                ("DONT" . ,yellow-warmer)
+                ("FAIL" . ,red-warmer)
+                ("BUG" . ,red-warmer)
+                ("DONE" . ,green)
+                ("NOTE" . ,blue-warmer)
+                ("KLUDGE" . ,cyan)
+                ("HACK" . ,cyan)
+                ("TEMP" . ,red)
+                ("FIXME" . ,red-warmer)
+                ("XXX+" . ,red-warmer)
+                ("REVIEW" . ,red)
+                ("DEPRECATED" . ,yellow)))))
+    (add-hook 'ef-themes-post-load-hook #'my-ef-themes-hl-todo-faces)
+
+    ;; Disable all other themes to avoid awkward blending:
+    (mapc #'disable-theme custom-enabled-themes)
+    (ef-themes-select 'ef-cyprus)
+    )
+
+  (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
+
+  (use-package org-margin :straight (:host github :repo "rougier/org-margin")
     :after (org)
-    :config
-    ;; (load-theme 'dracula t)
-    ;; (setq mk-feature/light nil)
+    :hook (org-mode . org-margin-mode)
     )
 
-  (use-package emacs
-    :after (org)
-    :config
-    (set-face-attribute 'org-level-1 nil :height 1.1)
-    (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-    (mk/modeline-setup)
-    )
+  ;; (set-face-attribute 'org-level-1 nil :height 1.1)
+  ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 
-  (use-package keycast
+  (use-package keycast :straight (:type git :host github :repo "tarsius/keycast")
     :disabled
-    :straight (:type git :host github :repo "tarsius/keycast")
-    :init
-    (keycast-mode)
-    )
+    :init (keycast-mode))
 
-#+END_SRC
+
+#+end_src
 
 ** Beacon - A light that follows your cursor around so you don't lose it!
 | beacon | https://github.com/Malabarba/beacon |
@@ -1946,8 +1847,9 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 ** Dashboard
 #+BEGIN_SRC emacs-lisp
   (use-package xkcd :defer)
-  (use-package all-the-icons
-    :if (display-graphic-p))
+  ;; (use-package all-the-icons
+  ;;   :disabled t
+  ;;   :if (display-graphic-p))
   (use-package dashboard
     :if (< (length command-line-args) 2)
     :diminish dashboard-mode
@@ -2038,7 +1940,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
-    (setq org-startup-indented t)
+    ;; (setq org-startup-indented t) ; disable org-indent-mode for org-margin
     (setq org-latex-create-formula-image-program 'dvisvgm)
 
     ;; (setq org-latex-create-formula-image-program 'dvipng)
@@ -2267,87 +2169,51 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  ;; ;; Org Style
-  ;; ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-  ;; ;; (setq org-startup-indented t)
-  ;; (use-package org-superstar
-  ;;   :defer t
-  ;;   :disabled t  ; disable for now
-  ;;   :after (org)
-  ;;   :hook (org-mode . org-superstar-mode)
-  ;;   :config
-  ;;   ;; Stop cycling bullets to emphasize hierarchy of headlines.
-  ;;   (setq org-superstar-cycle-headline-bullets nil)
-  ;;   ;; Hide away leading stars on terminal.
-  ;;   (setq org-superstar-leading-fallback ?\s)
-  ;;   (setq org-indent-mode-turns-on-hiding-stars nil)
-  ;;   (setq org-hide-leading-stars t)
-  ;;   (setq org-superstar-item-bullet-alist
-  ;;         '((?* . ?⌬) ; * ; previously used: 8226
-  ;;           (?+ . ?⋇) ; + ; previously used: 10210
-  ;;           (?- . ?▪))) ; - ; previously used: 8211
-  ;;   ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
-  ;;   (setq org-superstar-headline-bullets-list
-  ;;         '(9673 9675 ?◇ 10047 10040))
-  ;;   )
+    ;; ;; Org Style
+    ;; ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
+    ;; ;; (setq org-startup-indented t)
+    ;; (use-package org-superstar
+    ;;   :defer t
+    ;;   :disabled t  ; disable for now
+    ;;   :after (org)
+    ;;   :hook (org-mode . org-superstar-mode)
+    ;;   :config
+    ;;   ;; Stop cycling bullets to emphasize hierarchy of headlines.
+    ;;   (setq org-superstar-cycle-headline-bullets nil)
+    ;;   ;; Hide away leading stars on terminal.
+    ;;   (setq org-superstar-leading-fallback ?\s)
+    ;;   (setq org-indent-mode-turns-on-hiding-stars nil)
+    ;;   (setq org-hide-leading-stars t)
+    ;;   (setq org-superstar-item-bullet-alist
+    ;;         '((?* . ?⌬) ; * ; previously used: 8226
+    ;;           (?+ . ?⋇) ; + ; previously used: 10210
+    ;;           (?- . ?▪))) ; - ; previously used: 8211
+    ;;   ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
+    ;;   (setq org-superstar-headline-bullets-list
+    ;;         '(9673 9675 ?◇ 10047 10040))
+    ;;   )
 
-  (use-package org-modern
-    :custom ((org-modern-block-name nil "Don't stylise blocks")
-             (org-modern-block-fringe nil "Don't stylise block fringes")
-             (org-modern-priority nil "Don't stylise priorities")
-             (org-modern-tag nil "Don't stylise tags")
-             (org-modern-timestamp nil "Don't stylisee timestamps")
-             (org-modern-todo nil "Don't stylise TODOs")
-             (org-modern-checkbox nil "Don't stylise checkboxes")
-             (org-modern-hide-stars nil "Don't hide leading stars using org-modern")
-             (org-hide-leading-stars t "Hide leading stars using org")
-             (org-modern-keyword nil "I want to see #+")
-             (org-modern-list nil "Don't stylise lists")
-             (org-modern-table nil "I can't see the cursor otherwise")
-             (org-modern-internal-target nil "Stop it!")
-             ;; (org-modern-star ["●" "▲" "■" "◉" "○" "○"])
-             )
-    :config (add-hook 'org-mode-hook #'org-modern-mode))
+    (use-package org-bars
+      :straight (:host github :repo "tonyaldon/org-bars")
+      :defer t
+      :after (org)
+      :config
+      (setq org-bars-with-dynamic-stars-p nil)
+      )
+    (use-package highlight-indent-guides)
+    (use-package nerd-icons
+      :custom
+      ;; The Nerd Font you want to use in GUI
+      ;; "Symbols Nerd Font Mono" is the default and is recommended
+      ;; but you can use any other Nerd Font if you want
+      (nerd-icons-font-family "Symbols Nerd Font Mono")
+      (nerd-icons-scale-factor 1.1)
+      )
 
-  (use-package org-habit
-    :straight nil
-    :ensure nil
-    :custom
-    (org-habit-graph-column 1)
-    (org-habit-preceding-days 10)
-    (org-habit-following-days 1)
-    (org-habit-show-habits-only-for-today nil)
-    :config (add-to-list 'org-modules 'org-habit))
-  (use-package emacsql)
-  (use-package org-heatmap
-    :straight (:type git :host github :repo "Elilif/org-heatmap")
-    :after (org emacsql)
-    ;; :custom
-    ;; (org-agenda-files '("/path-to/org-heatmap/examples/examples.org"))
-    ;; (org-heatmap-db-location "/path-to/org-heatmap/examples/org-heatmap.db")
-    :config
-    (org-heatmap-mode))
-  (load-file "~/.emacs.d/site-lisp/lib-svg-tag-mode.el")
-
-  (use-package org-bars
-    :straight (:host github :repo "tonyaldon/org-bars")
-    :defer t
-    :after (org)
-    :config
-    (setq org-bars-with-dynamic-stars-p nil)
-    )
-  (use-package highlight-indent-guides)
-  (use-package nerd-icons
-    :custom
-    ;; The Nerd Font you want to use in GUI
-    ;; "Symbols Nerd Font Mono" is the default and is recommended
-    ;; but you can use any other Nerd Font if you want
-    (nerd-icons-font-family "Symbols Nerd Font Mono")
-    )
-  (use-package org-tag-beautify
-    :ensure t
-    :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
-    :init (org-tag-beautify-mode 1))
+    (use-package org-tag-beautify
+      :ensure t
+      :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
+      :init (org-tag-beautify-mode 1))
 #+END_SRC
 
 
@@ -2838,10 +2704,10 @@ Publish & Blog
     (setq org-cite-follow-processor 'citar)
     (setq org-cite-activate-processor 'citar)
     (setq citar-bibliography org-cite-global-bibliography)
-    (setq citar-symbols
-          `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
-            (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
-            (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
+    ;; (setq citar-symbols
+    ;;       `((file ,(all-the-icons-faicon "file-o" :face 'all-the-icons-green :v-adjust -0.1) . " ")
+    ;;         (note ,(all-the-icons-material "speaker_notes" :face 'all-the-icons-blue :v-adjust -0.3) . " ")
+    ;;         (link ,(all-the-icons-octicon "link" :face 'all-the-icons-orange :v-adjust 0.01) . " ")))
     (setq citar-symbol-separator "  ")
     ;; (require 'embark)
     ;; (setq citar-at-point-function 'embark-act)
@@ -3253,31 +3119,6 @@ Publish & Blog
 
 
 #+BEGIN_SRC emacs-lisp
-  (defun mk/ns-get-window-title-and-buffer ()
-    (interactive)
-    ;; Apple script from the activitywatch project
-    (do-applescript "
-  global frontApp, frontAppName, windowTitle
-  set windowTitle to \"\"
-  tell application \"System Events\"
-          set frontApp to first application process whose frontmost is true
-          set frontAppName to name of frontApp
-          tell process frontAppName
-                  try
-                          tell (1st window whose value of attribute \"AXMain\" is true)
-                                  set windowTitle to value of attribute \"AXTitle\"
-                          end tell
-                  end try
-          end tell
-  end tell
-  return frontAppName & \"
-  \" & windowTitle"))
-#+END_SRC
-
-
-
-
-#+BEGIN_SRC emacs-lisp
   (defun mk/dired-curl ()
     "Get file from url to dired."
     (interactive)
@@ -3287,37 +3128,6 @@ Publish & Blog
              (target (concat (file-name-as-directory cwd) (file-name-nondirectory url))))
         (url-copy-file url target)
         )))
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
-  (defun mk/frame-pin ()
-    "Pin current frame to always-on-top."
-    (interactive)
-    (modify-frame-parameters
-     nil '((z-group . above))))
-  (defun mk/frame-unpin ()
-    "Unpin current frame to always-on-top."
-    (interactive)
-    (modify-frame-parameters
-     nil '((z-group . nil))))
-
-
-  (defun mk/make-pinned-frame ()
-    "Make a new pined frame."
-    (interactive)
-    (make-frame '((undecorated . 1)
-                  (z-group . above)
-                  (width . 80)
-                  (height . 10)
-                  (user-size . t)
-                  (left . 1)
-                  (top . 1)
-                  (user-position . t)
-                  (tab-bar-lines . 0)
-                  (drag-with-header-line . t)
-                  (drag-with-tab-line . t)
-                  (drag-with-mode-line . t))))
 #+END_SRC
 
 
@@ -3887,10 +3697,3 @@ Publish & Blog
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
 #+END_SRC
 
-
-* Obsolete
-
-
-#+begin_src emacs-lisp
-
-#+end_src
