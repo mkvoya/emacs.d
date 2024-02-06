@@ -120,6 +120,7 @@
        (ns-transparent-titlebar . 1)        ; make the titlebar transparent
        (vertical-scroll-bars . nil)         ; No vertical scroll-bars
        (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
+       (undecorated . t)
        (width . 150)
        (height . 100)
        (font . "Monaco-12")
@@ -152,7 +153,7 @@
   (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
   (provide 'early-init)
-  ;;; early-init.el ends here
+      ;;; early-init.el ends here
 #+END_SRC
 
 * init.el
@@ -1029,8 +1030,9 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
       (set-frame-parameter frame 'top-bar-lines 0)
       )
 
-    (mk/enable-top-bar nil)
-    (add-hook 'after-make-frame-function #'mk/enable-top-bar)
+    ;; MK: DISABLE topbar
+    ;; (mk/enable-top-bar nil)
+    ;; (add-hook 'after-make-frame-function #'mk/enable-top-bar)
 
     (set-face-attribute 'top-bar nil :background "#EFEFEF" :font "Menlo-12") ;; default
     ;; (set-face-attribute 'top-bar nil :background "#2F2F2F" :foreground "#fFeF5F" :font "Menlo-12")
@@ -3122,6 +3124,7 @@ Publish & Blog
        ((string= journal "science") (format "science.%s" year))
        ((string= journal "commun. acm") (format "commun.acm.%s" year))
        ((string= journal "nature communications") (format "nat.comm.%s" year))
+       ((string= journal "nature") (format "nature.%s" year))
        ((string= journal "advanced science") (format "advs.%s" year))
        ((string= journal "acs nano") (format "acs.nano.%s" year))
        ((string= journal "nano select") (format "nano.%s" year))
@@ -3619,15 +3622,12 @@ Publish & Blog
     :config
     (setq holo-layer-enable-cursor-animation t)
     (setq holo-layer-enable-place-info nil)
-    (setq holo-layer-sort-tab-ui t)
+    ;; (setq holo-layer-sort-tab-ui t)
     (setq holo-layer-enable-indent-rainbow t)
     (setq holo-layer-cursor-color "Goldenrod")
     (holo-layer-enable)
     )
-  (use-package sort-tab
-    :ensure t
-    :init
-    (sort-tab-mode 1))
+  ;; (use-package sort-tab :ensure t :init (sort-tab-mode 1))
 #+END_SRC
 
 
@@ -3886,3 +3886,11 @@ Publish & Blog
   (use-package paper :disabled t
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
 #+END_SRC
+
+
+* Obsolete
+
+
+#+begin_src emacs-lisp
+
+#+end_src

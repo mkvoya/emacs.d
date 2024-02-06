@@ -93,6 +93,7 @@
      (ns-transparent-titlebar . 1)        ; make the titlebar transparent
      (vertical-scroll-bars . nil)         ; No vertical scroll-bars
      (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
+     (undecorated . t)
      (width . 150)
      (height . 100)
      (font . "Monaco-12")
