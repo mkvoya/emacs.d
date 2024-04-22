@@ -5,7 +5,6 @@
 #+PROPERTY: header-args :tangle emacs-config.el
 
 * Options
-
 #+BEGIN_SRC emacs-lisp
   ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
   ;;; Commentary:
@@ -581,8 +580,13 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     (evil-ex-define-cmd "quit" 'evil-quit)
     ;; (setq evil-emacs-state-cursor '("SkyBlue2" bar))
     ;; (setq evil-emacs-state-cursor '(hollow))
-    (setq evil-emacs-state-cursor '((bar . 3) "green"))
-    (setq evil-insert-state-cursor '((bar . 1) "blue"))
+    (if (featurep 'ef-themes)
+        (ef-themes-with-colors
+          (setq evil-emacs-state-cursor `((bar . 3) ,cursor))
+          (setq evil-insert-state-cursor `((bar . 1) ,cursor)))
+      (setq evil-emacs-state-cursor '((bar . 3) "green"))
+      (setq evil-insert-state-cursor '((bar . 1) "blue"))
+      )
     ;; Disable Evil in snails-mode
 
     (dolist (nonevil-mode '(snails-mode
@@ -1800,10 +1804,11 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
   (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
 
-  (use-package org-margin :straight (:host github :repo "rougier/org-margin")
-    :after (org)
-    :hook (org-mode . org-margin-mode)
-    )
+  ;; (use-package org-margin :straight (:host github :repo "rougier/org-margin")
+  ;;   :disabled t
+  ;;   :after (org)
+  ;;   :hook (org-mode . org-margin-mode)
+  ;;   )
 
   ;; (set-face-attribute 'org-level-1 nil :height 1.1)
   ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
@@ -1940,7 +1945,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq org-adapt-indentation t
           org-hide-leading-stars t)
     ;;org-odd-levels-only t
-    ;; (setq org-startup-indented t) ; disable org-indent-mode for org-margin
+    (setq org-startup-indented t) ; disable org-indent-mode for org-margin
     (setq org-latex-create-formula-image-program 'dvisvgm)
 
     ;; (setq org-latex-create-formula-image-program 'dvipng)
@@ -3193,7 +3198,7 @@ Publish & Blog
 
 
 #+BEGIN_SRC emacs-lisp
-  ;; (use-package ox-pandoc)
+  (use-package ox-pandoc)
 #+END_SRC
 
 
@@ -3243,7 +3248,10 @@ Publish & Blog
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package darkroom)
+  (use-package darkroom
+    :config
+    (setq darkroom-keep-lines t)
+    )
 #+END_SRC
 
 
@@ -3492,7 +3500,7 @@ Publish & Blog
   (require 'emacs-badge)
   (setq emacs-badge-timer
         (run-with-timer
-         1 1
+         10 1
          '(lambda()
             (emacs-badge-update (format "%s" (mk/count-today-todos))))))
 
@@ -3696,4 +3704,16 @@ Publish & Blog
   (use-package paper :disabled t
     :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
 #+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package treesit-auto
+    :custom
+    (treesit-auto-install 'prompt)
+    :config
+    (setq treesit-font-lock-level 4)
+    (treesit-auto-add-to-auto-mode-alist 'all)
+    (global-treesit-auto-mode))
+#+END_SRC
+
 

@@ -47,3 +47,10 @@ games
 /xenops/
 /multisession/
 /init-lisp/
+/customs.el
+/ebib-filters
+/forge-database-v9-20231207-2000.sqlite
+/librime
+/site-lisp/emacs-application-framework
+/tabsession.el
+/tree-sitter
