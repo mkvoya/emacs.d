@@ -6,18 +6,22 @@
 
 * Options
 #+BEGIN_SRC emacs-lisp
-  ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
-  ;;; Commentary:
+     ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
+     ;;; Commentary:
 
-  ;;; Code:
+     ;;; Code:
 
   (defvar mk-feature/bibliography t "Enable bibliography.")
   (defvar mk-feature/gui t "Enable GUI-related packages.")
   (defvar mk-feature/noteman t "Enable note management.")
   (defvar mk-feature/light t "Use light mode.")
   (defvar mk-feature/news-mail t "Enable news and mails.")
-#+END_SRC
-
+  (when is-android
+    (setq mk-feature/bibliography nil
+          mk-feature/gui nil
+          mk-feature/news-mail nil
+          mk-feature/noteman nil))
+ #+END_SRC
 * early-init.el
 :PROPERTIES:
 :HEADER-ARGS: :tangle early-init.el
@@ -29,7 +33,7 @@
 
   ;;; Code:
 
-  (defvar mk-android (string= system-type "android") "Whether on Anroid.")
+  (defvar is-android (string= system-type "android") "Whether on Anroid.")
 
   ;; (setq debug-on-error t)
   ;; (setq debug-on-signal t)
@@ -53,7 +57,7 @@
   (setq comp-deferred-compilation nil)
 
 
-  (when mk-android
+  (when is-android
     (setenv "PATH" (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                            (getenv "PATH")))
     (setenv "LD_LIBRARY_PATH" (format "%s:%s"
@@ -62,7 +66,7 @@
     (push "/data/data/com.termux/files/usr/bin" exec-path)
     )
 
-  (unless mk-android
+  (unless is-android
     (when (display-graphic-p)
       (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
       (scroll-bar-mode nil)
@@ -95,7 +99,7 @@
     ;; (set-frame-font "Monaco-12" nil t)
     (set-face-attribute 'fixed-pitch nil :family "Monaco")
 
-    ) ; End of unless mk-android
+    ) ; End of unless is-android
 
   ;; (when window-system (set-frame-size (selected-frame) 120 50))
 
@@ -331,7 +335,7 @@ We need to setup fonts early.
 #+BEGIN_SRC emacs-lisp
   (use-package fontaine
     :ensure t
-    :when (display-graphic-p)
+    :when (and (display-graphic-p) (not is-android))
     ;; :hook (kill-emacs . fontaine-store-latest-preset)
     :config
     (setq fontaine-latest-state-file
@@ -1753,6 +1757,12 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq doom-modeline-support-imenu t)
     (setq doom-modeline-bar-width 2)
     ;; (setq doom-modeline-window-width-limit 85)
+    (setq doom-modeline-height 1) ; optional
+    (custom-set-faces
+     '(mode-line ((t (:height 0.95))))
+     '(mode-line-active ((t (:height 0.95)))) ; For 29+
+     '(mode-line-inactive ((t (:height 0.95)))))
+
     )
 
   (use-package ef-themes :straight (:host github :repo "protesilaos/ef-themes")
@@ -1774,7 +1784,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
     (defun my-ef-themes-hl-todo-faces ()
       "Configure `hl-todo-keyword-faces' with Ef themes colors.
-    The exact color values are taken from the active Ef theme."
+      The exact color values are taken from the active Ef theme."
       (ef-themes-with-colors
         (setq hl-todo-keyword-faces
               `(("HOLD" . ,yellow)
@@ -3112,6 +3122,7 @@ Publish & Blog
     :config
     (setq read-aloud-engine "say"))
   (use-package emacs-badge
+    :if (not is-android)
     :defer t
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     )
@@ -3500,7 +3511,7 @@ Publish & Blog
   (require 'emacs-badge)
   (setq emacs-badge-timer
         (run-with-timer
-         10 1
+         30 30
          '(lambda()
             (emacs-badge-update (format "%s" (mk/count-today-todos))))))
 
@@ -3717,3 +3728,32 @@ Publish & Blog
 #+END_SRC
 
 
+
+#+BEGIN_SRC emacs-lisp
+  (use-package obsidian
+    :ensure t
+    :demand t
+    :config
+    (obsidian-specify-path "~/Dropbox/Dreams")
+    (global-obsidian-mode t)
+    :custom
+    ;; This directory will be used for `obsidian-capture' if set.
+    (obsidian-inbox-directory "Inbox")
+    ;; Create missing files in inbox? - when clicking on a wiki link
+    ;; t: in inbox, nil: next to the file with the link
+    ;; default: t
+                                          ;(obsidian-wiki-link-create-file-in-inbox nil)
+    ;; The directory for daily notes (file name is YYYY-MM-DD.md)
+    (obsidian-daily-notes-directory "Daily Notes")
+    ;; Directory of note templates, unset (nil) by default
+                                          ;(obsidian-templates-directory "Templates")
+    ;; Daily Note template name - requires a template directory. Default: Daily Note Template.md
+                                          ;(obsidian-daily-note-template "Daily Note Template.md")
+    :bind (:map obsidian-mode-map
+                ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
+                ("C-c C-o" . obsidian-follow-link-at-point)
+                ;; Jump to backlinks
+                ("C-c C-b" . obsidian-backlink-jump)
+                ;; If you prefer you can use `obsidian-insert-link'
+                ("C-c C-l" . obsidian-insert-wikilink)))
+#+END_SRC

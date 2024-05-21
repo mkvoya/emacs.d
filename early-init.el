@@ -3,7 +3,7 @@
 
 ;;; Code:
 
-(defvar mk-android (string= system-type "android") "Whether on Anroid.")
+(defvar is-android (string= system-type "android") "Whether on Anroid.")
 
 ;; (setq debug-on-error t)
 ;; (setq debug-on-signal t)
@@ -27,7 +27,7 @@
 (setq comp-deferred-compilation nil)
 
 
-(when mk-android
+(when is-android
   (setenv "PATH" (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                          (getenv "PATH")))
   (setenv "LD_LIBRARY_PATH" (format "%s:%s"
@@ -36,7 +36,7 @@
   (push "/data/data/com.termux/files/usr/bin" exec-path)
   )
 
-(unless mk-android
+(unless is-android
   (when (display-graphic-p)
     (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
     (scroll-bar-mode nil)
@@ -69,7 +69,7 @@
   ;; (set-frame-font "Monaco-12" nil t)
   (set-face-attribute 'fixed-pitch nil :family "Monaco")
 
-  ) ; End of unless mk-android
+  ) ; End of unless is-android
 
 ;; (when window-system (set-frame-size (selected-frame) 120 50))
 
