@@ -342,6 +342,7 @@ We need to setup fonts early.
 
 #+BEGIN_SRC emacs-lisp
   (use-package fontaine
+    :if (not is-android)
     :ensure t
     :when (and (display-graphic-p) (not is-android))
     ;; :hook (kill-emacs . fontaine-store-latest-preset)
@@ -435,7 +436,7 @@ We need to setup fonts early.
   (use-package dash :defer t)
   (use-package ts :defer t)
   (use-package s :defer t)
-  (use-package reveal-in-osx-finder :defer t)
+  (use-package reveal-in-osx-finder :if (not is-android) :defer t)
   (use-package crux :defer t)
   (use-package ranger :defer t)  ; The ranger mode
   (use-package vlf :defer t)  ; View large files
@@ -1738,6 +1739,8 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 #+BEGIN_SRC emacs-lisp
   (use-package jieba
+    :disabled t
+    :if (not is-android)
     :delight
     :after (evil)
     :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
@@ -1752,6 +1755,16 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
           (jieba-forward-word))))
     (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
     (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
+    )
+
+  (use-package emt
+    :if (not is-android)
+    :straight (:host github :repo "roife/emt"
+                     :files ("*.el" "module/*" "module"))
+    :hook (after-init . emt-mode)
+    :config
+    (define-key evil-motion-state-map (kbd "w") #'emt-forward-word)
+    (define-key evil-motion-state-map (kbd "b") #'emt-backward-word)
     )
 #+END_SRC
 
@@ -1910,6 +1923,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 #+BEGIN_SRC emacs-lisp
   (use-package beacon
+    :disabled t
     :defer t
     :config
     (setq beacon-color "#00ff00")
@@ -2227,6 +2241,12 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (use-package ov)
     (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
+
+    (use-package org-sticky-header
+      :straight (:host github :repo "alphapapa/org-sticky-header")
+      :defer t
+      :after (org)
+      )
   ;; Org Cite
   (use-package oc
     :straight nil
@@ -3200,6 +3220,14 @@ Publish & Blog
     :if (not is-android)
     :defer t
     :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
+    :config
+    (require 'emacs-badge)
+    (setq emacs-badge-timer
+          (run-with-timer
+           30 30
+           '(lambda()
+              (emacs-badge-update (format "%s" (mk/count-today-todos))))))
+
     )
   (use-package elnode
     :defer
@@ -3521,6 +3549,7 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package holo-layer
+    :if (not is-android)
     :straight (:type git :host github :repo "manateelazycat/holo-layer" :files ("*"))
     :config
     (setq holo-layer-enable-cursor-animation t)
@@ -3537,6 +3566,7 @@ Publish & Blog
 #+BEGIN_SRC emacs-lisp
   (use-package eaf
     :disabled t
+    :if (not is-android)
     :straight (:type git :host github :repo "emacs-eaf/emacs-application-framework" :files ("*"))
     :custom
     ;; See https://github.com/emacs-eaf/emacs-application-framework/wiki/Customization
@@ -3555,9 +3585,6 @@ Publish & Blog
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-  (use-package send-to-osx-grammarly
-    :straight (:type git :host github :repo "mkvoya/send-to-osx-grammarly" :files ("*"))
-    )
   (use-package gptel)
 #+END_SRC
 
@@ -3582,12 +3609,6 @@ Publish & Blog
        nil 'agenda)
       count)
     )
-  (require 'emacs-badge)
-  (setq emacs-badge-timer
-        (run-with-timer
-         30 30
-         '(lambda()
-            (emacs-badge-update (format "%s" (mk/count-today-todos))))))
 
 #+END_SRC
 
@@ -3595,13 +3616,6 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
 (use-package dirvish)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ox-reveal
-    :config
-    (setq org-reveal-root "https://cdn.jsdelivr.net/npm/reveal.js")
-    )
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -3629,26 +3643,6 @@ Publish & Blog
   (with-eval-after-load 'ob-C
     (advice-add 'org-babel-C-execute :filter-args
                 #'org-babel-C-execute/filter-args))
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
-  (use-package tabspaces
-    :disabled t
-    ;; use this next line only if you also use straight, otherwise ignore it.
-    :straight (:type git :host github :repo "mclear-tools/tabspaces")
-    :hook (after-init . tabspaces-mode) ;; use this only if you want the minor-mode loaded at startup.
-    :commands (tabspaces-switch-or-create-workspace
-               tabspaces-open-or-create-project-and-workspace)
-    :custom
-    (tabspaces-use-filtered-buffers-as-default t)
-    (tabspaces-default-tab "Default")
-    (tabspaces-remove-to-default t)
-    (tabspaces-include-buffers '("*scratch*"))
-    (tabspaces-initialize-project-with-todo t)
-    (tabspaces-todo-file-name "project-todo.org")
-    ;; sessions
-    (tabspaces-session t)
-    (tabspaces-session-auto-restore t))
 #+END_SRC
 
 
@@ -3732,15 +3726,6 @@ Publish & Blog
        ))
  #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package popwin
-    :disabled t
-    :config
-    (popwin-mode 1)
-    )
-
-#+END_SRC
-
 
 ** Custom key-bindings
 
@@ -3805,6 +3790,7 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package obsidian
+    :if (not is-android)
     :ensure t
     :demand t
     :config
