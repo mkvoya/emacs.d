@@ -4,6 +4,7 @@
 #+EMAIL: mk@dong.mk
 #+PROPERTY: header-args :tangle emacs-config.el
 
+
 * Options
 #+BEGIN_SRC emacs-lisp
      ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
@@ -232,27 +233,34 @@
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t) ; Ensure :straight t
   (setq use-package-compute-statistics t)
+  (when is-android
+    (setq straight-disable-compile t)
+    )
+  (unless is-android
+    (straight-use-package 'org))
   (use-package use-package-ensure-system-package :ensure t)
-  (straight-use-package 'org)
+
 #+END_SRC
 
 
 ** Benchmarks
 
 #+BEGIN_SRC emacs-lisp
-(use-package benchmark-init
-  :ensure t
-  :config
-  ;; To disable collection of benchmark data after init is done.
-  (add-hook 'after-init-hook 'benchmark-init/deactivate))
+  (use-package benchmark-init
+    :ensure t
+    :config
+    ;; To disable collection of benchmark data after init is done.
+    (add-hook 'after-init-hook 'benchmark-init/deactivate))
 #+END_SRC
 
 ** Emacs Server
 
 #+BEGIN_SRC emacs-lisp
-  ;;; The server part may not be configured so early.
-  (load "server") ; Load and start server if it's not running
-  (unless (server-running-p) (server-start))
+  (unless is-android
+    ;;; The server part may not be configured so early.
+    (load "server") ; Load and start server if it's not running
+    (unless (server-running-p) (server-start))
+    )
 #+END_SRC
 
 ** The PATH
@@ -657,6 +665,102 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (evil magit)
     :defer t)
 #+END_SRC
+
+
+** Meow
+
+#+begin_src emacs-lisp
+  (use-package meow
+    :config
+(defun meow-setup ()
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-overwrite-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev)
+   '("<escape>" . ignore))
+  (meow-leader-define-key
+   ;; SPC j/k will run the original command in MOTION state.
+   '("j" . "H-j")
+   '("k" . "H-k")
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("d" . meow-delete)
+   '("D" . meow-backward-delete)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("f" . meow-find)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("m" . meow-join)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   '("R" . meow-swap-grab)
+   '("s" . meow-kill)
+   '("t" . meow-till)
+   '("u" . meow-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-line)
+   '("X" . meow-goto-line)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("'" . repeat)
+   '("<escape>" . ignore)))
+
+    )
+#+end_src
+
 
 ** Dir
 
@@ -1274,8 +1378,8 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
     :hook ((c-ts-base-mode . hs-minor-mode)
            (c-ts-base-mode . display-line-numbers-mode)
            (c-ts-base-mode . ws-butler-mode)
-           (c-ts-base-mode . ggtags-mode)
-           (c-ts-base-mode . helm-gtags-mode)
+           ;; (c-ts-base-mode . ggtags-mode)
+           ;; (c-ts-base-mode . helm-gtags-mode)
            (c-ts-base-mode . clang-format+-mode))
     :init (progn
             (add-to-list 'major-mode-remap-alist '(c-mode . c-ts-mode))
@@ -1448,36 +1552,8 @@ Better line number from https://github.com/Eason0210/emacs.d/blob/330d530f566593
 #+END_SRC
 
 
-** Golang
-
 #+BEGIN_SRC emacs-lisp
-  (use-package go-ts-mode
-    :mode "\\.go$"
-    :ensure-system-package gopls
-    :hook ((go-ts-mode . eldoc-mode)
-           (go-ts-mode . display-line-numbers-mode))
-    :init (add-to-list 'major-mode-remap-alist '(go-mode . go-ts-mode))
-    :config (when (boundp 'dtrt-indent-hook-mapping-list)
-              (add-to-list 'dtrt-indent-hook-mapping-list
-                           '(go-ts-mode c/c++/java go-ts-mode-indent-offset))))
-#+END_SRC
-
-** Rust
-
-#+BEGIN_SRC emacs-lisp
-  (use-package rustic
-    :custom
-    (rustic-lsp-setup-p . nil))
-
-  (use-package rust-ts-mode
-    :ensure nil
-    :mode "\\.rs$"
-    :hook ((rust-ts-mode . eldoc-mode)
-           (rust-ts-mode . display-line-numbers-mode))
-    :init (add-to-list 'major-mode-remap-alist '(rust-mode . rust-ts-mode))
-    :config (when (boundp 'dtrt-indent-hook-mapping-list)
-              (add-to-list 'dtrt-indent-hook-mapping-list
-                           '(rust-ts-mode c/c++/java rust-ts-mode-indent-offset))))
+  (use-package swift-mode :disabled t)
 #+END_SRC
 
 ** Python & Web
@@ -1744,7 +1820,6 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq doom-modeline-time-live-icon t)
 
     (setq doom-modeline-minor-modes nil)
-
 
     (setq doom-modeline-enable-word-count nil)
     (setq doom-modeline-modal t)
@@ -3236,18 +3311,17 @@ Publish & Blog
   (use-package linux-kernel-coding-style
     :straight (:type git :host github :repo "mkvoya/linux-kernel-coding-style.el")
     )
-  ;; (use-package tree-sitter
-  ;;   :init
-  ;;   (use-package tree-sitter-langs)
-  ;;   (global-tree-sitter-mode)
-  ;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
-  ;;   )
+  (use-package treesit-auto
+    :custom
+    (treesit-auto-install 'prompt)
+    :config
+    (treesit-auto-add-to-auto-mode-alist 'all)
+    (global-treesit-auto-mode))
 
 #+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package swift-mode)
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -3452,7 +3526,7 @@ Publish & Blog
     (setq holo-layer-enable-cursor-animation t)
     (setq holo-layer-enable-place-info nil)
     ;; (setq holo-layer-sort-tab-ui t)
-    (setq holo-layer-enable-indent-rainbow t)
+    ;; (setq holo-layer-enable-indent-rainbow t)
     (setq holo-layer-cursor-color "Goldenrod")
     (holo-layer-enable)
     )
