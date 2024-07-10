@@ -144,7 +144,7 @@
   ;;; Code:
 
 
-  (setq gc-cons-threshold (* 400 (expt 2 20))
+  (setq gc-cons-threshold (* 4 (expt 2 20))
         gc-cons-percentage 0.6)
 
   (let* (;; (file-name-handler-alist nil)  ; This causes loading issues. Check: https://lists.gnu.org/archive/html/emacs-devel/2022-08/msg00218.html
@@ -164,6 +164,8 @@
 
   (setq gc-cons-threshold (expt 2 23)
         gc-cons-percentage 0.1)
+  (setq gc-cons-threshold (expt 2 28)
+        gc-cons-percentage 0.3)
 
   (message "Everything is up. Wish you a nice day. :)")
   (put 'narrow-to-region 'disabled nil)
@@ -602,11 +604,10 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
         (ef-themes-with-colors
           (setq evil-emacs-state-cursor `((bar . 3) ,cursor))
           (setq evil-insert-state-cursor `((bar . 1) ,cursor)))
-      (setq evil-emacs-state-cursor '((bar . 3) "green"))
-      (setq evil-insert-state-cursor '((bar . 1) "blue"))
+      (setq evil-emacs-state-cursor '((bar . 3) "#E90074"))
+      (setq evil-insert-state-cursor '((bar . 1) "#874CCC"))
       )
     ;; Disable Evil in snails-mode
-
     (dolist (nonevil-mode '(snails-mode
                             notdeft-mode
                             vterm-mode
@@ -671,101 +672,6 @@ Currently, yascroll won't show upon mouse-triggerred scrolling.
     :after (evil magit)
     :defer t)
 #+END_SRC
-
-
-** Meow
-
-#+begin_src emacs-lisp
-  (use-package meow
-    :config
-(defun meow-setup ()
-  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
-  (meow-motion-overwrite-define-key
-   '("j" . meow-next)
-   '("k" . meow-prev)
-   '("<escape>" . ignore))
-  (meow-leader-define-key
-   ;; SPC j/k will run the original command in MOTION state.
-   '("j" . "H-j")
-   '("k" . "H-k")
-   ;; Use SPC (0-9) for digit arguments.
-   '("1" . meow-digit-argument)
-   '("2" . meow-digit-argument)
-   '("3" . meow-digit-argument)
-   '("4" . meow-digit-argument)
-   '("5" . meow-digit-argument)
-   '("6" . meow-digit-argument)
-   '("7" . meow-digit-argument)
-   '("8" . meow-digit-argument)
-   '("9" . meow-digit-argument)
-   '("0" . meow-digit-argument)
-   '("/" . meow-keypad-describe-key)
-   '("?" . meow-cheatsheet))
-  (meow-normal-define-key
-   '("0" . meow-expand-0)
-   '("9" . meow-expand-9)
-   '("8" . meow-expand-8)
-   '("7" . meow-expand-7)
-   '("6" . meow-expand-6)
-   '("5" . meow-expand-5)
-   '("4" . meow-expand-4)
-   '("3" . meow-expand-3)
-   '("2" . meow-expand-2)
-   '("1" . meow-expand-1)
-   '("-" . negative-argument)
-   '(";" . meow-reverse)
-   '("," . meow-inner-of-thing)
-   '("." . meow-bounds-of-thing)
-   '("[" . meow-beginning-of-thing)
-   '("]" . meow-end-of-thing)
-   '("a" . meow-append)
-   '("A" . meow-open-below)
-   '("b" . meow-back-word)
-   '("B" . meow-back-symbol)
-   '("c" . meow-change)
-   '("d" . meow-delete)
-   '("D" . meow-backward-delete)
-   '("e" . meow-next-word)
-   '("E" . meow-next-symbol)
-   '("f" . meow-find)
-   '("g" . meow-cancel-selection)
-   '("G" . meow-grab)
-   '("h" . meow-left)
-   '("H" . meow-left-expand)
-   '("i" . meow-insert)
-   '("I" . meow-open-above)
-   '("j" . meow-next)
-   '("J" . meow-next-expand)
-   '("k" . meow-prev)
-   '("K" . meow-prev-expand)
-   '("l" . meow-right)
-   '("L" . meow-right-expand)
-   '("m" . meow-join)
-   '("n" . meow-search)
-   '("o" . meow-block)
-   '("O" . meow-to-block)
-   '("p" . meow-yank)
-   '("q" . meow-quit)
-   '("Q" . meow-goto-line)
-   '("r" . meow-replace)
-   '("R" . meow-swap-grab)
-   '("s" . meow-kill)
-   '("t" . meow-till)
-   '("u" . meow-undo)
-   '("U" . meow-undo-in-selection)
-   '("v" . meow-visit)
-   '("w" . meow-mark-word)
-   '("W" . meow-mark-symbol)
-   '("x" . meow-line)
-   '("X" . meow-goto-line)
-   '("y" . meow-save)
-   '("Y" . meow-sync-grab)
-   '("z" . meow-pop-selection)
-   '("'" . repeat)
-   '("<escape>" . ignore)))
-
-    )
-#+end_src
 
 
 ** Dir
@@ -1198,6 +1104,49 @@ Alternatives (Check the selectrum repo README)
 | Cape (use with Corfu) | https://github.com/minad/cape                |
 
 #+BEGIN_SRC emacs-lisp
+  (use-package corfu
+    ;; Optional customizations
+    ;; :custom
+    ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    ;; (corfu-auto t)                 ;; Enable auto completion
+    ;; (corfu-separator ?\s)          ;; Orderless field separator
+    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
+
+    ;; Enable Corfu only for certain modes.
+    ;; :hook ((prog-mode . corfu-mode)
+    ;;        (shell-mode . corfu-mode)
+    ;;        (eshell-mode . corfu-mode))
+
+    ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
+    ;; be used globally (M-/).  See also the customization variable
+    ;; `global-corfu-modes' to exclude certain modes.
+    :init
+    (global-corfu-mode))
+
+  ;; A few more useful configurations...
+  (use-package emacs
+    :init
+    ;; TAB cycle if there are only few candidates
+    ;; (setq completion-cycle-threshold 3)
+
+    ;; Enable indentation+completion using the TAB key.
+    ;; `completion-at-point' is often bound to M-TAB.
+    (setq tab-always-indent 'complete)
+
+    ;; Emacs 30 and newer: Disable Ispell completion function. As an alternative,
+    ;; try `cape-dict'.
+    (setq text-mode-ispell-word-completion nil)
+
+    ;; Emacs 28 and newer: Hide commands in M-x which do not apply to the current
+    ;; mode.  Corfu commands are hidden, since they are not used via M-x. This
+    ;; setting is useful beyond Corfu.
+    (setq read-extended-command-predicate #'command-completion-default-include-p))
+
   ;; Use Dabbrev with Corfu!
   (use-package dabbrev
     ;; Swap M-/ and C-M-/
@@ -1725,17 +1674,24 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (rime-posframe-properties
      (list :background-color "#000000"  ; 不要在这里设置字体，会影响后面 face 里字体的
            :foreground-color "#f33333"
-           :internal-border-width 10))
+           :internal-border-width 3
+           :internal-border-color "#5fc187"))
     :config
     (set-face-attribute 'rime-default-face nil
                         :background "#000000"
                         :foreground "honeydew1"
                         :font "Hei-20")
     (set-face-attribute 'rime-highlight-candidate-face nil
-                        ;; :background "#f33333"
-                        :foreground "#FFFF00"
+                        :background "#5fc187"
+                        :foreground "#efefef"
+                        :font "Hei-20")
+    (set-face-attribute 'rime-candidate-num-face nil
+                        :background "#000000"
+                        :foreground "#5fc187"
                         :font "Hei-20")
     (set-face-attribute 'rime-code-face nil
+                        :background "#719ae7"
+                        :foreground "#efefef"
                         :font "Hei-20")
     )
 #+END_SRC
@@ -1743,6 +1699,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 ** CJK font jumping
 
 #+BEGIN_SRC emacs-lisp
+  (setq word-wrap-by-category t)
   (use-package jieba
     :disabled t
     :if (not is-android)
@@ -1841,7 +1798,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
     (setq doom-modeline-enable-word-count nil)
     (setq doom-modeline-modal t)
-    (setq doom-modeline-modal-icon t)
+    (setq doom-modeline-modal-icon nil)
     (setq doom-modeline-modal-modern-icon t)
     (setq doom-modeline-unicode-fallback t)
     (setq doom-modeline-enable-word-count t)
@@ -1849,6 +1806,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq doom-modeline-always-show-macro-register t)
     (setq doom-modeline-support-imenu t)
     (setq doom-modeline-bar-width 2)
+
     ;; (setq doom-modeline-window-width-limit 85)
     (setq doom-modeline-height 1) ; optional
     (custom-set-faces
@@ -1877,7 +1835,7 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
     (defun my-ef-themes-hl-todo-faces ()
       "Configure `hl-todo-keyword-faces' with Ef themes colors.
-      The exact color values are taken from the active Ef theme."
+        The exact color values are taken from the active Ef theme."
       (ef-themes-with-colors
         (setq hl-todo-keyword-faces
               `(("HOLD" . ,yellow)
@@ -1904,6 +1862,24 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (mapc #'disable-theme custom-enabled-themes)
     (ef-themes-select 'ef-cyprus)
     )
+
+  (use-package doom-themes
+    :ensure t
+    :config
+    ;; Global settings (defaults)
+    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t) ; if nil, italics is universally disabled
+    (load-theme 'doom-one t)
+
+    ;; Enable flashing mode-line on errors
+    (doom-themes-visual-bell-config)
+    ;; Enable custom neotree theme (all-the-icons must be installed!)
+    (doom-themes-neotree-config)
+    ;; or for treemacs users
+    (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+    (doom-themes-treemacs-config)
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config))
 
   (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
 
@@ -2090,13 +2066,16 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     (setq org-todo-keywords
           '((sequence
              "TODO(t)"     ; New task
+             "知识(K)" ; pieces of knowledge
+             "讨论(D)"  ; Discussion records
+             "技术技巧(S)"
+             "IDEA(I)"
              "PROJECT(p)"  ; Project
              "SUBMITTED(s)"; Project
              "ONGOING(g)"  ; Doing
              "WAIT(w)"     ; Procrastinated on purpose
              "LONG-TERM(l)"  ; Long-term
              "DELEGATE(z)"   ; Delegated
-             "IDEA(i)" "EXP(e)" "TIP(i)" "COLL(C)"
              "CONFDDL(C)"
              "GOAL(G)"
              "|"
@@ -2284,51 +2263,64 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
-    ;; ;; Org Style
-    ;; ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
-    ;; ;; (setq org-startup-indented t)
-    ;; (use-package org-superstar
-    ;;   :defer t
-    ;;   :disabled t  ; disable for now
-    ;;   :after (org)
-    ;;   :hook (org-mode . org-superstar-mode)
-    ;;   :config
-    ;;   ;; Stop cycling bullets to emphasize hierarchy of headlines.
-    ;;   (setq org-superstar-cycle-headline-bullets nil)
-    ;;   ;; Hide away leading stars on terminal.
-    ;;   (setq org-superstar-leading-fallback ?\s)
-    ;;   (setq org-indent-mode-turns-on-hiding-stars nil)
-    ;;   (setq org-hide-leading-stars t)
-    ;;   (setq org-superstar-item-bullet-alist
-    ;;         '((?* . ?⌬) ; * ; previously used: 8226
-    ;;           (?+ . ?⋇) ; + ; previously used: 10210
-    ;;           (?- . ?▪))) ; - ; previously used: 8211
-    ;;   ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
-    ;;   (setq org-superstar-headline-bullets-list
-    ;;         '(9673 9675 ?◇ 10047 10040))
-    ;;   )
+  ;; ;; Org Style
+  ;; ;; from https://www.lijigang.com/blog/2018/08/08/神器-org-mode/#org4288876
+  ;; ;; (setq org-startup-indented t)
+  ;; (use-package org-superstar
+  ;;   :defer t
+  ;;   :disabled t  ; disable for now
+  ;;   :after (org)
+  ;;   :hook (org-mode . org-superstar-mode)
+  ;;   :config
+  ;;   ;; Stop cycling bullets to emphasize hierarchy of headlines.
+  ;;   (setq org-superstar-cycle-headline-bullets nil)
+  ;;   ;; Hide away leading stars on terminal.
+  ;;   (setq org-superstar-leading-fallback ?\s)
+  ;;   (setq org-indent-mode-turns-on-hiding-stars nil)
+  ;;   (setq org-hide-leading-stars t)
+  ;;   (setq org-superstar-item-bullet-alist
+  ;;         '((?* . ?⌬) ; * ; previously used: 8226
+  ;;           (?+ . ?⋇) ; + ; previously used: 10210
+  ;;           (?- . ?▪))) ; - ; previously used: 8211
+  ;;   ;; ●◆◼►▸▮▪■⚈⚉⌫⌦☑ ◉◈○▷①②③④⑤⑥⑦⑧⑨⎋〄
+  ;;   (setq org-superstar-headline-bullets-list
+  ;;         '(9673 9675 ?◇ 10047 10040))
+  ;;   )
+  (font-lock-add-keywords
+   'org-mode
+   '(("^[[:space:]]*\\(-\\) "
+      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-    (use-package org-bars
-      :straight (:host github :repo "tonyaldon/org-bars")
-      :defer t
-      :after (org)
-      :config
-      (setq org-bars-with-dynamic-stars-p nil)
-      )
-    (use-package highlight-indent-guides)
-    (use-package nerd-icons
-      :custom
-      ;; The Nerd Font you want to use in GUI
-      ;; "Symbols Nerd Font Mono" is the default and is recommended
-      ;; but you can use any other Nerd Font if you want
-      (nerd-icons-font-family "Symbols Nerd Font Mono")
-      (nerd-icons-scale-factor 1.1)
-      )
+  (use-package org-bars
+    :straight (:host github :repo "tonyaldon/org-bars")
+    :defer t
+    :after (org)
+    :config
+    (setq org-bars-with-dynamic-stars-p nil)
+    )
+  (use-package highlight-indent-guides)
+  (use-package nerd-icons
+    :custom
+    ;; The Nerd Font you want to use in GUI
+    ;; "Symbols Nerd Font Mono" is the default and is recommended
+    ;; but you can use any other Nerd Font if you want
+    (nerd-icons-font-family "Symbols Nerd Font Mono")
+    (nerd-icons-scale-factor 1.1)
+    )
 
-    (use-package org-tag-beautify
-      :ensure t
-      :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
-      :init (org-tag-beautify-mode 1))
+  (use-package org-tag-beautify
+    :ensure t
+    :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
+    :init (org-tag-beautify-mode 1))
+  (use-package org-rainbow-tags
+    :ensure t
+    :custom
+    (org-rainbow-tags-hash-start-index 10)
+    (org-rainbow-tags-extra-face-attributes
+     ;; Default is '(:weight 'bold)
+     '(:inverse-video t :box t :weight 'bold))
+    :hook
+    (org-mode . org-rainbow-tags-mode))
 #+END_SRC
 
 
@@ -2501,31 +2493,24 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
     ;; :after (async)
     :init
     (require 'async)
-    ;; (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
-    (setq org-caldav-url "https://mail.sjtu.edu.cn/dav/mingkaidong@sjtu.edu.cn/")
+    (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
+    (setq org-caldav-todo-percent-states
+          '(
+            (0 "TODO")
+            (100 "DONE")
+            (0 "IDEA")
+            (100 "CANCELED")))
     (setq org-caldav-calendars
           '(
-            (:calendar-id "9d6f9f39-cba5-fe5b-bd49-c61168d64f81"
-                          :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
-                          :files ("~/Dropbox/Dreams/Org/Main.org"
-                                  "~/Dropbox/Dreams/Org/Inbox.org"
-                                  )
-                          :type-regex "VEVENT")
-            (:calendar-id "e08e1f91-e359-0e59-3a72-b8b0ea70a783"
-                          :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
-                          :files (
-                                  ;; "~/Dropbox/Dreams/Org/Main.org"
-                                  ;; "~/Dropbox/Dreams/Org/Inbox.org"
-                                  "~/Dropbox/Dreams/Org/Ebib-ReadingList.org"
-                                  )
-                          :type-regex "VTODO")
+            (
+             :calendar-id "9d6f9f39-cba5-fe5b-bd49-c61168d64f81"
+             ;; :calendar-id "OrgSync"
+             :inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org"
+             :files ("~/Dropbox/Dreams/Org/Main.org"
+                     "~/Dropbox/Dreams/Org/Inbox.org"
+                     "~/Dropbox/Dreams/Org/Ebib-ReadingList.org"
+                     ))
             ))
-    ;; (setq org-caldav-calendar-id "f846603c-c54c-c73f-f009-e7331ef16216")
-    ;; (setq org-caldav-inbox "~/Dropbox/Dreams/Org/Caldav.inbox.org")
-    ;; (setq org-caldav-files '("~/Dropbox/Dreams/Org/Main.org"
-    ;;                          "~/Dropbox/Dreams/Org/Inbox.org"
-    ;;                          ))
-    ;; (setq org-icalendar-timezone "America/Los_Angeles")
     (setq org-icalendar-timezone "Asia/Shanghai")
     )
 #+END_SRC
@@ -2567,7 +2552,6 @@ Modes to embed one buffer in another buffer and keep them in sync
 |             | consult-ripgrep | consult built-in                                              |
 
 #+BEGIN_SRC emacs-lisp
-
   (use-package websocket :defer t)
   (use-package simple-httpd :defer t)
   (use-package denote
@@ -3272,7 +3256,7 @@ Publish & Blog
       (setq motd-border-color "#444444")
       )
     (setq motd--git-commit-dir "~/Dropbox/Dreams")
-    (motd-start-timer)
+    ;; (motd-start-timer)
     )
   (use-package xwidget-apps
     :if mk-feature/noteman
@@ -3559,9 +3543,16 @@ Publish & Blog
     :config
     (setq holo-layer-enable-cursor-animation t)
     (setq holo-layer-enable-place-info nil)
+    (setq holo-layer-cursor-animation-color-gradient-start-value 200)
+    (setq holo-layer-enable-indent-rainbow nil)
+    (setq holo-layer-enable-type-animation t)
+    (setq holo-layer-type-animation-style "lightning")
+    ;; (setq holo-layer-type-animation-style "balloon")
+    ;; (setq holo-layer-type-animation-style 'supernova)
+    ;; (setq holo-layer-type-animation-style 'flame)
     ;; (setq holo-layer-sort-tab-ui t)
     ;; (setq holo-layer-enable-indent-rainbow t)
-    (setq holo-layer-cursor-color "Goldenrod")
+    ;; (setq holo-layer-cursor-color "Goldenrod")
     (holo-layer-enable)
     )
   ;; (use-package sort-tab :ensure t :init (sort-tab-mode 1))
@@ -3821,4 +3812,27 @@ Publish & Blog
                 ("C-c C-b" . obsidian-backlink-jump)
                 ;; If you prefer you can use `obsidian-insert-link'
                 ("C-c C-l" . obsidian-insert-wikilink)))
+
+
+#+END_SRC
+
+** AI Tools
+
+#+BEGIN_SRC emacs-lisp
+  (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+    :ensure t
+    :config
+    (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+    (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    )
+  ;; you can utilize :map :hook and :config to customize copilot
+
+#+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+(setq-default
+   header-line-format
+   '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (number-to-string gc-elapsed)) "s"))
 #+END_SRC
