@@ -7,10 +7,10 @@
 
 * Options
 #+BEGIN_SRC emacs-lisp
-     ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
-     ;;; Commentary:
+  ;;; emacs-config.el --- Main Emacs Configuration  -*- lexical-binding: t -*-
+  ;;; Commentary:
 
-     ;;; Code:
+  ;;; Code:
 
   (defvar mk-feature/bibliography t "Enable bibliography.")
   (defvar mk-feature/gui t "Enable GUI-related packages.")
@@ -22,7 +22,7 @@
           mk-feature/gui nil
           mk-feature/news-mail nil
           mk-feature/noteman nil))
- #+END_SRC
+#+END_SRC
 * early-init.el
 :PROPERTIES:
 :HEADER-ARGS: :tangle early-init.el
@@ -101,6 +101,9 @@
        (height . 50)
        (font . "Monaco-12")
        (minibuffer . t)
+       (drag-with-header-line . t)
+       (drag-with-mode-line . t)
+       (drag-with-internal-border . t)
        ))
     ;; (set-frame-font "Monaco-12" nil t)
     (set-face-attribute 'fixed-pitch nil :family "Monaco")
@@ -129,7 +132,7 @@
   (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
   (provide 'early-init)
-      ;;; early-init.el ends here
+  ;;; early-init.el ends here
 #+END_SRC
 
 * init.el
@@ -329,8 +332,6 @@
 
   (blink-cursor-mode 1)
 
-  (when (> emacs-major-version 28)
-    (pixel-scroll-precision-mode))
   (setq delete-by-moving-to-trash t)
 #+END_SRC
 
@@ -389,11 +390,11 @@ We need to setup fonts early.
          '(#x1f300 . #x1fad0)
        'emoji)
      (cond
+      ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")
       ((member "Noto Emoji" (font-family-list)) "Noto Emoji")
       ((member "Symbola" (font-family-list)) "Symbola")
       ((member "Apple Color Emoji" (font-family-list)) "Apple Color Emoji")
       ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
-      ((member "Segoe UI Emoji" (font-family-list)) "Segoe UI Emoji")
       ))
 
     ;; set Chinese font
@@ -918,6 +919,21 @@ Emacs package that displays available keybindings in popup
         )
       )
     )
+  (use-package vterm-toggle
+    :straight (:host github :repo "jixiuf/vterm-toggle")
+    :config
+    (global-set-key (kbd "C-c t") 'vterm-toggle)
+    (global-set-key [C-f2] 'vterm-toggle-cd)
+
+    ;; you can cd to the directory where your previous buffer file exists
+    ;; after you have toggle to the vterm buffer with `vterm-toggle'.
+    (define-key vterm-mode-map [(control return)]   #'vterm-toggle-insert-cd)
+
+                                          ;Switch to next vterm buffer
+    (define-key vterm-mode-map (kbd "s-n")   'vterm-toggle-forward)
+                                          ;Switch to previous vterm buffer
+    (define-key vterm-mode-map (kbd "s-p")   'vterm-toggle-backward)
+    )
 #+END_SRC
 
 
@@ -1100,32 +1116,9 @@ Alternatives (Check the selectrum repo README)
 | company-mode          | https://github.com/company-mode/company-mode |
 | Corfu                 | https://github.com/minad/corfu               |
 | Cape (use with Corfu) | https://github.com/minad/cape                |
+| lsp-bridge            |                                              |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package corfu
-    ;; Optional customizations
-    ;; :custom
-    ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-    ;; (corfu-auto t)                 ;; Enable auto completion
-    ;; (corfu-separator ?\s)          ;; Orderless field separator
-    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
-    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
-    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
-    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
-    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
-    ;; (corfu-scroll-margin 5)        ;; Use scroll margin
-
-    ;; Enable Corfu only for certain modes.
-    ;; :hook ((prog-mode . corfu-mode)
-    ;;        (shell-mode . corfu-mode)
-    ;;        (eshell-mode . corfu-mode))
-
-    ;; Recommended: Enable Corfu globally.  This is recommended since Dabbrev can
-    ;; be used globally (M-/).  See also the customization variable
-    ;; `global-corfu-modes' to exclude certain modes.
-    :init
-    (global-corfu-mode))
-
   ;; A few more useful configurations...
   (use-package emacs
     :init
@@ -1140,19 +1133,10 @@ Alternatives (Check the selectrum repo README)
     ;; try `cape-dict'.
     (setq text-mode-ispell-word-completion nil)
 
-    ;; Emacs 28 and newer: Hide commands in M-x which do not apply to the current
-    ;; mode.  Corfu commands are hidden, since they are not used via M-x. This
-    ;; setting is useful beyond Corfu.
+    ;; Hide commands in M-x which do not apply to the current mode.  Corfu
+    ;; commands are hidden, since they are not used via M-x. This setting is
+    ;; useful beyond Corfu.
     (setq read-extended-command-predicate #'command-completion-default-include-p))
-
-  ;; Use Dabbrev with Corfu!
-  (use-package dabbrev
-    ;; Swap M-/ and C-M-/
-    :bind (("M-/" . dabbrev-completion)
-           ("C-M-/" . dabbrev-expand))
-    ;; Other useful Dabbrev configurations.
-    :custom
-    (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'")))
 #+END_SRC
 
 ** Templating: Yasnippet
@@ -1165,9 +1149,6 @@ Alternatives (Check the selectrum repo README)
     :init (yas-global-mode 1))
   (use-package yasnippet-snippets
     :after yasnippet)
-#+END_SRC
-
-#+BEGIN_SRC emacs-lisp
 #+END_SRC
 
 ** LSP
@@ -1190,7 +1171,6 @@ Alternatives (Check the selectrum repo README)
 | [[https://github.com/PillFall/Emacs-LanguageTool.el][languagetool]]          |                                |
 
 #+BEGIN_SRC emacs-lisp
-
   (use-package flymake
     :straight (:type built-in)  ; built-in
     :config
@@ -1225,8 +1205,24 @@ Alternatives (Check the selectrum repo README)
     :init
     ;; (setq lsp-bridge-tex-lsp-server "texlab-grammarly")
     (setq lsp-bridge-enable-hover-diagnostic t)
+    (setq acm-enable-capf t)
+    (setq acm-enable-doc t)
+    (setq acm-enable-doc-markdown-render 'async)
+    (setq acm-enable-icon t)
+    (setq acm-enable-tabnine t)
+    (setq acm-enable-quick-access t)
+    (setq acm-enable-citre t)
+    (setq acm-backend-search-file-words-candidate-min-length 3)
+    (setq acm-backend-lsp-show-progress t)
+    (setq acm-backend-yas-candidate-min-length 2)
+    (setq acm-backend-elisp-candidate-min-length 2)
+    (setq acm-backend-search-file-words-enable-fuzzy-match t)
+    (setq acm-backend-search-file-words-enable-fuzzy-match-threshold 1)
+
+    (setq acm-backend-lsp-match-mode "prefix")
+    (setq acm-backend-lsp-frontend-filter-p t)
+
     (global-lsp-bridge-mode))
-  (provide 'init-completion)
 #+END_SRC
 
 
@@ -1778,126 +1774,111 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 #+begin_src emacs-lisp :tangle yes
 
-    (use-package doom-modeline
-      :init (doom-modeline-mode 1)
-      :config
-      (setq inhibit-compacting-font-caches t)
-      (setq mode-line-right-align-edge 'right-fringe)
+  (use-package doom-modeline
+    :init (doom-modeline-mode 1)
+    :config
+    (setq inhibit-compacting-font-caches t)
+    (setq mode-line-right-align-edge 'right-fringe)
 
-      (setq doom-modeline-icon t)
-      (setq doom-modeline-major-mode-icon t)
-      (setq doom-modeline-major-mode-color-icon t)
-      (setq doom-modeline-buffer-state-icon t)
-      (setq doom-modeline-buffer-modification-icon t)
+    (setq doom-modeline-icon t)
+    (setq doom-modeline-major-mode-icon t)
+    (setq doom-modeline-major-mode-color-icon t)
+    (setq doom-modeline-buffer-state-icon t)
+    (setq doom-modeline-buffer-modification-icon t)
 
-      (setq doom-modeline-time t)
-      (setq doom-modeline-time-icon t)
-      (setq doom-modeline-time-live-icon t)
+    (setq doom-modeline-time t)
+    (setq doom-modeline-time-icon t)
+    (setq doom-modeline-time-live-icon t)
 
-      (setq doom-modeline-minor-modes nil)
+    (setq doom-modeline-minor-modes nil)
 
-      (setq doom-modeline-enable-word-count nil)
-      (setq doom-modeline-modal t)
-      (setq doom-modeline-modal-icon nil)
-      (setq doom-modeline-modal-modern-icon t)
-      (setq doom-modeline-unicode-fallback t)
-      (setq doom-modeline-enable-word-count t)
-      (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
-      (setq doom-modeline-always-show-macro-register t)
-      (setq doom-modeline-support-imenu t)
-      (setq doom-modeline-bar-width 2)
+    (setq doom-modeline-enable-word-count nil)
+    (setq doom-modeline-modal t)
+    (setq doom-modeline-modal-icon nil)
+    (setq doom-modeline-modal-modern-icon t)
+    (setq doom-modeline-unicode-fallback t)
+    (setq doom-modeline-enable-word-count t)
+    (setq doom-modeline-continuous-word-count-modes '(markdown-mode gfm-mode org-mode))
+    (setq doom-modeline-always-show-macro-register t)
+    (setq doom-modeline-support-imenu t)
+    (setq doom-modeline-bar-width 2)
 
-      ;; (setq doom-modeline-window-width-limit 85)
-      (setq doom-modeline-height 1) ; optional
-      (custom-set-faces
-       '(mode-line ((t (:height 0.95))))
-       '(mode-line-active ((t (:height 0.95)))) ; For 29+
-       '(mode-line-inactive ((t (:height 0.95))))
-       '(doom-modeline-evil-emacs-state ((t (:italic nil)))))
-      )
+    ;; (setq doom-modeline-window-width-limit 85)
+    (setq doom-modeline-height 1) ; optional
+    (custom-set-faces
+     '(mode-line ((t (:height 0.95))))
+     '(mode-line-active ((t (:height 0.95)))) ; For 29+
+     '(mode-line-inactive ((t (:height 0.95))))
+     '(doom-modeline-evil-emacs-state ((t (:italic nil)))))
+    )
 
-    (use-package ef-themes :straight (:host github :repo "protesilaos/ef-themes")
-      :after (hl-todo doom-modeline)
-      :config
-      (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
-      (setq ef-themes-headings ; read the manual's entry or the doc string
-            '((0 variable-pitch light 1.9)
-              (1 variable-pitch light 1.8)
-              (2 variable-pitch regular 1.7)
-              (3 variable-pitch regular 1.6)
-              (4 variable-pitch regular 1.5)
-              (5 variable-pitch 1.4) ; absence of weight means `bold'
-              (6 variable-pitch 1.3)
-              (7 variable-pitch 1.2)
-              (t variable-pitch 1.1)))
-      (setq ef-themes-mixed-fonts t
-            ef-themes-variable-pitch-ui t)
+  (use-package ef-themes :straight (:host github :repo "protesilaos/ef-themes")
+    :after (hl-todo doom-modeline)
+    :config
+    (setq ef-cyprus-palette-overrides '((bg-main "#fdfefd")))
+    (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
+    (setq ef-themes-headings ; read the manual's entry or the doc string
+          '((0 variable-pitch light 1.9)
+            (1 variable-pitch light 1.8)
+            (2 variable-pitch regular 1.7)
+            (3 variable-pitch regular 1.6)
+            (4 variable-pitch regular 1.5)
+            (5 variable-pitch 1.4) ; absence of weight means `bold'
+            (6 variable-pitch 1.3)
+            (7 variable-pitch 1.2)
+            (t variable-pitch 1.1)))
+    (setq ef-themes-mixed-fonts t
+          ef-themes-variable-pitch-ui t)
 
-      (defun my-ef-themes-hl-todo-faces ()
-        "Configure `hl-todo-keyword-faces' with Ef themes colors.
-          The exact color values are taken from the active Ef theme."
-        (ef-themes-with-colors
-          (setq hl-todo-keyword-faces
-                `(("HOLD" . ,yellow)
-                  ("TODO" . ,red)
-                  ("NEXT" . ,blue)
-                  ("THEM" . ,magenta)
-                  ("PROG" . ,cyan-warmer)
-                  ("OKAY" . ,green-warmer)
-                  ("DONT" . ,yellow-warmer)
-                  ("FAIL" . ,red-warmer)
-                  ("BUG" . ,red-warmer)
-                  ("DONE" . ,green)
-                  ("NOTE" . ,blue-warmer)
-                  ("KLUDGE" . ,cyan)
-                  ("HACK" . ,cyan)
-                  ("TEMP" . ,red)
-                  ("FIXME" . ,red-warmer)
-                  ("XXX+" . ,red-warmer)
-                  ("REVIEW" . ,red)
-                  ("DEPRECATED" . ,yellow)))))
-      (add-hook 'ef-themes-post-load-hook #'my-ef-themes-hl-todo-faces)
+    (defun my-ef-themes-hl-todo-faces ()
+      "Configure `hl-todo-keyword-faces' with Ef themes colors.
+        The exact color values are taken from the active Ef theme."
+      (ef-themes-with-colors
+        (setq hl-todo-keyword-faces
+              `(("HOLD" . ,yellow)
+                ("TODO" . ,red)
+                ("NEXT" . ,blue)
+                ("THEM" . ,magenta)
+                ("PROG" . ,cyan-warmer)
+                ("OKAY" . ,green-warmer)
+                ("DONT" . ,yellow-warmer)
+                ("FAIL" . ,red-warmer)
+                ("BUG" . ,red-warmer)
+                ("DONE" . ,green)
+                ("NOTE" . ,blue-warmer)
+                ("KLUDGE" . ,cyan)
+                ("HACK" . ,cyan)
+                ("TEMP" . ,red)
+                ("FIXME" . ,red-warmer)
+                ("XXX+" . ,red-warmer)
+                ("REVIEW" . ,red)
+                ("DEPRECATED" . ,yellow)))))
+    (add-hook 'ef-themes-post-load-hook #'my-ef-themes-hl-todo-faces)
 
-      ;; Disable all other themes to avoid awkward blending:
-      (mapc #'disable-theme custom-enabled-themes)
-      (ef-themes-select 'ef-cyprus)
-      )
+    ;; Disable all other themes to avoid awkward blending:
+    (mapc #'disable-theme custom-enabled-themes)
+    (ef-themes-select 'ef-cyprus)
+    )
 
-    (use-package doom-themes
-      :ensure t
-      :config
-      ;; Global settings (defaults)
-      (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-            doom-themes-enable-italic t) ; if nil, italics is universally disabled
-      (load-theme 'doom-one t)
+  (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
 
-      ;; Enable flashing mode-line on errors
-      (doom-themes-visual-bell-config)
-      ;; Enable custom neotree theme (all-the-icons must be installed!)
-      (doom-themes-neotree-config)
-      ;; or for treemacs users
-      (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
-      (doom-themes-treemacs-config)
-      ;; Corrects (and improves) org-mode's native fontification.
-      (doom-themes-org-config))
+  ;; (use-package org-margin :straight (:host github :repo "rougier/org-margin")
+  ;;   :disabled t
+  ;;   :after (org)
+  ;;   :hook (org-mode . org-margin-mode)
+  ;;   )
 
-    (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
+  ;; (set-face-attribute 'org-level-1 nil :height 1.1)
+  ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 
-    ;; (use-package org-margin :straight (:host github :repo "rougier/org-margin")
-    ;;   :disabled t
-    ;;   :after (org)
-    ;;   :hook (org-mode . org-margin-mode)
-    ;;   )
-
-    ;; (set-face-attribute 'org-level-1 nil :height 1.1)
-    ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
-
-    (use-package keycast :straight (:type git :host github :repo "tarsius/keycast")
-      :disabled
-      :init (keycast-mode))
+  (use-package keycast :straight (:type git :host github :repo "tarsius/keycast")
+    :disabled
+    :init (keycast-mode))
 
 
 #+end_src
+
+
 
 ** Beacon - A light that follows your cursor around so you don't lose it!
 | beacon | https://github.com/Malabarba/beacon |
@@ -2005,10 +1986,9 @@ Check https://emacs-china.org/t/emacs-builtin-mode/11937
 
 * Org mode
 ** Org
-
 | appt | MELPA, Appointment package |
 
-#+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp :tangle yes
 
   ;; Enable Org mode
   (use-package org
@@ -3580,9 +3560,6 @@ Publish & Blog
     ) ;; unbind, see more in the Wiki
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (use-package gptel)
-#+END_SRC
 
 
 
@@ -3863,3 +3840,69 @@ Publish & Blog
                   "\\|iso\\|epub\\|pdf\\)"))
     )
 #+end_src
+
+
+
+* Cursor-like
+
+
+#+BEGIN_SRC emacs-lisp
+  (use-package elysium
+    :straight
+    (:host github :repo "lanceberge/elysium" :branch "main" :files ("*.el"))
+    :custom
+    ;; Below are the default values
+    (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
+    (elysium-window-style 'vertical)) ; Can be customized to horizontal
+  (use-package smerge-mode
+    :ensure nil
+    :hook
+    (prog-mode . smerge-mode))
+
+  (use-package gptel
+    :config
+    (defun remove-trailing-newline (str)
+      "Remove the trailing newline character from STR, if it exists."
+      (if (string-suffix-p "\n" str)
+          (substring str 0 -1)
+        str))
+    (defun read-file-contents (file-path)
+      "Read the contents of FILE-PATH and return it as a string."
+      (with-temp-buffer
+        (insert-file-contents file-path)
+        (buffer-string)))
+    (defun gptel-api-key ()
+      (remove-trailing-newline (read-file-contents "~/.secrets/ipads-chatgpt.key")))
+    (setq gptel-use-curl nil)
+    (setq
+     gptel-model "gpt-4o-2024-05-13"
+     gptel-backend
+     (gptel-make-openai "IPADS GPT"
+       :host "ipads.chat.gpt:3006"
+       :protocol "http"
+       :stream t
+       :key #'gptel-api-key
+       :models '(
+                 "gpt-4o-2024-05-13"
+                 "gpt-4o"))))
+
+#+END_SRC
+
+Scrolling
+#+begin_src emacs-lisp :tangle yes
+  ;; Let's disable the precision mode since it brings some troubles with the precision mode
+  ;; (pixel-scroll-precision-mode)
+  (setq scroll-preserve-screen-position 'always)
+#+end_src
+
+
+* A list of interesting packges
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package infinite
+    :disabled t
+    :straight (:host gitlab :repo "andreyorst/infinite.el")
+    )
+#+end_src
+
+

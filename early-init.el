@@ -70,6 +70,9 @@
      (height . 50)
      (font . "Monaco-12")
      (minibuffer . t)
+     (drag-with-header-line . t)
+     (drag-with-mode-line . t)
+     (drag-with-internal-border . t)
      ))
   ;; (set-frame-font "Monaco-12" nil t)
   (set-face-attribute 'fixed-pitch nil :family "Monaco")
@@ -98,4 +101,4 @@
 (setq sentence-end-double-space nil) ; Use only one space to end a sentence
 
 (provide 'early-init)
-    ;;; early-init.el ends here
+;;; early-init.el ends here

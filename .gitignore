@@ -54,3 +54,5 @@ games
 /site-lisp/emacs-application-framework
 /tabsession.el
 /tree-sitter
+/elgrep-data.el
+/modules/
