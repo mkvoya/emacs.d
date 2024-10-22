@@ -1057,7 +1057,6 @@ Alternatives (Check the selectrum repo README)
   ;;   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 
   (use-package embark
-    :disabled
     :demand
     :bind
     (("C-." . embark-act)         ;; pick some comfortable binding
@@ -1075,7 +1074,6 @@ Alternatives (Check the selectrum repo README)
 
   ;; Consult users will also want the embark-consult package.
   (use-package embark-consult
-    :disabled
     :after (embark consult)
     :demand t ; only necessary if you have the hook below
     ;; if you want to have consult previews as you move around an
@@ -1578,6 +1576,8 @@ Alternatives (Check the selectrum repo README)
   (load-file "~/.emacs.d/site-lisp/wc.el")
   (provide 'init-writing)
   (load-file "~/.emacs.d/site-lisp/tex-autogen.el")
+  (use-package svg-lib :ensure t)
+  (load-file "~/.emacs.d/site-lisp/big-timer.el")
 #+END_SRC
 
 
@@ -2021,16 +2021,17 @@ Use holo lyaer
     (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
 
-    (use-package org-sticky-header
-      :straight (:host github :repo "alphapapa/org-sticky-header")
-      :defer t
-      :after (org)
-      )
+  (use-package org-sticky-header
+    :straight (:host github :repo "alphapapa/org-sticky-header")
+    :defer t
+    :after (org)
+    )
   ;; Org Cite
   (use-package oc
     :straight nil
     :ensure nil
     :after org)
+
 #+END_SRC
 
 #+BEGIN_SRC emacs-lisp
@@ -2307,20 +2308,20 @@ Modes to embed one buffer in another buffer and keep them in sync
     :ensure t
     :custom
     (org-roam-directory (file-truename "~/Dropbox/Dreams/Org/"))
-    (org-roam-dailies-directory "Journals/")
-    (org-roam-dailies-capture-templates '(("d" "default" entry
-                                           "* %<%H:%M>: %?"
-                                           :target (file+datetree "LatestJournal.org" week))))
+    ;; (org-roam-dailies-directory "Journals/")
+    ;; (org-roam-dailies-capture-templates '(("d" "default" entry
+    ;;                                        "* %<%H:%M>: %?"
+    ;;                                        :target (file+datetree "LatestJournal.org" week))))
     :bind (("C-c n l" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n g" . org-roam-graph)
            ("C-c n i" . org-roam-node-insert)
            ("C-c n c" . org-roam-capture)
            ;; Dailies
-           ("C-c n j" . org-roam-dailies-capture-today)
-           ("C-c n J" . org-roam-dailies-goto-today)
-           ("C-c j" . org-roam-dailies-capture-today)
-           ("C-c J" . org-roam-dailies-goto-today)
+           ;; ("C-c n j" . org-roam-dailies-capture-today)
+           ;; ("C-c n J" . org-roam-dailies-goto-today)
+           ;; ("C-c j" . org-roam-dailies-capture-today)
+           ;; ("C-c J" . org-roam-dailies-goto-today)
            )
     :config
     ;; If you're using a vertical completion framework, you might want a more informative completion interface
@@ -2328,6 +2329,44 @@ Modes to embed one buffer in another buffer and keep them in sync
     (org-roam-db-autosync-mode)
     ;; If using org-roam-protocol
     (require 'org-roam-protocol)
+    )
+  (use-package org-journal
+    :ensure t
+    :bind (("C-c j" . org-journal-open-current-journal-file)
+           ("C-c J" . org-journal-new-entry))
+    :config
+    (bind-key "C-c s" 'org-journal-search-forever org-journal-mode-map)
+    (unbind-key "C-c C-s" org-journal-mode-map)
+    (setq org-journal-file-format "%Y-%m-%d-w%V.org")
+    (setq org-journal-enable-agenda-integration t)
+    (setq org-journal-file-type 'weekly)
+    (setq org-journal-dir "~/Dropbox/Dreams/Org/Journals/"
+          org-journal-date-format "%A, %d %B %Y")
+
+    ;; org capture integration
+    (defun org-journal-find-location ()
+      ;; Open today's journal, but specify a non-nil prefix argument in order to
+      ;; inhibit inserting the heading; org-capture will insert the heading.
+      (org-journal-new-entry t)
+      (unless (eq org-journal-file-type 'daily)
+        (org-narrow-to-subtree))
+      (goto-char (point-max)))
+    (defvar org-journal--date-location-scheduled-time nil)
+
+    (defun org-journal-date-location (&optional scheduled-time)
+      (let ((scheduled-time (or scheduled-time (org-read-date nil nil nil "Date:"))))
+        (setq org-journal--date-location-scheduled-time scheduled-time)
+        (org-journal-new-entry t (org-time-string-to-time scheduled-time))
+        (unless (eq org-journal-file-type 'daily)
+          (org-narrow-to-subtree))
+        (goto-char (point-max))))
+
+    (setq org-capture-templates '(("j" "Journal entry" plain (function org-journal-date-location)
+                                   "** TODO %?\n <%(princ org-journal--date-location-scheduled-time)>\n"
+                                   :jump-to-captured t)
+                                  ("J" "Journal entry" plain (function org-journal-find-location)
+                                   "** %(format-time-string org-journal-time-format)%^{Title}\n%i%?"
+                                   :jump-to-captured t :immediate-finish t)))
     )
 
   (use-package org-roam-ui
@@ -3104,6 +3143,8 @@ Publish & Blog
     :ensure-system-package ((wn . wordnet))
     ;; :bind (("C-c w s" . synosaurus-lookup)
     ;;        ("C-c w S" . synosaurus-choose-and-replace))
+    :custom
+    (synosaurus-prefix (kbd "C-c S"))
     :config (progn
               (setq synosaurus-choose-method 'popup)
               (unbind-key "C-c s l" synosaurus-mode-map)
@@ -3131,7 +3172,6 @@ Publish & Blog
     :config
     (setq org-tidy-top-property-style 'keep
           org-tidy-properties-style 'fringe)
-    (add-hook 'org-mode-hook #'org-tidy-mode)
     )
 #+END_SRC
 
@@ -3140,6 +3180,7 @@ Publish & Blog
 | beacon | https://github.com/Malabarba/beacon |
 #+BEGIN_SRC emacs-lisp
   (use-package holo-layer
+    :disabled t
     :if (not is-android)
     :straight (:type git :host github :repo "manateelazycat/holo-layer" :files ("*"))
     :config
@@ -3341,7 +3382,6 @@ Publish & Blog
     (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
     (elysium-window-style 'vertical)) ; Can be customized to horizontal
   (use-package smerge-mode
-    :ensure nil
     :hook
     (prog-mode . smerge-mode))
 
@@ -3361,14 +3401,15 @@ Publish & Blog
       (remove-trailing-newline (read-file-contents "~/.secrets/ipads-chatgpt.key")))
     (setq gptel-use-curl nil)
     (setq
-     gptel-model "gpt-4o-2024-05-13"
+     ;; gptel-model "gpt-4o-2024-05-13"
+     gptel-model "claude-3-5"
      gptel-backend
      (gptel-make-openai "IPADS GPT"
        :host "ipads.chat.gpt:3006"
        :protocol "http"
        :stream t
        :key #'gptel-api-key
-       :models '(
+       :models '("claude-3-5"
                  "gpt-4o-2024-05-13"
                  "gpt-4o"))))
 
@@ -3425,6 +3466,13 @@ Scrolling
   (use-package infinite
     :disabled t
     :straight (:host gitlab :repo "andreyorst/infinite.el")
+    )
+  (use-package eee
+    :disabled t
+    :straight (:type git :host github :repo "eval-exec/eee.el"
+                     :files (:defaults "*.el" "*.sh"))
+    :config
+    (setq ee-terminal-command "wezterm")
     )
 #+end_src
 
