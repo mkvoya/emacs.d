@@ -250,7 +250,9 @@
     )
   (unless is-android
     (straight-use-package 'org))
-  (use-package use-package-ensure-system-package :ensure t)
+  (use-package use-package-ensure-system-package
+    :straight (:type built-in)  ; built-in
+    )
   (use-package delight)
 #+END_SRC
 
@@ -349,7 +351,7 @@
 #+end_src
 
 ** Fonts
-We need to setup fonts early.
+We need to setup fonts early. Or displayed characters will be rendered and cached.
 
 #+BEGIN_SRC emacs-lisp
   (use-package fontaine
@@ -400,6 +402,7 @@ We need to setup fonts early.
       ((member "Noto Color Emoji" (font-family-list)) "Noto Color Emoji")
       ))
 
+
     ;; set Chinese font
     (dolist (charset '(kana han symbol cjk-misc bopomofo))
       (set-fontset-font
@@ -413,6 +416,8 @@ We need to setup fonts early.
                    ((member "WenQuanYi Zen Hei" (font-family-list)) "WenQuanYi Zen Hei")
                    ((member "Microsoft YaHei" (font-family-list)) "Microsoft YaHei")
                    ))))
+
+    (set-fontset-font (frame-parameter nil 'font) '(#x25c7 . #x2733) "Segoe UI Emoji" nil 'prepend)
 
     ;; (set-face-attribute 'default nil :font (font-spec :family "ia Writer" :size 14))
     ;; (set-fontset-font t 'unicode (font-spec :family "Noto Color Emoji" :size 14))
@@ -435,6 +440,7 @@ We need to setup fonts early.
                                     ("Apple Color Emoji"   . 0.91)
                                     ))
     )
+
 #+END_SRC
 
 
@@ -785,9 +791,9 @@ Emacs package that displays available keybindings in popup
     (calendar-chinese-celestial-stem ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
     (calendar-chinese-terrestrial-branch ["子" "丑" "寅" "卯" "辰" "巳" "午" "未" "申" "酉" "戌" "亥"])
     ;; 设置中文月份
-    (calendar-month-name-array ["一月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月" "十一月" "十二月"])
+    ;; (calendar-month-name-array ["一月" "二月" "三月" "四月" "五月" "六月" "七月" "八月" "九月" "十月" "十一月" "十二月"])
     ;; 设置星期标题显示
-    (calendar-day-name-array ["日" "一" "二" "三" "四" "五" "六"])
+    ;; (calendar-day-name-array ["日" "一" "二" "三" "四" "五" "六"])
     ;; 周一作为一周第一天
     (calendar-week-start-day 0)
     )
@@ -880,8 +886,19 @@ Emacs package that displays available keybindings in popup
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
   (use-package calfw
+    :straight (:host github
+                     :repo "haji-ali/emacs-calfw" :files ("*"))
     :init
     (use-package calfw-org :after (org))
+    (use-package calfw-blocks
+      :straight (:host github
+                       :repo "haji-ali/calfw-blocks" :files ("*")))
+    (use-package maccalfw
+      :commands maccalfw-open
+      :straight (:host github
+                       :repo "haji-ali/maccalfw"
+                       :files ("maccalfw.el" ("src" . "src"))))
+    (require 'calfw-cal)
     :config
     (defun mk/open-calendar ()
       (interactive)
@@ -896,6 +913,10 @@ Emacs package that displays available keybindings in popup
         )))
     )
 #+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+
+#+end_src
 
 ** vterm
 #+BEGIN_SRC emacs-lisp
@@ -912,6 +933,7 @@ Emacs package that displays available keybindings in popup
     :straight (:host github :repo "jixiuf/vterm-toggle")
     :config
     (global-set-key (kbd "C-c t") 'vterm-toggle)
+    (global-set-key (kbd "C-`") 'vterm-toggle)
     (global-set-key [C-f2] 'vterm-toggle-cd)
 
     ;; you can cd to the directory where your previous buffer file exists
@@ -1133,6 +1155,7 @@ Alternatives (Check the selectrum repo README)
 | flycheck | popular alternative to flymake                    |
 | flymake  | The rewritten built-in flymake is sufficient good |
 | flyspell | This is the real spell checker                    |
+| jinx | A flyspell alternative using enchant |
 
 | [[https://github.com/emacs-languagetool/flycheck-languagetool][flycheck-languagetool]] |                                |
 | [[https://github.com/emacs-grammarly/flycheck-grammarly][flycheck-grammarly]]    |                                |
@@ -1148,10 +1171,66 @@ Alternatives (Check the selectrum repo README)
     :config
     (setq flymake-no-changes-timeout 2)
     )
+  (use-package jinx
+    :hook (emacs-startup . global-jinx-mode)
+    :bind (("C-;" . jinx-correct)
+           ("C-M-;" . jinx-languages))
+    :config
 
-  (use-package flyspell-correct
-    :after flyspell
-    :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
+    (add-to-list 'jinx-exclude-regexps '(t "\\cc"))
+    (defun jinx--add-to-abbrev (overlay word)
+      "Add abbreviation to `global-abbrev-table'.
+        The misspelled word is taken from OVERLAY.  WORD is the corrected word."
+      (let ((abbrev (buffer-substring-no-properties
+                     (overlay-start overlay)
+                     (overlay-end overlay))))
+        (message "Abbrev: %s -> %s" abbrev word)
+        (define-abbrev global-abbrev-table abbrev word)))
+
+    (advice-add 'jinx--correct-replace :before #'jinx--add-to-abbrev)
+
+    (defun my/jinx-ispell-localwords ()
+      "Return a string of ispell's local words.
+
+    Those are the words following `ispell-words-keyword' (usually
+    \"LocalWords\") in the current buffer."
+      (require 'ispell)
+      (save-excursion
+        (goto-char (point-min))
+        (cl-loop while (search-forward ispell-words-keyword nil t)
+                 collect (string-trim (buffer-substring-no-properties (point) (line-end-position))) into result
+                 finally return (mapconcat #'identity result " "))))
+
+    (defun my/jinx-add-ispell-localwords ()
+      "Add ispell's local words to `jinx-local-words'."
+      (let ((ispell-localwords (my/jinx-ispell-localwords)))
+        (setq jinx-local-words (concat jinx-local-words ispell-localwords))
+        (setq jinx--session-words (append jinx--session-words (split-string ispell-localwords)))))
+
+    (add-hook 'jinx-mode-hook #'my/jinx-add-ispell-localwords)
+
+    (defun my/jinx-save-as-ispell-localword (save key word)
+      "Save WORD using ispell's `ispell-words-keyword'.
+  If SAVE is non-nil save, otherwise format candidate given action KEY."
+      (if save
+          (progn
+            (require 'ispell)
+            (ispell-add-per-file-word-list word)
+            (add-to-list 'jinx--session-words word)
+            (setq jinx-local-words
+                  (string-join
+                   (sort (delete-dups
+                          (cons word (split-string jinx-local-words)))
+                         #'string<)
+                   " "))))
+      (list key word "File"))
+
+    (setf (alist-get ?* jinx--save-keys) #'my/jinx-save-as-ispell-localword)
+    )
+
+  ;; (use-package flyspell-correct
+  ;;   :after flyspell
+  ;;   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
   (use-package grammarly
     :straight (:host github :repo "emacs-grammarly/grammarly")
@@ -1193,6 +1272,8 @@ Alternatives (Check the selectrum repo README)
 
     (setq acm-backend-lsp-match-mode "prefix")
     (setq acm-backend-lsp-frontend-filter-p t)
+    ;; (require 'acm-backend-path)
+    ;; (setq acm-enable-path t)
 
     (global-lsp-bridge-mode))
 #+END_SRC
@@ -1223,7 +1304,7 @@ Alternatives (Check the selectrum repo README)
     (define-key evil-normal-state-map (kbd "C-t") 'citre-jump-back)
     (setq citre-project-root-function
           #'(lambda ()
-              (when-let ((project (project-current nil)))
+              (when-let* ((project (project-current nil)))
                 (expand-file-name (nth 2 project)))))
     )
 #+END_SRC
@@ -1321,7 +1402,7 @@ Alternatives (Check the selectrum repo README)
     (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "Make")))
     (add-hook 'LaTeX-mode-hook (lambda()
                                  (mkvoya/better-wrap)
-                                 (flyspell-mode)
+                                 ;; (flyspell-mode)
                                  ;; (add-hook 'after-save-hook #'flyspell-buffer)
                                  (LaTeX-math-mode)
                                  (darkroom-mode)
@@ -1386,7 +1467,7 @@ Alternatives (Check the selectrum repo README)
 ** PDF Tools
 #+BEGIN_SRC emacs-lisp
 
-  (use-package pdf-tools :defer t
+  (use-package pdf-tools
     :if mk-feature/gui
     :init
     :mode ("\\.pdf\\'" . pdf-view-mode)
@@ -1503,7 +1584,7 @@ Alternatives (Check the selectrum repo README)
     (rime-librime-root "~/.emacs.d/librime/dist")
     (rime-share-data-dir "~/Library/Rime")
     (rime-user-data-dir "~/Library/Rime")
-    (rime-emacs-module-header-root "/opt/homebrew/opt/emacs-plus@30/include")
+    (rime-emacs-module-header-root "/opt/homebrew/opt/emacs-plus@31/include")
     (rime-show-candidate 'posframe)
     (rime-posframe-properties
      (list :background-color "#000000"  ; 不要在这里设置字体，会影响后面 face 里字体的
@@ -1534,25 +1615,6 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (setq word-wrap-by-category t)
-  (use-package jieba
-    :disabled t
-    :if (not is-android)
-    :delight
-    :after (evil)
-    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
-    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
-    (jieba-mode)
-    (defun mk/forward-word()
-      "mk's better forward-word."
-      (interactive)
-      (let ((char (char-after)))
-        (if (memq char (string-to-list " \n\r\\"))
-            (re-search-forward "\\\s+")
-          (jieba-forward-word))))
-    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
-    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
-    )
-
   (use-package emt
     :if (not is-android)
     :straight (:host github :repo "roife/emt"
@@ -1566,7 +1628,7 @@ Alternatives (Check the selectrum repo README)
 
 ** CJK font alignment
 #+BEGIN_SRC emacs-lisp
-  (use-package valign
+  (use-package valign :disabled t ; org-modern has this feature (and they conflict)
     :hook (org-mode . valign-mode)
     )
 #+END_SRC
@@ -1651,14 +1713,14 @@ Alternatives (Check the selectrum repo README)
     (setq ef-cyprus-palette-overrides '((bg-main "#fdfefd")))
     (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
     (setq ef-themes-headings ; read the manual's entry or the doc string
-          '((0 variable-pitch light 1.9)
-            (1 variable-pitch light 1.8)
-            (2 variable-pitch regular 1.7)
-            (3 variable-pitch regular 1.6)
-            (4 variable-pitch regular 1.5)
-            (5 variable-pitch 1.4) ; absence of weight means `bold'
-            (6 variable-pitch 1.3)
-            (7 variable-pitch 1.2)
+          '((0 variable-pitch bold 1.1)
+            (1 variable-pitch bold 1.1)
+            (2 variable-pitch regular 1.1)
+            (3 variable-pitch regular 1.1)
+            (4 variable-pitch regular 1.1)
+            (5 variable-pitch 1.1) ; absence of weight means `bold'
+            (6 variable-pitch 1.1)
+            (7 variable-pitch 1.1)
             (t variable-pitch 1.1)))
     (setq ef-themes-mixed-fonts t
           ef-themes-variable-pitch-ui t)
@@ -1704,15 +1766,10 @@ Alternatives (Check the selectrum repo README)
   ;; (set-face-attribute 'org-level-1 nil :height 1.1)
   ;; (set-face-attribute 'fringe nil :background nil) ; Visually hide left-right margins
 
-  (use-package keycast :straight (:type git :host github :repo "tarsius/keycast")
-    :disabled
-    :init (keycast-mode))
 #+end_src
 
 
 
-** Beacon
-Use holo lyaer
 
 ** Smooth scrolling
 
@@ -1796,7 +1853,8 @@ Use holo lyaer
     :after (org)
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
-    (setq org-image-actual-width 400)
+    ;;(setq org-image-actual-width 400)
+    (setq org-image-actual-width nil)
     (add-hook 'org-mode-hook (lambda () (image-click-mode))))
 #+END_SRC
 
@@ -1846,76 +1904,68 @@ Use holo lyaer
     (add-hook 'org-mode-hook #'org-show-link-when-idle)
 
     (setq org-element-use-cache nil)  ; cache sometimes causes problems
-    (use-package org-num-mode
-      :defer t
-      :straight nil  ; built-in with org-mode
-      ;; :hook (org-mode . org-num-mode)
-      )
 
     :config
 
-    (setq org-display-remote-inline-images 'download)
+    ;; simple use-packages
+    (use-package org-contrib)
+    (use-package org-inline-pdf :defer t)
+    (use-package org-modern :straight (:type git :host github :repo "minad/org-modern")
+      :init
+      (setq
+       ;; Edit settings
+       org-auto-align-tags nil
+       org-tags-column 0
+       org-catch-invisible-edits 'show-and-error
+       org-special-ctrl-a/e t
+       org-insert-heading-respect-content t
+       ;; Org styling, hide markup etc.
+       org-hide-emphasis-markers t
+       org-pretty-entities t)
+      ;; Agenda styling
+      ;; org-agenda-tags-column 0
+      ;; org-agenda-block-separator ?─
+      ;; org-agenda-time-grid
+      ;; '((daily today require-timed)
+      ;;   (800 1000 1200 1400 1600 1800 2000)
+      ;;   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+      ;; org-agenda-current-time-string
+      ;; "◀── now ─────────────────────────────────────────────────"
 
-    ;; Auto add DONE TIME, from https://orgmode.org/guide/Progress-Logging.html
-    (setq org-log-done 'time)
+      (global-org-modern-mode)
+      ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+      )
+    ;;   (setq org-agenda-span 1
+    ;; org-agenda-start-day "+0d")
+
+    (add-to-list 'org-modules 'org-protocol)
+    (require 'org-protocol)
+
+    ;; configs
+    (setq org-directory "~/Dropbox/Dreams/Org/")
+    ;; (setq org-display-remote-inline-images 'download)
 
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)"     ; New task
-             "知识(K)" ; pieces of knowledge
-             "讨论(D)"  ; Discussion records
-             "技术技巧(S)"
-             "IDEA(I)"
-             "PROJECT(p)"  ; Project
-             "SUBMITTED(s)"; Project
-             "ONGOING(g)"  ; Doing
-             "WAIT(w)"     ; Procrastinated on purpose
-             "LONG-TERM(l)"  ; Long-term
-             "DELEGATE(z)"   ; Delegated
-             "CONFDDL(C)"
-             "GOAL(G)"
+             "TODO(t)" "NEXT(n)" "HOLD(h/!)" "IDEA(I)"
+             "PROJECT(p)" "CONFDDL(C)"
              "|"
-             "ACCEPTED(a)" ; Project
-             "DONE(d!)"      ; Done
-             "CANCELED(c@)"  ; Eliminated
+             "ACCEPTED(a)" "DONE(d/!)" "CANCELED(c@)"
              )))
-    ;; Always change the task to IN-PROGRESS.
-    ;; (setq org-clock-in-switch-to-state "IN-PROGRESS")
-    ;; (setq org-clock-out-switch-to-state #'(lambda (_)
-    ;;           (completing-read "Finishing a clock, change task state to?" '("DONE" "TODO"))))
     ;; Keyword colors
     (setf org-todo-keyword-faces
-          '(
-            ;; Many styles from https://github.com/GTrunSec/my-profile/blob/master/dotfiles/doom-emacs/config.org
-            ;; ("TODO" . (:foreground "#ff39a3" :weight bold))
-            ("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
-            ("ONGOING"  . "orangered")
+          '(("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
+            ("NEXT"  . "orangered")
             ("ACCEPTED"  . "darkgreen")
-            ("SUBMITTED"  . "blue")
-            ("WAIT" . "pink")
-            ;; ("CANCELED" . (:foreground "white" :background "#4d4d4d" :weight bold :strike-through "#0d0d0d"))
+            ("HOLD" . "pink")
             ("CANCELED" . (:foreground "white" :background "#4d4d4d"))
-            ;; ("DONE" . "#008080")
             ("DONE" . (:foreground "#008080"))
-            ("DELEGATE"  . "DeepSkyBlue")
             ))
     (setq org-log-into-drawer t)
-
-    ;; Strike through the whole line with DONE entry
-    ;; (font-lock-add-keywords
-    ;;  'org-mode
-    ;;  '(
-    ;;    ("\\* \\<DONE .*" 0 'shr-strike-through append)
-    ;;    ("\\* \\<CANCELED .*" 0 'shr-strike-through append))
-    ;;  t)
-
-    ;; …, ➡, ⚡, ▼, ↴, , ∞, ⬎, ⤷, ⤵ "↴▾▽▼↩↘↸"
-    ;; (setq org-ellipsis "▾")
+    (setq org-log-done 'time) ;; Auto add DONE TIME
     (setq org-ellipsis "↴")
-    ;; (setq org-ellipsis "...")
     (set-face-attribute 'org-ellipsis nil :foreground "grey86")
-    ;; org-ellipsis " ••• "
 
     ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
     (defun org-force-open-current-window ()
@@ -1986,11 +2036,8 @@ Use holo lyaer
                 ))
 
 
-    (use-package org-contrib :disabled)
-    (use-package org-inline-pdf :defer t)
     (use-package org-super-agenda
-      :init
-      (org-super-agenda-mode)
+      :init (org-super-agenda-mode)
       :config
       (setq org-super-agenda-groups
             '((:name "Next Items"
@@ -2004,6 +2051,22 @@ Use holo lyaer
                            :scheduled future
                            :order 1)))
       )
+    (setq org-agenda-custom-commands
+          '(("z" "Super Agenda"
+             ((agenda "" ((org-agenda-span 'day)
+                          (org-super-agenda-groups
+                           '((:name "Today" :time-grid t :date today :scheduled today :order 1)))))
+              (alltodo "" ((org-agenda-overriding-header "")
+                           (org-super-agenda-groups
+                            '((:log t)
+                              (:name "What's Next" :todo "NEXT" :time-grid t :order 1)
+                              (:name "Important" :priority "A" :order 6)
+                              (:name "Due Today" :deadline today :order 2)
+                              (:name "Scheduled Soon" :scheduled future :order 8)
+                              (:name "Due Soon" :deadline future :order 9)
+                              (:name "Overdue" :deadline past :order 7)
+                              (:name "Projects" :tag "Project" :order 14)
+                              ))))))))
 
     (setq org-hide-emphasis-markers nil)      ; don’t hide markers for like *foo*
     ;; (setq org-hide-emphasis-markers t)
@@ -2021,9 +2084,7 @@ Use holo lyaer
     (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
 
-  (use-package org-sticky-header
-    :straight (:host github :repo "alphapapa/org-sticky-header")
-    :defer t
+  (use-package org-sticky-header :straight (:host github :repo "alphapapa/org-sticky-header")
     :after (org)
     )
   ;; Org Cite
@@ -2034,42 +2095,26 @@ Use holo lyaer
 
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-  (font-lock-add-keywords
-   'org-mode
-   '(("^[[:space:]]*\\(-\\) "
-      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-  (use-package org-bars
-    :straight (:host github :repo "tonyaldon/org-bars")
-    :defer t
+#+BEGIN_SRC emacs-lisp
+  (use-package org-bars :straight (:host github :repo "tonyaldon/org-bars")
     :after (org)
-    :config
-    (setq org-bars-with-dynamic-stars-p nil)
-    )
+    :config (setq org-bars-with-dynamic-stars-p nil))
+
   (use-package highlight-indent-guides)
   (use-package nerd-icons
     :custom
-    ;; The Nerd Font you want to use in GUI
-    ;; "Symbols Nerd Font Mono" is the default and is recommended
-    ;; but you can use any other Nerd Font if you want
     (nerd-icons-font-family "Symbols Nerd Font Mono")
-    (nerd-icons-scale-factor 1.1)
-    )
+    (nerd-icons-scale-factor 1.1))
 
   (use-package org-tag-beautify
-    :ensure t
     :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
     :init (org-tag-beautify-mode 1))
   (use-package org-rainbow-tags
-    :ensure t
     :custom
     (org-rainbow-tags-hash-start-index 10)
-    (org-rainbow-tags-extra-face-attributes
-     ;; Default is '(:weight 'bold)
-     '(:inverse-video t :box t :weight 'bold))
-    :hook
-    (org-mode . org-rainbow-tags-mode))
+    (org-rainbow-tags-extra-face-attributes '(:inverse-video t :box t :weight 'bold))
+    :hook (org-mode . org-rainbow-tags-mode))
 #+END_SRC
 
 
@@ -2103,12 +2148,23 @@ Use holo lyaer
 
   (add-hook 'org-agenda-finalize-hook #'my:org-agenda-time-grid-spacing)
   (setq org-agenda-start-with-log-mode t)
-
-
 #+END_SRC
 
+#+begin_src emacs-lisp :tangle yes
+  (font-lock-add-keywords
+   'org-mode
+   '(("^[[:space:]]*\\(-\\) "
+      (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+#+end_src
 
-#+BEGIN_SRC emacs-lisp
+
+** Custom Org Function
+:PROPERTIES:
+:ID:       F19E7F53-9CA3-44AC-9D08-3425862589DF
+:CREATED:  [2024-12-17 Tue 00:12]
+:END:
+
+#+begin_src emacs-lisp :tangle yes
   ;; Paste Image From https://emacs-china.org/t/topic/6601/4
   (defun org-insert-image ()
     "Insert a image from clipboard."
@@ -2140,8 +2196,9 @@ Use holo lyaer
       (message image-file))
     (org-display-inline-images)
     )
+#+end_src
 
-#+END_SRC
+
 ** Org Exports
 
 #+BEGIN_SRC emacs-lisp
@@ -2273,6 +2330,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
+    :straight (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
     :after (org org-modern)
     :hook (org-mode . org-transclusion-mode)
     :config
@@ -2286,6 +2344,7 @@ Modes to embed one buffer in another buffer and keep them in sync
      'org-transclusion-source-fringe nil
      :foreground "lightblue"
      :background "blue")
+    (require 'org-transclusion-indent-mode)
     )
   ;; :bind (("<f12>" . #'org-transclusion-add))
   ;; ("C-n t" . #'org-transclusion-mode)
@@ -2317,11 +2376,6 @@ Modes to embed one buffer in another buffer and keep them in sync
            ("C-c n g" . org-roam-graph)
            ("C-c n i" . org-roam-node-insert)
            ("C-c n c" . org-roam-capture)
-           ;; Dailies
-           ;; ("C-c n j" . org-roam-dailies-capture-today)
-           ;; ("C-c n J" . org-roam-dailies-goto-today)
-           ;; ("C-c j" . org-roam-dailies-capture-today)
-           ;; ("C-c J" . org-roam-dailies-goto-today)
            )
     :config
     ;; If you're using a vertical completion framework, you might want a more informative completion interface
@@ -2361,13 +2415,54 @@ Modes to embed one buffer in another buffer and keep them in sync
           (org-narrow-to-subtree))
         (goto-char (point-max))))
 
-    (setq org-capture-templates '(("j" "Journal entry" plain (function org-journal-date-location)
-                                   "** TODO %?\n <%(princ org-journal--date-location-scheduled-time)>\n"
-                                   :jump-to-captured t)
-                                  ("J" "Journal entry" plain (function org-journal-find-location)
-                                   "** %(format-time-string org-journal-time-format)%^{Title}\n%i%?"
-                                   :jump-to-captured t :immediate-finish t)))
+    (defun transform-square-brackets-to-round-ones(string-to-transform)
+      "Transforms [ into ( and ] into ), other chars left unchanged."
+      (concat 
+       (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c))) string-to-transform))
+      )
+    (setq org-capture-templates
+          `(("i" "Inbox" entry  (file "inbox.org")
+             ,(concat "* TODO %?\n"
+                      "/Entered on/ %U"))
+            ("j" "Journal entry" plain (function org-journal-date-location)
+             "** TODO %?\n <%(princ org-journal--date-location-scheduled-time)>\n"
+             :jump-to-captured t)
+            ("J" "Journal entry" plain (function org-journal-find-location)
+             "** %(format-time-string org-journal-time-format)%^{Title}\n%i%?"
+             :jump-to-captured t :immediate-finish t)
+            ("c" "Captured" entry (file "capture.org")
+             "* %t %:description\nlink: %l \n\n%i\n" :prepend t :empty-lines-after 1)
+            ("n" "Captured Now!" entry (file "capture.org")
+             "* %t %:description\nlink: %l \n\n%i\n" :prepend t :emptry-lines-after 1 :immediate-finish t)
+            ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+             "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+            ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+             "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
+            ("w" "Web site" entry
+             (file "webpages.org")
+             "* %a :website:\n\n%U %?\n\n%:initial")
+            )
+          )
     )
+
+  ;; Add CREATED property when creating an entry
+  (defun mk/org-add-created-property ()
+    (org-id-get-create)
+    (org-set-property "CREATED" (format-time-string (org-time-stamp-format t t)))
+    )
+  (add-hook 'org-insert-heading-hook #'mk/org-add-created-property)
+  ;; Add today as the default scheduled date when turning into TODO
+  (defun mk/org-set-scheduled-today ()
+    (when (and (string= org-state "TODO")
+               (not (org-entry-get nil "SCHEDULED")))
+      (org-schedule nil (format-time-string "%Y-%m-%d"))))
+  (defun mk/org-set-next-activation ()
+    (when (and (string= (org-get-todo-state) "NEXT")
+               (not (org-entry-get nil "ACTIVATED")))
+      (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
+  (add-hook 'org-after-todo-state-change-hook #'mk/org-set-scheduled-today)
+  (add-hook 'org-after-todo-state-change-hook #'mk/org-set-next-activation)
+
 
   (use-package org-roam-ui
     :straight
@@ -2878,24 +2973,6 @@ Publish & Blog
 
 * Fancy Misc Things
 
-** Popweb
-
-#+BEGIN_SRC emacs-lisp
-  (use-package popweb
-    :if mk-feature/gui
-    :defer t
-    :disabled t
-    :straight (:type git :host github :repo "manateelazycat/popweb" :files ("*"))
-    :init
-    (setq popweb-root (file-name-directory (locate-library "popweb.el")))
-    (add-to-list 'load-path (concat popweb-root "extension/latex"))
-    (require 'popweb-latex)
-    (add-to-list 'load-path (concat popweb-root "extension/dict"))
-    (require 'popweb-dict)
-    )
-#+END_SRC
-
-
 ** Less (if ever) used
 
 
@@ -3020,63 +3097,11 @@ Publish & Blog
 ** Anki-like
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org-drill
-    :disabled t)
-
-  (use-package org-anki
-    :after (org)
-    :config
-    ;; Override the cloze function
-    ;; The below function does not work since Anki does not show the back of the card for clozes.
-    ;; (defun org-anki--region-to-cloze (begin end arg hint)
-    ;;   "Cloze region from BEGIN to END with number ARG."
-    ;;   (let ((region (buffer-substring begin end)))
-    ;;     (save-excursion
-    ;;       (delete-region begin end)
-    ;;       (insert (with-output-to-string
-    ;;                 (princ (format "{{c%d::%s" (or arg 1) region))
-    ;;                 (unless (string-blank-p hint) (princ (format "::%s" hint)))
-    ;;                 (princ "}}")))
-    ;;       (org-end-of-subtree)
-    ;;       (insert "\n" region ": " hint)
-    ;;       )))
-    )
-
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package define-word)
-  (use-package sdcv :disabled t)
-
-  ;; via http://www.emacswiki.org/emacs/ThesauriAndSynonyms
-  ;; The file names are absolute, not relative, locations
-  ;;     - e.g. /foobar/mthesaur.txt.cache, not mthesaur.txt.cache
-  (use-package synonyms
-    :ensure t ;; install package if not found
-    :init ;; executed before loading package
-    (setq synonyms-file        "~/.emacs.d/data/mthesaur.txt")
-    (setq synonyms-cache-file  "~/.emacs.d/data/synonyms.cache")
-    :config
-    (defun my-synonym-current-word ()
-      "Lookup synonyms for current word."
-      (interactive)
-      (synonyms-lookup (thing-at-point 'word) nil nil))
-    :bind (:map my-map ("s" . my-synonym-current-word))
-    )
-#+END_SRC
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package org-pomodoro)
-#+END_SRC
-
-
-
-#+BEGIN_SRC emacs-lisp
   (use-package wwg
     :straight (:type git :host github :repo "ag91/writer-word-goals")
-    :config
+    :disabled t
     )
 #+END_SRC
 
@@ -3139,18 +3164,6 @@ Publish & Blog
               (bind-key "-" 'spray-slower spray-mode-map)
               (add-to-list 'spray-unsupported-minor-modes 'beacon-mode)))
 
-  (use-package synosaurus
-    :ensure-system-package ((wn . wordnet))
-    ;; :bind (("C-c w s" . synosaurus-lookup)
-    ;;        ("C-c w S" . synosaurus-choose-and-replace))
-    :custom
-    (synosaurus-prefix (kbd "C-c S"))
-    :config (progn
-              (setq synosaurus-choose-method 'popup)
-              (unbind-key "C-c s l" synosaurus-mode-map)
-              (unbind-key "C-c s r" synosaurus-mode-map)
-              (add-hook 'org-mode-hook #'synosaurus-mode)
-              (add-hook 'LaTeX-mode-hook #'synosaurus-mode)))
   (use-package powerthesaurus
     ;; :bind ("C-c w p" . powerthesaurus-lookup-dwim)
     :config (add-to-list 'display-buffer-alist
@@ -3177,33 +3190,9 @@ Publish & Blog
 
 
 
-| beacon | https://github.com/Malabarba/beacon |
-#+BEGIN_SRC emacs-lisp
-  (use-package holo-layer
-    :disabled t
-    :if (not is-android)
-    :straight (:type git :host github :repo "manateelazycat/holo-layer" :files ("*"))
-    :config
-    (setq holo-layer-enable-cursor-animation t)
-    (setq holo-layer-enable-place-info nil)
-    (setq holo-layer-cursor-animation-color-gradient-start-value 200)
-    (setq holo-layer-enable-indent-rainbow nil)
-    (setq holo-layer-enable-type-animation t)
-    (setq holo-layer-type-animation-style "lightning")
-    ;; (setq holo-layer-type-animation-style "balloon")
-    ;; (setq holo-layer-type-animation-style 'supernova)
-    ;; (setq holo-layer-type-animation-style 'flame)
-    ;; (setq holo-layer-sort-tab-ui t)
-    ;; (setq holo-layer-enable-indent-rainbow t)
-    ;; (setq holo-layer-cursor-color "Goldenrod")
-    (holo-layer-enable)
-    )
-  ;; (use-package sort-tab :ensure t :init (sort-tab-mode 1))
-#+END_SRC
 
 
 #+BEGIN_SRC emacs-lisp
-
   (defun mk/count-today-todos ()
     "Count the number of today's to-do tasks."
     (interactive)
@@ -3232,7 +3221,6 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package htmlize)
-  (setq org-tags-column 0)
 #+END_SRC
 
 
@@ -3287,7 +3275,7 @@ Publish & Blog
       (setq candidates (cl-sort candidates #'< :key 'car))
       (switch-to-buffer-other-window (cdr (car candidates)))))
 
-  (defun mk/open-orgroam-panel()
+  (defun mk/webkit-open-orgroam-ui()
     "Open the Org-roam client at [http://127.0.0.1:35901]."
     (interactive)
     ;; Ensure the server is running.
@@ -3304,7 +3292,13 @@ Publish & Blog
                    (browse-url-interactive-arg "xwidget-webkit URL: ")))
     (xwidget-webkit-browse-url url t)
     )
-#+END_SRC
+  (defun mk/webkit-open-activitywatch()
+    "Open the ActivityWatch client at [http://localhost:5600/]."
+    (interactive)
+    (xwidget-webkit-browse-url "http://127.0.0.1:5600" nil)
+    )
+
+#+end_src
 
 
 ** Custom key-bindings
@@ -3402,7 +3396,7 @@ Publish & Blog
     (setq gptel-use-curl nil)
     (setq
      ;; gptel-model "gpt-4o-2024-05-13"
-     gptel-model "claude-3-5"
+     gptel-model 'gpt-4o
      gptel-backend
      (gptel-make-openai "IPADS GPT"
        :host "ipads.chat.gpt:3006"
@@ -3462,19 +3456,8 @@ Scrolling
 #+end_src
 * A list of interesting packges
 
-#+begin_src emacs-lisp :tangle yes
-  (use-package infinite
-    :disabled t
-    :straight (:host gitlab :repo "andreyorst/infinite.el")
-    )
-  (use-package eee
-    :disabled t
-    :straight (:type git :host github :repo "eval-exec/eee.el"
-                     :files (:defaults "*.el" "*.sh"))
-    :config
-    (setq ee-terminal-command "wezterm")
-    )
-#+end_src
+  | infinite | https://github.com/andreyorst/infinite.el |
+  | eee | https://github.com/eval-exec/eee.el |
 
 #+BEGIN_SRC emacs-lisp
   (use-package maple-explorer :disabled t)
@@ -3520,3 +3503,116 @@ Scrolling
     )
   (use-package flymd :after (markdown-mode))
 #+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+#+END_SRC
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package plantuml
+    :straight (:type git :host github :repo "ginqi7/plantuml-emacs")
+    :config
+    (setq plantuml-jar-path "/some/path/plantuml.jar"
+          plantuml-output-type "svg"
+          plantuml-relative-path "./images/"
+          plantuml-theme "plain"
+          plantuml-font "somefont"
+          plantuml-add-index-number t
+          plantuml-log-command t
+          plantuml-mindmap-contains-org-content t
+          plantuml-org-headline-bold t)
+    )
+#+end_src
+
+
+
+#+begin_src emacs-lisp :tangle yes
+  ;; (load-file "~/.emacs.d/site-lisp/xwidget-apps/org-mindmap-live/xwidget-org-mindmap-live.el")
+  ;; (require 'xwidget-org-mindmap-live)
+  ;; (acm-backend-path-candidates "~/.emacs.d/")
+#+End_src
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package aider
+    :disabled t
+    :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
+    :config
+    ;; Use claude-3-5-sonnet cause it is best in aider benchmark
+    (setq aider-args '("--model" "openai/gpt-4o"))
+    (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/")
+    (setenv "OPENAI_API_KEY" (gptel-api-key))
+    ;;
+    (global-set-key (kbd "C-c k") 'aider-transient-menu))
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-zettel-ref-mode
+    :straight (:host github :repo "yibie/org-zettel-ref-mode" :files ("*"))
+    :init
+    (setq org-zettel-ref-overview-directory "~/Dropbox/Dreams/Org/orgzet/source-note/")
+    :config
+    ;; (setq org-zettel-ref-mode-type 'denote)
+    (setq org-zettel-ref-mode-type 'org-roam)
+    ;; (setq org-zettel-ref-mode-type 'normal)
+    (setq org-zettel-ref-python-file "~/.emacs.d/straight/repos/org-zettel-ref-mode/convert-to-org.py")
+    (setq org-zettel-ref-temp-folder "/Volumes/ramfs/convert/")
+    (setq org-zettel-ref-reference-folder "~/Dropbox/Dreams/Org/orgzet/ref/")
+    (setq org-zettel-ref-archive-folder "~/Dropbox/Dreams/Org/orgzet/archives/")
+    (setq org-zettel-ref-debug t)
+    (setq org-zettel-ref-python-environment 'system)
+    (defun mk/org-get-webpage ()
+      "Retrive a web page from a given url and save it to the temp-folder. Then call org-zettel-run-python-script to convert it to org-mode format."
+      (interactive)
+      (let ((url (read-string "URL: ")))
+        (call-process "curl" nil 0 nil "-o" (concat org-zettel-ref-temp-folder "webpage.html") url)
+        (org-zettel-run-python-script)
+        )
+      )
+    )
+  (defun download-webpage-and-rename (url)
+    "Download webpage from URL and rename the file to the webpage title."
+    (interactive "sEnter URL: ")
+    (url-retrieve
+     url
+     (lambda (status)
+       (if (plist-get status :error)
+           (message "Failed to retrieve URL: %s" (plist-get status :error))
+         (goto-char (point-min))
+         (re-search-forward "<title>\\(.*?\\)</title>" nil t)
+         (let ((title (match-string 1))
+               (filename (concat (make-temp-file "webpage-" nil ".html"))))
+           (write-region (point-min) (point-max) filename)
+           (rename-file filename (concat title ".html") t)
+           (message "Downloaded and saved as %s.html" title))))))
+  (use-package org-web-tools)
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-noter
+    :straight (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
+    )
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-protocol-capture-html)
+#+end_src
+
+Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
+
+
+#+begin_src emacs-lisp :tangle yes
+  ;; (use-package svg-clock)
+  (use-package svg-analog-clock
+    :straight (:host github :repo "RaminHAL9001/emacs-svg-clock" :files ("*.el")))
+  #+end_src
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package org-timeblock
+    :straight (org-timeblock :type git
+                             :host github
+                             :repo "ichernyshovvv/org-timeblock"))
+  (use-package org-analyzer)
+#+end_src

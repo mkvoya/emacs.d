@@ -1,0 +1,48 @@
+#+title: disabled packages from the main configuration file
+
+* Cool cursor effects:
+
+| beacon                   | https://github.com/Malabarba/beacon          |                                       |
+| holo-layer               | https://github.com/manateelazycat/holo-layer | 频繁的光标信息更新可能会让 Emacs 变慢 |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package holo-layer :disabled t
+    :straight (:type git :host github :repo "manateelazycat/holo-layer" :files ("*")))
+#+END_SRC
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package keycast :disabled t
+    :straight (:type git :host github :repo "tarsius/keycast")
+    :init (keycast-mode))
+#+end_src
+
+
+* Jieba -- 中文分词和前后跳转
+:PROPERTIES:
+:ID:       836F76DB-E3F3-462F-942D-60B0DC84D04B
+:CREATED:  [2024-12-01 Sun 22:24]
+:END:
+
+使用 c++ 的 jieba 模块，没啥不好的，就是懒得维护了，直接使用 emt 了。
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package jieba
+    :disabled t
+    :if (not is-android)
+    :delight
+    :after (evil)
+    :straight (:host github :repo "mkvoya/jieba.el" :files ("*"))
+    :init  ; We need to enable jieba during init so that it can construct the jieba in background, rather than when autoloading the functions.
+    (jieba-mode)
+    (defun mk/forward-word()
+      "mk's better forward-word."
+      (interactive)
+      (let ((char (char-after)))
+        (if (memq char (string-to-list " \n\r\\"))
+            (re-search-forward "\\\s+")
+          (jieba-forward-word))))
+    (define-key evil-motion-state-map (kbd "w") #'mk/forward-word)
+    (define-key evil-motion-state-map (kbd "b") #'jieba-backward-word)
+    )
+#+end_src
+
