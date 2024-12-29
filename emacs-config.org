@@ -3343,9 +3343,10 @@ Publish & Blog
 
 
 #+BEGIN_SRC emacs-lisp
-(setq-default
-   header-line-format
-   '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (number-to-string gc-elapsed)) "s"))
+  (load-file "~/.emacs.d/site-lisp/org-timeliner.el")
+  (setq-default header-line-format
+                '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (number-to-string gc-elapsed)) "s"
+                  " " (:eval (timeliner-get-string))))
 #+END_SRC
 
 
