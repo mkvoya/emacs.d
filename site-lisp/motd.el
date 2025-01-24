@@ -223,8 +223,10 @@ Recent Submission Deadlines:
 (defun motd-start-timer ()
   "Start the timer for the motd daemon."
   (interactive)
-  (setq motd--timer
-        (run-with-idle-timer 0 'motd-timer-interval #'motd--timeout-handler))
+  (if motd--timer
+      (message "Timer is already up.")
+    (setq motd--timer
+          (run-with-idle-timer 0 'motd-timer-interval #'motd--timeout-handler)))
   )
 
 (defun motd-stop-timer ()

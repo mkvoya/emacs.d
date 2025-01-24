@@ -383,7 +383,8 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
              :variable-pitch-weight normal
              :bold-weight bold
              :italic-slant italic
-             :line-spacing 0.1)
+             ;;:line-spacing 0.1
+             )
             ))
     ;; (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular))
     (fontaine-set-preset 'regular)
@@ -1854,7 +1855,7 @@ Alternatives (Check the selectrum repo README)
     :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
     ;;(setq org-image-actual-width 400)
-    (setq org-image-actual-width nil)
+    (setq org-image-actual-width '(300))
     (add-hook 'org-mode-hook (lambda () (image-click-mode))))
 #+END_SRC
 
@@ -1948,10 +1949,10 @@ Alternatives (Check the selectrum repo README)
     ;; Org mode TODO states
     (setq org-todo-keywords
           '((sequence
-             "TODO(t)" "NEXT(n)" "HOLD(h/!)" "IDEA(I)"
+             "TODO(t!)" "NEXT(n!)" "ROUTINE(r)" "HOLD(h!/!)" "IDEA(I)"
              "PROJECT(p)" "CONFDDL(C)"
              "|"
-             "ACCEPTED(a)" "DONE(d/!)" "CANCELED(c@)"
+             "ACCEPTED(a@)" "DONE(d!/!)" "CANCELED(c@)"
              )))
     ;; Keyword colors
     (setf org-todo-keyword-faces
@@ -3026,7 +3027,7 @@ Publish & Blog
       (setq motd-border-color "#444444")
       )
     (setq motd--git-commit-dir "~/Dropbox/Dreams")
-    ;; (motd-start-timer)
+    (motd-start-timer)
     )
   (use-package xwidget-apps
     :if mk-feature/noteman
@@ -3616,4 +3617,69 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
                              :host github
                              :repo "ichernyshovvv/org-timeblock"))
   (use-package org-analyzer)
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle yes
+  (defun yant/org-align-tags (limit &optional force)
+    "Align all the tags in org buffer."
+    (save-match-data
+      (when (eq major-mode 'org-mode)
+        (while (re-search-forward "^\\*+ \\(.+?\\)\\([ \t]+\\)\\(:\\(?:[^ \n]+:\\)+\\)$" limit t)
+    	(when (and (match-string 2)
+    		   (or force
+    		       (not (get-text-property (match-beginning 2) 'org-tag-aligned))))
+    	  (with-silent-modifications
+              (put-text-property (match-beginning 2) (match-end 2) 'org-tag-aligned t)
+    	    (put-text-property (if (>= 2 (- (match-end 2) (match-beginning 2)))
+    				   (match-beginning 2)
+    				 ;; multiple whitespaces may mean that we are in process of typing
+    				 (1+ (match-beginning 2)))
+    			       (match-end 2)
+    			       'display
+    			       `(space . (:align-to (- right
+    						       (,(+ 3 ;; no idea, but otherwise it is sometimes not enough
+    							    (string-display-pixel-width org-ellipsis)
+    							    (string-display-pixel-width (or (match-string 3)
+    											    ""))))))))))))))
+
+  (defun string-display-pixel-width (string &optional mode)
+    "Calculate pixel width of STRING.
+    Optional MODE specifies major mode used for display."
+    (with-temp-buffer
+      (with-silent-modifications
+        (erase-buffer)
+        (insert string))
+      (when (fboundp mode)
+        (funcall mode)
+        (font-lock-fontify-buffer))
+      (if (get-buffer-window (current-buffer))
+    	(car (window-text-pixel-size nil (line-beginning-position) (point)))
+        (set-window-buffer nil (current-buffer))
+        (car (window-text-pixel-size nil (line-beginning-position) (point))))))
+
+  ;; (add-hook 'org-mode-hook (lambda () (font-lock-add-keywords 'org-mode '(yant/org-align-tags) t)) 100)
+  ;; (add-hook 'org-mode-hook (lambda () (add-to-list 'font-lock-extra-managed-props 'org-tag-aligned)))
+
+#+end_src
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package image-slicing
+    :straight (image-slicing :type git
+                             :host github
+                             :repo "ginqi7/image-slicing")
+    :config
+    )
+
+;; (use-package org-sliced-images
+;;   :ensure t
+;;   :config (org-sliced-images-mode))
+#+end_src
+
+
+
+#+begin_src emacs-lisp :tangle yes
+  (use-package nova
+    :straight (:host github :repo "thisisran/nova" :files ("*.el")))
 #+end_src
