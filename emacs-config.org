@@ -207,13 +207,14 @@
 
 #+BEGIN_SRC emacs-lisp
   (setq custom-file "~/.emacs.d/customs.el")
-  (load custom-file t)
+  (add-hook 'elpaca-after-init-hook (lambda () (load custom-file 'noerror)))
 #+END_SRC
 
 *** Packages
 
-**** straight.el replacing package.el
+**** elpaca replacing straight.el replacing package.el
 
+| elpaca             | https://github.com/progfolio/elpaca          |
 | straight.el        | https://github.com/raxod502/straight.el      |
 | package.el         | built-in package system                      |
 | quelpa             | https://github.com/quelpa/quelpa             |
@@ -221,18 +222,46 @@
 | paradox            | A modern interface for package.el            |
 
 #+BEGIN_SRC emacs-lisp
-  (defvar bootstrap-version)
-  (let ((bootstrap-file
-         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
-        (bootstrap-version 6))
-    (unless (file-exists-p bootstrap-file)
-      (with-current-buffer
-          (url-retrieve-synchronously
-           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-           'silent 'inhibit-cookies)
-        (goto-char (point-max))
-        (eval-print-last-sexp)))
-    (load bootstrap-file nil 'nomessage))
+  (defvar elpaca-installer-version 0.9)
+  (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+  (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+  (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
+  (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                                :ref nil :depth 1 :inherit ignore
+                                :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                                :build (:not elpaca--activate-package)))
+  (let* ((repo  (expand-file-name "elpaca/" elpaca-repos-directory))
+         (build (expand-file-name "elpaca/" elpaca-builds-directory))
+         (order (cdr elpaca-order))
+         (default-directory repo))
+    (add-to-list 'load-path (if (file-exists-p build) build repo))
+    (unless (file-exists-p repo)
+      (make-directory repo t)
+      (when (< emacs-major-version 28) (require 'subr-x))
+      (condition-case-unless-debug err
+          (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                    ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                    ,@(when-let* ((depth (plist-get order :depth)))
+                                                        (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                    ,(plist-get order :repo) ,repo))))
+                    ((zerop (call-process "git" nil buffer t "checkout"
+                                          (or (plist-get order :ref) "--"))))
+                    (emacs (concat invocation-directory invocation-name))
+                    ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                          "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                    ((require 'elpaca))
+                    ((elpaca-generate-autoloads "elpaca" repo)))
+              (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+            (error "%s" (with-current-buffer buffer (buffer-string))))
+        ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+    (unless (require 'elpaca-autoloads nil t)
+      (require 'elpaca)
+      (elpaca-generate-autoloads "elpaca" repo)
+      (load "./elpaca-autoloads")))
+  (add-hook 'after-init-hook #'elpaca-process-queues)
+  (elpaca `(,@elpaca-order))
+
+
 #+END_SRC
 
 **** use-package: A use-package declaration for simplifying your .emacs
@@ -242,18 +271,14 @@
 | [[https://elpa.gnu.org/packages/delight.html][delight]]  | better: altering mode appearance on modeline |
 
 #+BEGIN_SRC emacs-lisp
-  (straight-use-package 'use-package)
-  (setq straight-use-package-by-default t) ; Ensure :straight t
-  (setq use-package-compute-statistics t)
-  (when is-android
-    (setq straight-disable-compile t)
-    )
-  (unless is-android
-    (straight-use-package 'org))
-  (use-package use-package-ensure-system-package
-    :straight (:type built-in)  ; built-in
-    )
-  (use-package delight)
+  ;; Install use-package support
+  (elpaca-wait)
+  (setq use-package-always-ensure t)
+  (elpaca bind-key) ; elpaca-use-package will trigger bind-key, so we have to specify it before
+  (elpaca elpaca-use-package
+          ;; Enable use-package :ensure support for Elpaca.
+          (elpaca-use-package-mode))
+  (elpaca-wait)
 #+END_SRC
 
 
@@ -265,7 +290,12 @@
     :ensure t
     :config
     ;; To disable collection of benchmark data after init is done.
-    (add-hook 'after-init-hook 'benchmark-init/deactivate))
+    (add-hook 'elpaca-after-init-hook 'benchmark-init/deactivate))
+
+  ;; (use-package bind-key :ensure (:wait t))
+  (use-package compat :ensure (:wait t))
+  (use-package use-package-ensure-system-package :ensure nil)
+  (use-package delight :ensure (:wait t))
 #+END_SRC
 
 ** Emacs Server
@@ -343,7 +373,7 @@
 #+begin_src emacs-lisp
   (use-package ns-win
     :if (memq window-system '(mac ns))
-    :straight nil
+    :ensure nil
     :init
     ;; (setq mac-right-command-modifier 'control)
     ;; (setq mac-right-option-modifier 'control)
@@ -449,7 +479,6 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 
 #+BEGIN_SRC emacs-lisp
   (use-package async :defer t)
-  (use-package bind-key :defer t)
   (use-package marquee-header :defer t)  ; This is really an interesting package.
   (use-package dash :defer t)
   (use-package ts :defer t)
@@ -459,23 +488,23 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
   (use-package ranger :defer t)  ; The ranger mode
   (use-package vlf :defer t)  ; View large files
   ;; Persist history over Emacs restarts. Vertico sorts by history position.
-  (use-package savehist :straight nil :hook (after-init . savehist-mode))
+  (use-package savehist :ensure nil :hook (elpaca-after-init . savehist-mode))
 
   ;; Check https://emacs-china.org/t/emacs-builtin-mode/11937
   ;; Winner mode
-  (use-package winner :straight nil :hook (after-init . winner-mode))
+  (use-package winner :ensure nil :hook (elpaca-after-init . winner-mode))
   ;; Highlight current line
-  (use-package hl-line :straight nil :hook (after-init . global-hl-line-mode))
+  (use-package hl-line :ensure nil :hook (elpaca-after-init . global-hl-line-mode))
   ;; Remember the cursor position of files
-  (use-package saveplace :straight nil :hook (after-init . save-place-mode))
-  (use-package so-long :straight nil :config (global-so-long-mode 1))
+  (use-package saveplace :ensure nil :hook (elpaca-after-init . save-place-mode))
+  (use-package so-long :ensure nil :config (global-so-long-mode 1))
 
-  (use-package paren :defer t :config
+  (use-package paren :ensure nil :config
     (setq show-paren-when-point-inside-paren t
           show-paren-when-point-in-periphery t)
     (show-paren-mode))
-  (use-package simple :straight nil
-    :hook (after-init . (lambda ()
+  (use-package simple :ensure nil
+    :hook (elpaca-after-init . (lambda ()
                           (line-number-mode)
                           (column-number-mode)
                           (size-indication-mode)
@@ -501,14 +530,14 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 
 #+BEGIN_SRC emacs-lisp
   (use-package magit
-    :straight nil  ; built-in
+    :ensure nil  ; built-in
     :after (project)
     :defer t
     :init
     (setq magit-diff-refine-hunk t)
     :config
     (use-package magit-extras
-      :straight nil
+      :ensure nil
       :init
       (setq magit-bind-magit-project-status t)
       )
@@ -557,7 +586,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 | undo-fu   |          |
 
 #+BEGIN_SRC emacs-lisp
-  (use-package undo-fu :ensure t)
+  (use-package undo-fu :ensure (:host github :repo "emacsmirror/undo-fu"))
   (use-package undo-tree
     :disabled
     :config
@@ -570,8 +599,8 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 
 #+BEGIN_SRC emacs-lisp
   (use-package evil
-    :straight t
-    :after (undo-fu)
+    :ensure t
+    :after (undo-fu bind-key)
     :init
     (setq evil-want-C-i-jump nil)
     (setq evil-move-beyond-eol t)
@@ -669,6 +698,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
   ;; optional: disable additional bindings for yanking text
   ;; (setq evil-magit-use-y-for-yank nil)
   (use-package evil-magit
+    :ensure nil
     :after (evil magit)
     :defer t)
 #+END_SRC
@@ -694,7 +724,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 #+BEGIN_SRC emacs-lisp
   ;;; Smart Tab
   (use-package smart-tab
-    :straight nil
+    :ensure nil
     :defer t
     :config
     (smart-tabs-insinuate 'c 'javascript))
@@ -827,7 +857,7 @@ Emacs package that displays available keybindings in popup
   (use-package cal-china-x
     :ensure t
     :commands cal-china-x-setup
-    :hook (after-init . cal-china-x-setup)
+    :hook (elpaca-after-init . cal-china-x-setup)
     :config
     ;; 重要节日设置
     (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
@@ -887,16 +917,14 @@ Emacs package that displays available keybindings in popup
 | Calfw | https://github.com/kiwanami/emacs-calfw |
 #+BEGIN_SRC emacs-lisp
   (use-package calfw
-    :straight (:host github
-                     :repo "haji-ali/emacs-calfw" :files ("*"))
+    :ensure (:host github :repo "haji-ali/emacs-calfw" :files ("*"))
     :init
     (use-package calfw-org :after (org))
     (use-package calfw-blocks
-      :straight (:host github
-                       :repo "haji-ali/calfw-blocks" :files ("*")))
+      :ensure (:host github :repo "haji-ali/calfw-blocks" :files ("*")))
     (use-package maccalfw
       :commands maccalfw-open
-      :straight (:host github
+      :ensure (:host github
                        :repo "haji-ali/maccalfw"
                        :files ("maccalfw.el" ("src" . "src"))))
     (require 'calfw-cal)
@@ -931,7 +959,7 @@ Emacs package that displays available keybindings in popup
         (vterm session-name)
         )))
   (use-package vterm-toggle
-    :straight (:host github :repo "jixiuf/vterm-toggle")
+    :ensure (:host github :repo "jixiuf/vterm-toggle")
     :config
     (global-set-key (kbd "C-c t") 'vterm-toggle)
     (global-set-key (kbd "C-`") 'vterm-toggle)
@@ -1116,6 +1144,7 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;; A few more useful configurations...
   (use-package emacs
+    :ensure nil
     :init
     ;; TAB cycle if there are only few candidates
     ;; (setq completion-cycle-threshold 3)
@@ -1168,7 +1197,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package flymake
-    :straight (:type built-in)  ; built-in
+    :ensure nil  ; built-in
     :config
     (setq flymake-no-changes-timeout 2)
     )
@@ -1234,12 +1263,12 @@ Alternatives (Check the selectrum repo README)
   ;;   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
   (use-package grammarly
-    :straight (:host github :repo "emacs-grammarly/grammarly")
+    :ensure (:host github :repo "emacs-grammarly/grammarly")
     :config
     (grammarly-load-from-authinfo)
     )
   (use-package flymake-grammarly
-    :straight (:host github :repo "emacs-grammarly/flymake-grammarly")
+    :ensure (:host github :repo "emacs-grammarly/flymake-grammarly")
     :after grammarly
     :config
     )
@@ -1251,7 +1280,7 @@ Alternatives (Check the selectrum repo README)
                          (lsp))))  ; or lsp-deferred
 
   (use-package lsp-bridge
-    :straight '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+    :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
                            :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
                            :build (:not compile))
     :init
@@ -1315,7 +1344,7 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   ;; Built-in native line number display
   (use-package display-line-numbers
-    :straight nil
+    :ensure nil
     :hook (prog-mode . display-line-numbers-mode)
     :config
     ;; (setq-default display-line-numbers-width 3)
@@ -1344,6 +1373,7 @@ Alternatives (Check the selectrum repo README)
                                      (statement-case-open . +)))))
 
   (use-package c-ts-mode
+    :ensure nil
     :bind (:map c-ts-base-mode-map
                 ("M-<up>" . drag-stuff-up)
                 ("M-<down>" . drag-stuff-down)
@@ -1366,7 +1396,11 @@ Alternatives (Check the selectrum repo README)
 ** LaTeX
 #+BEGIN_SRC emacs-lisp
   (use-package tex
-    :straight auctex
+    :ensure (auctex :repo "https://git.savannah.gnu.org/git/auctex.git" :branch "main"
+        :pre-build (("make" "elpa"))
+        :build (:not elpaca--compile-info) ;; Make will take care of this step
+        :files ("*.el" "doc/*.info*" "etc" "images" "latex" "style")
+        :version (lambda (_) (require 'auctex) AUCTeX-version))
     :defer t
     :init
     (setq TeX-source-correlate-method 'synctex)
@@ -1452,7 +1486,7 @@ Alternatives (Check the selectrum repo README)
 
   ;; Show build progress in modeline
   (use-package procress
-    :straight (:host github :repo "haji-ali/procress")
+    :ensure (:host github :repo "haji-ali/procress")
     :commands procress-auctex-mode
     :init
     (add-hook 'LaTeX-mode-hook #'procress-auctex-mode)
@@ -1504,9 +1538,9 @@ Alternatives (Check the selectrum repo README)
 ** Tramp
 #+BEGIN_SRC emacs-lisp
   (use-package tramp
-    :straight nil
+    :ensure nil
     :init
-    (use-package tramp-sh :straight nil :defer t)
+    (use-package tramp-sh :ensure nil :defer t)
     ;; (setq tramp-debug-buffer t)
     (setq tramp-verbose 10)
     (setq tramp-ssh-controlmaster-options
@@ -1576,7 +1610,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package rime
-    :straight (rime :type git
+    :ensure (rime :type git
                     :host github
                     :repo "DogLooksGood/emacs-rime"
                     :files ("*.el" "Makefile" "lib.c"))
@@ -1618,9 +1652,9 @@ Alternatives (Check the selectrum repo README)
   (setq word-wrap-by-category t)
   (use-package emt
     :if (not is-android)
-    :straight (:host github :repo "roife/emt"
+    :ensure (:host github :repo "roife/emt"
                      :files ("*.el" "module/*" "module"))
-    :hook (after-init . emt-mode)
+    :hook (elpaca-after-init . emt-mode)
     :config
     (define-key evil-motion-state-map (kbd "w") #'emt-forward-word)
     (define-key evil-motion-state-map (kbd "b") #'emt-backward-word)
@@ -1639,8 +1673,8 @@ Alternatives (Check the selectrum repo README)
   (load-file "~/.emacs.d/site-lisp/wc.el")
   (provide 'init-writing)
   (load-file "~/.emacs.d/site-lisp/tex-autogen.el")
-  (use-package svg-lib :ensure t)
-  (load-file "~/.emacs.d/site-lisp/big-timer.el")
+  ;; (use-package svg-lib :ensure t)
+  ;; (load-file "~/.emacs.d/site-lisp/big-timer.el")
 #+END_SRC
 
 
@@ -1648,7 +1682,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package emacs
-    :straight nil
+    :ensure nil
     :config
     (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "λ")  ; previously ✎
                                            ("#+END_SRC" . "□")
@@ -1669,8 +1703,10 @@ Alternatives (Check the selectrum repo README)
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
-
+  (use-package shrink-path
+    :ensure (:host github :repo "zbelial/shrink-path.el" :fetcher github))
   (use-package doom-modeline
+    :after (shrink-path)
     :init (doom-modeline-mode 1)
     :config
     (setq inhibit-compacting-font-caches t)
@@ -1708,7 +1744,7 @@ Alternatives (Check the selectrum repo README)
      '(doom-modeline-evil-emacs-state ((t (:italic nil)))))
     )
 
-  (use-package ef-themes :straight (:host github :repo "protesilaos/ef-themes")
+  (use-package ef-themes :ensure (:host github :repo "protesilaos/ef-themes")
     :after (hl-todo doom-modeline)
     :config
     (setq ef-cyprus-palette-overrides '((bg-main "#fdfefd")))
@@ -1756,9 +1792,9 @@ Alternatives (Check the selectrum repo README)
     (ef-themes-select 'ef-cyprus)
     )
 
-  (use-package hl-todo :straight (:host github :repo "tarsius/hl-todo"))
+  (use-package hl-todo :ensure (:host github :repo "tarsius/hl-todo"))
 
-  ;; (use-package org-margin :straight (:host github :repo "rougier/org-margin")
+  ;; (use-package org-margin :ensure (:host github :repo "rougier/org-margin")
   ;;   :disabled t
   ;;   :after (org)
   ;;   :hook (org-mode . org-margin-mode)
@@ -1832,7 +1868,7 @@ Alternatives (Check the selectrum repo README)
  #+BEGIN_SRC emacs-lisp
    (use-package volatile-highlights
      :delight
-     :straight (:host github :repo "k-talo/volatile-highlights.el")
+     :ensure (:host github :repo "k-talo/volatile-highlights.el")
      :config
      ;;-----------------------------------------------------------------------------
      ;; Supporting evil-mode.
@@ -1850,9 +1886,8 @@ Alternatives (Check the selectrum repo README)
   (use-package image-click-mode
     :if mk-feature/gui
     :delight
-    :ensure t
     :after (org)
-    :straight (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
+    :ensure (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
     :config
     ;;(setq org-image-actual-width 400)
     (setq org-image-actual-width '(300))
@@ -1868,7 +1903,8 @@ Alternatives (Check the selectrum repo README)
 
   ;; Enable Org mode
   (use-package org
-    :straight nil
+    :after (bind-key)
+    :ensure nil
     :defer 2
     :mode ("\\.org\\'" . org-mode)
     :bind (("C-c a" . #'org-agenda)
@@ -1909,9 +1945,9 @@ Alternatives (Check the selectrum repo README)
     :config
 
     ;; simple use-packages
-    (use-package org-contrib)
+    (use-package org-contrib :ensure (:host github :repo "emacsmirror/org-contrib"))
     (use-package org-inline-pdf :defer t)
-    (use-package org-modern :straight (:type git :host github :repo "minad/org-modern")
+    (use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
       :init
       (setq
        ;; Edit settings
@@ -1935,6 +1971,8 @@ Alternatives (Check the selectrum repo README)
 
       (global-org-modern-mode)
       ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+      (set-face-attribute 'org-modern-todo nil :height 1)
+      (set-face-attribute 'org-modern-todo nil :weight 'light)
       )
     ;;   (setq org-agenda-span 1
     ;; org-agenda-start-day "+0d")
@@ -2081,16 +2119,16 @@ Alternatives (Check the selectrum repo README)
             ("~" org-code verbatim)
             ("+"
              (:strike-through t))))
-    (use-package ov)
-    (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
+    ;; (use-package ov)
+    ;; (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
     )
 
-  (use-package org-sticky-header :straight (:host github :repo "alphapapa/org-sticky-header")
+  (use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
     :after (org)
     )
   ;; Org Cite
   (use-package oc
-    :straight nil
+    :ensure nil
     :ensure nil
     :after org)
 
@@ -2098,18 +2136,17 @@ Alternatives (Check the selectrum repo README)
 
 
 #+BEGIN_SRC emacs-lisp
-  (use-package org-bars :straight (:host github :repo "tonyaldon/org-bars")
+  (use-package org-bars :ensure (:host github :repo "tonyaldon/org-bars")
     :after (org)
     :config (setq org-bars-with-dynamic-stars-p nil))
 
-  (use-package highlight-indent-guides)
   (use-package nerd-icons
     :custom
     (nerd-icons-font-family "Symbols Nerd Font Mono")
     (nerd-icons-scale-factor 1.1))
 
   (use-package org-tag-beautify
-    :custom (org-tag-beautify-data-dir "~/.emacs.d/straight/repos/org-tag-beautify/data/")
+    :custom (org-tag-beautify-data-dir "~/.emacs.d/ensure/repos/org-tag-beautify/data/")
     :init (org-tag-beautify-mode 1))
   (use-package org-rainbow-tags
     :custom
@@ -2204,7 +2241,7 @@ Alternatives (Check the selectrum repo README)
 
 #+BEGIN_SRC emacs-lisp
   (use-package ox-html
-    :straight nil
+    :ensure nil
     :after (org)
     :defer t
     :config
@@ -2282,7 +2319,7 @@ Alternatives (Check the selectrum repo README)
 #+BEGIN_SRC emacs-lisp
   (use-package ox-icalendar
     :defer t
-    :straight nil
+    :ensure nil
     :after (org)
     :config
     (setq org-icalendar-alarm-time 5)
@@ -2331,7 +2368,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 #+BEGIN_SRC emacs-lisp
   (use-package org-transclusion
-    :straight (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
+    :ensure (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
     :after (org org-modern)
     :hook (org-mode . org-transclusion-mode)
     :config
@@ -2387,6 +2424,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     )
   (use-package org-journal
     :ensure t
+    :after (bind-key)
     :bind (("C-c j" . org-journal-open-current-journal-file)
            ("C-c J" . org-journal-new-entry))
     :config
@@ -2466,13 +2504,13 @@ Modes to embed one buffer in another buffer and keep them in sync
 
 
   (use-package org-roam-ui
-    :straight
+    :ensure
     (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
     :after org-roam
     ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
     ;;         a hookable mode anymore, you're advised to pick something yourself
     ;;         if you don't care about startup time, use
-    ;;  :hook (after-init . org-roam-ui-mode)
+    ;;  :hook (elpaca-after-init . org-roam-ui-mode)
     :config
     (setq org-roam-ui-sync-theme t
           org-roam-ui-follow t
@@ -2481,7 +2519,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 
   (use-package org-capture
     :if mk-feature/noteman
-    :straight nil
+    :ensure nil
     :config
     (defvar mk/org-capture-people-path)
     (defun mk/org-capture-people ()
@@ -2498,7 +2536,7 @@ Modes to embed one buffer in another buffer and keep them in sync
             ))
     )
   (use-package consult-notes
-    :straight (:type git :host github :repo "mclear-tools/consult-notes")
+    :ensure (:type git :host github :repo "mclear-tools/consult-notes")
     :commands (consult-notes
                consult-notes-search-in-all-notes)
     :bind ("C-c d f" . consult-notes)
@@ -2539,7 +2577,7 @@ Publish & Blog
 #+BEGIN_SRC emacs-lisp
   (use-package bibtex
     :if mk-feature/bibliography
-    :straight nil  ; built in
+    :ensure nil  ; built in
     :defer
     :init
     (setq bibtex-dialect 'biblatex)
@@ -2591,7 +2629,7 @@ Publish & Blog
   ;; citar
   (use-package citar
     :if mk-feature/bibliography
-    :straight (:host github :repo "bdarcus/citar")
+    :ensure (:host github :repo "bdarcus/citar")
     :defer
     :demand
     :bind (;; ("C-c B" . citar-insert-citation)
@@ -2803,7 +2841,7 @@ Publish & Blog
   (use-package ebib-biblio
     :if mk-feature/bibliography
     :after (ebib biblio)
-    :straight nil
+    :ensure nil
     :demand
     :bind (:map biblio-selection-mode-map
                 ("e" . ebib-biblio-selection-import)))
@@ -2817,6 +2855,7 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package emacs
+    :ensure nil
     :if mk-feature/bibliography
     :after (ebib)
     :init
@@ -2982,7 +3021,6 @@ Publish & Blog
   (use-package elquery :defer)
   (use-package citeproc :defer)
   (use-package org-download :defer)
-  (use-package symbol-overlay :defer)
   (use-package read-aloud
     :disabled
     :config
@@ -2990,7 +3028,7 @@ Publish & Blog
   (use-package emacs-badge
     :if (not is-android)
     :defer t
-    :straight (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
+    :ensure (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
     :config
     (require 'emacs-badge)
     (setq emacs-badge-timer
@@ -3002,7 +3040,7 @@ Publish & Blog
     )
   (use-package elnode
     :defer
-    :straight (:type git :host github :repo "jcaw/elnode"))
+    :ensure (:type git :host github :repo "jcaw/elnode"))
   (use-package multiple-cursors
     :bind (("C-!" . mc/mark-next-like-this)))
 #+END_SRC
@@ -3013,8 +3051,8 @@ Publish & Blog
 #+BEGIN_SRC emacs-lisp
   ;; (load-file "~/.emacs.d/site-lisp/wc.el")
   (use-package motd
+    :after (dash)
     :if mk-feature/noteman
-    :straight nil
     :ensure nil
     :load-path "~/.emacs.d/site-lisp/"
     :config
@@ -3030,8 +3068,8 @@ Publish & Blog
     (motd-start-timer)
     )
   (use-package xwidget-apps
+    :after (websocket)
     :if mk-feature/noteman
-    :straight nil
     :ensure nil
     :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
     :config
@@ -3101,7 +3139,7 @@ Publish & Blog
   (use-package define-word)
   (use-package org-pomodoro)
   (use-package wwg
-    :straight (:type git :host github :repo "ag91/writer-word-goals")
+    :ensure (:type git :host github :repo "ag91/writer-word-goals")
     :disabled t
     )
 #+END_SRC
@@ -3157,6 +3195,8 @@ Publish & Blog
 
   ;; Speedy reading
   (use-package spray
+    :ensure (:host github :repo "emacsmirror/spray")
+    :after (bind-key)
     :config (progn
               (setq spray-wpm 400
                     spray-margin-left 4
@@ -3332,8 +3372,7 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-    :ensure t
+    :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
     :config
     (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
     (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
@@ -3346,7 +3385,7 @@ Publish & Blog
 #+BEGIN_SRC emacs-lisp
   (load-file "~/.emacs.d/site-lisp/org-timeliner.el")
   (setq-default header-line-format
-                '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (number-to-string gc-elapsed)) "s"
+                '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"
                   " " (:eval (timeliner-get-string))))
 #+END_SRC
 
@@ -3371,13 +3410,14 @@ Publish & Blog
 
 #+BEGIN_SRC emacs-lisp
   (use-package elysium
-    :straight
+    :ensure
     (:host github :repo "lanceberge/elysium" :branch "main" :files ("*.el"))
     :custom
     ;; Below are the default values
     (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
     (elysium-window-style 'vertical)) ; Can be customized to horizontal
   (use-package smerge-mode
+    :ensure nil
     :hook
     (prog-mode . smerge-mode))
 
@@ -3430,7 +3470,7 @@ Scrolling
       (message "Opening %s..." file)
       (call-process "open" nil 0 nil "-a" "PDF Expert" file)
       (message "Opening %s done" file)))
-  (define-key dired-mode-map "E" 'mk/dired-open-pdf)
+  ;;(define-key dired-mode-map "E" 'mk/dired-open-pdf)
 
   (defun mk/dired-curl ()
     "Get file from url to dired."
@@ -3443,7 +3483,7 @@ Scrolling
         )))
 
   (use-package diredfl :config (diredfl-global-mode))
-  (use-package dired+ :config (setq diredp-hide-details-propagate-flag t))
+;;  (use-package dired+ :config (setq diredp-hide-details-propagate-flag t))
   (use-package dired-preview
     :config
     ;; Default values for demo purposes
@@ -3466,12 +3506,12 @@ Scrolling
   (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
   (use-package explain-pause-mode :disabled t)
   (use-package keystrokes :disabled t
-    :straight (:type git :host gitlab :repo "marcowahl/keystrokes"))
+    :ensure (:type git :host gitlab :repo "marcowahl/keystrokes"))
   (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
   (use-package elgantt :disabled t
-    :straight (:type git :host github :repo "legalnonsense/elgantt"))
+    :ensure (:type git :host github :repo "legalnonsense/elgantt"))
   (use-package paper :disabled t
-    :straight (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
+    :ensure (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
 #+END_SRC
 
 * Misc major modes
@@ -3482,7 +3522,7 @@ Scrolling
   (use-package lua-mode :defer)
   (use-package swift-mode :disabled t)
   (use-package typescript-mode)
-  (use-package adoc-mode :defer t :straight (:host github :repo "sensorflo/adoc-mode"))
+  (use-package adoc-mode :defer t :ensure (:host github :repo "sensorflo/adoc-mode"))
   (use-package elm-mode)
   (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
   (use-package vue-mode :mode "\\.vue\\'" :defer t)
@@ -3512,7 +3552,7 @@ Scrolling
 
 #+begin_src emacs-lisp :tangle yes
   (use-package plantuml
-    :straight (:type git :host github :repo "ginqi7/plantuml-emacs")
+    :ensure (:type git :host github :repo "ginqi7/plantuml-emacs")
     :config
     (setq plantuml-jar-path "/some/path/plantuml.jar"
           plantuml-output-type "svg"
@@ -3538,7 +3578,7 @@ Scrolling
 #+begin_src emacs-lisp :tangle yes
   (use-package aider
     :disabled t
-    :straight (:host github :repo "tninja/aider.el" :files ("aider.el"))
+    :ensure (:host github :repo "tninja/aider.el" :files ("aider.el"))
     :config
     ;; Use claude-3-5-sonnet cause it is best in aider benchmark
     (setq aider-args '("--model" "openai/gpt-4o"))
@@ -3551,14 +3591,15 @@ Scrolling
 
 #+begin_src emacs-lisp :tangle yes
   (use-package org-zettel-ref-mode
-    :straight (:host github :repo "yibie/org-zettel-ref-mode" :files ("*"))
+    :disabled t
+    :ensure (:host github :repo "yibie/org-zettel-ref-mode" :files ("*"))
     :init
     (setq org-zettel-ref-overview-directory "~/Dropbox/Dreams/Org/orgzet/source-note/")
     :config
     ;; (setq org-zettel-ref-mode-type 'denote)
     (setq org-zettel-ref-mode-type 'org-roam)
     ;; (setq org-zettel-ref-mode-type 'normal)
-    (setq org-zettel-ref-python-file "~/.emacs.d/straight/repos/org-zettel-ref-mode/convert-to-org.py")
+    (setq org-zettel-ref-python-file "~/.emacs.d/ensure/repos/org-zettel-ref-mode/convert-to-org.py")
     (setq org-zettel-ref-temp-folder "/Volumes/ramfs/convert/")
     (setq org-zettel-ref-reference-folder "~/Dropbox/Dreams/Org/orgzet/ref/")
     (setq org-zettel-ref-archive-folder "~/Dropbox/Dreams/Org/orgzet/archives/")
@@ -3594,12 +3635,12 @@ Scrolling
 
 #+begin_src emacs-lisp :tangle yes
   (use-package org-noter
-    :straight (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
+    :ensure (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
     )
 #+end_src
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package org-protocol-capture-html)
+  ;; (use-package org-protocol-capture-html)
 #+end_src
 
 Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
@@ -3608,12 +3649,12 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
 #+begin_src emacs-lisp :tangle yes
   ;; (use-package svg-clock)
   (use-package svg-analog-clock
-    :straight (:host github :repo "RaminHAL9001/emacs-svg-clock" :files ("*.el")))
+    :ensure (:host github :repo "RaminHAL9001/emacs-svg-clock" :files ("*.el")))
   #+end_src
 
 #+begin_src emacs-lisp :tangle yes
   (use-package org-timeblock
-    :straight (org-timeblock :type git
+    :ensure (org-timeblock :type git
                              :host github
                              :repo "ichernyshovvv/org-timeblock"))
   (use-package org-analyzer)
@@ -3666,7 +3707,7 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
 
 #+begin_src emacs-lisp :tangle yes
   (use-package image-slicing
-    :straight (image-slicing :type git
+    :ensure (image-slicing :type git
                              :host github
                              :repo "ginqi7/image-slicing")
     :config
@@ -3681,5 +3722,5 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
 
 #+begin_src emacs-lisp :tangle yes
   (use-package nova
-    :straight (:host github :repo "thisisran/nova" :files ("*.el")))
+    :ensure (:host github :repo "thisisran/nova" :files ("*.el")))
 #+end_src

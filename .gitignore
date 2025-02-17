@@ -13,6 +13,7 @@ var/
 emacs-config.el
 emacs-config.elc
 emacs-config.html
+elpaca/
 
 .DS_Store
 .org-id-locations
