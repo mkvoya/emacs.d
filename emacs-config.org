@@ -637,7 +637,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
       (setq evil-emacs-state-cursor '((bar . 3) "#E90074"))
       (setq evil-insert-state-cursor '((bar . 1) "#874CCC"))
       )
-    ;; Disable Evil in snails-mode
+    ;; Disable Evil in some mode
     (dolist (nonevil-mode '(snails-mode
                             notdeft-mode
                             vterm-mode
@@ -649,7 +649,6 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
                             ebib-entry-mode
                             ebib-strings-mode
                             minibuffer-mode
-                            corfu-mode
                             motd-message-mode
                             elfeed-search-mode
                             elfeed-show-mode
@@ -1142,6 +1141,24 @@ Alternatives (Check the selectrum repo README)
 | lsp-bridge            |                                              |
 
 #+BEGIN_SRC emacs-lisp
+  (use-package corfu
+    ;; Optional customizations
+    ;; :custom
+    ;; (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+    ;; (corfu-quit-at-boundary nil)   ;; Never quit at completion boundary
+    ;; (corfu-quit-no-match nil)      ;; Never quit, even if there is no match
+    ;; (corfu-preview-current nil)    ;; Disable current candidate preview
+    ;; (corfu-preselect 'prompt)      ;; Preselect the prompt
+    ;; (corfu-on-exact-match nil)     ;; Configure handling of exact matches
+
+    :init
+    (global-corfu-mode)
+    :config
+    ;; Enable auto completion and configure quitting
+    (setq corfu-auto t
+          corfu-quit-no-match 'separator) ;; or t
+    )
+
   ;; A few more useful configurations...
   (use-package emacs
     :ensure nil
@@ -1161,6 +1178,57 @@ Alternatives (Check the selectrum repo README)
     ;; commands are hidden, since they are not used via M-x. This setting is
     ;; useful beyond Corfu.
     (setq read-extended-command-predicate #'command-completion-default-include-p))
+
+  ;; Add extensions
+  (use-package cape
+    ;; Bind prefix keymap providing all Cape commands under a mnemonic key.
+    ;; Press C-c p ? to for help.
+    :bind ("C-c p" . cape-prefix-map) ;; Alternative key: M-<tab>, M-p, M-+
+    ;; Alternatively bind Cape commands individually.
+    ;; :bind (("C-c p d" . cape-dabbrev)
+    ;;        ("C-c p h" . cape-history)
+    ;;        ("C-c p f" . cape-file)
+    ;;        ...)
+    :init
+    ;; Add to the global default value of `completion-at-point-functions' which is
+    ;; used by `completion-at-point'.  The order of the functions matters, the
+    ;; first function returning a result wins.  Note that the list of buffer-local
+    ;; completion functions takes precedence over the global list.
+    (add-hook 'completion-at-point-functions #'cape-dabbrev)
+    (add-hook 'completion-at-point-functions #'cape-file)
+    (add-hook 'completion-at-point-functions #'cape-elisp-block)
+    (add-hook 'completion-at-point-functions #'cape-history)
+    ;; ...
+    )
+
+  ;; ;; Use Dabbrev with Corfu!
+  ;; (use-package dabbrev
+  ;;   ;; Swap M-/ and C-M-/
+  ;;   :bind (("M-/" . dabbrev-completion)
+  ;;          ("C-M-/" . dabbrev-expand))
+  ;;   :config
+  ;;   (add-to-list 'dabbrev-ignored-buffer-regexps "\\` ")
+  ;;   ;; Since 29.1, use `dabbrev-ignored-buffer-regexps' on older.
+  ;;   (add-to-list 'dabbrev-ignored-buffer-modes 'doc-view-mode)
+  ;;   (add-to-list 'dabbrev-ignored-buffer-modes 'pdf-view-mode)
+  ;;   (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
+
+  (use-package nerd-icons-corfu
+    :config
+    (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
+
+    ;; Optionally:
+    (setq nerd-icons-corfu-mapping
+          '((array :style "cod" :icon "symbol_array" :face font-lock-type-face)
+            (boolean :style "cod" :icon "symbol_boolean" :face font-lock-builtin-face)
+            ;; ...
+            (t :style "cod" :icon "code" :face font-lock-warning-face)))
+    ;; Remember to add an entry for `t', the library uses that as default.
+
+    ;; The Custom interface is also supported for tuning the variable above.
+    )
+
+
 #+END_SRC
 
 ** Templating: Yasnippet
@@ -1210,7 +1278,7 @@ Alternatives (Check the selectrum repo README)
     (add-to-list 'jinx-exclude-regexps '(t "\\cc"))
     (defun jinx--add-to-abbrev (overlay word)
       "Add abbreviation to `global-abbrev-table'.
-        The misspelled word is taken from OVERLAY.  WORD is the corrected word."
+          The misspelled word is taken from OVERLAY.  WORD is the corrected word."
       (let ((abbrev (buffer-substring-no-properties
                      (overlay-start overlay)
                      (overlay-end overlay))))
@@ -1222,8 +1290,8 @@ Alternatives (Check the selectrum repo README)
     (defun my/jinx-ispell-localwords ()
       "Return a string of ispell's local words.
 
-    Those are the words following `ispell-words-keyword' (usually
-    \"LocalWords\") in the current buffer."
+      Those are the words following `ispell-words-keyword' (usually
+      \"LocalWords\") in the current buffer."
       (require 'ispell)
       (save-excursion
         (goto-char (point-min))
@@ -1241,7 +1309,7 @@ Alternatives (Check the selectrum repo README)
 
     (defun my/jinx-save-as-ispell-localword (save key word)
       "Save WORD using ispell's `ispell-words-keyword'.
-  If SAVE is non-nil save, otherwise format candidate given action KEY."
+    If SAVE is non-nil save, otherwise format candidate given action KEY."
       (if save
           (progn
             (require 'ispell)
@@ -1272,6 +1340,39 @@ Alternatives (Check the selectrum repo README)
     :after grammarly
     :config
     )
+
+  (use-package eglot :after (exec-path-from-shell)
+    :preface
+    (defun mk/eglot-ensure ()
+      (exec-path-from-shell-initialize)
+      (eglot-ensure))
+    :hook (
+           (rust-mode . mk/eglot-ensure)
+           (go-mode   . mk/eglot-ensure)
+           (python-base-mode . mk/eglot-ensure)
+           )
+    :config
+    (add-to-list 'eglot-server-programs
+               '(LaTeX-mode . ("texlab")))
+    )
+  (use-package eldoc-box :after eglot
+    :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode)
+                                          ;(eglot-managed-mode . eldoc-box-hover-mode)
+    :custom (eldoc-box-clear-with-C-g t)
+    (eldoc-box-offset 1)
+    :config (add-to-list 'eldoc-box-frame-parameters '(alpha . 0.80))
+    )
+  (use-package eglot-x :ensure (:host github :repo "nemethf/eglot-x")
+    :after eglot
+    :config (eglot-x-setup)
+    )
+
+  (use-package eglot-booster :ensure (:host github :repo "jdtsmith/eglot-booster")
+    :after eglot
+    :config (eglot-booster-mode)
+    )
+  (use-package consult-eglot :after eglot)
+
   (use-package lsp-grammarly
     :disabled t
     :ensure t
@@ -1280,9 +1381,10 @@ Alternatives (Check the selectrum repo README)
                          (lsp))))  ; or lsp-deferred
 
   (use-package lsp-bridge
+    :disabled t
     :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-                           :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-                           :build (:not compile))
+                         :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                         :build (:not compile))
     :init
     ;; (setq lsp-bridge-tex-lsp-server "texlab-grammarly")
     (setq lsp-bridge-enable-hover-diagnostic t)
@@ -1412,7 +1514,6 @@ Alternatives (Check the selectrum repo README)
     ;; make latexmk available via C-c C-c
     ;; Note: SyncTeX is setup via ~/.latexmkrc (see below)
     ;; (add-to-list 'TeX-command-list '("latexmk" "latexmk -pdf -escape-shell %s" TeX-run-TeX nil t :help "Run latexmk on file"))
-    (message "OK")
     (add-to-list 'TeX-command-list '("Make" "make" TeX-run-command nil t))
     (add-to-list 'TeX-command-list '("Make Clean" "make clean" TeX-run-command nil t))
     (add-to-list 'TeX-command-list '("Make Clean & Make" "make clean && make" TeX-run-command nil t))
@@ -1440,12 +1541,13 @@ Alternatives (Check the selectrum repo README)
                                  ;; (flyspell-mode)
                                  ;; (add-hook 'after-save-hook #'flyspell-buffer)
                                  (LaTeX-math-mode)
-                                 (darkroom-mode)
-                                 (setq buffer-face-mode-face '(:family "iA Writer Quattro V"))
-                                 (buffer-face-mode)
-                                 (visual-line-mode)
-                                 (visual-line-mode)
-                                 (darkroom-decrease-margins 0.8)
+                                 (mk/eglot-ensure)
+                                 ;; (darkroom-mode)
+                                 ;; (setq buffer-face-mode-face '(:family "iA Writer Quattro V"))
+                                 ;; (buffer-face-mode)
+                                 ;; (visual-line-mode)
+                                 ;; (visual-line-mode)
+                                 ;; (darkroom-decrease-margins 0.8)
                                  ))
     ;; (add-hook 'TeX-output-mode (lambda () (goto-char (point-max))))
 
@@ -2457,7 +2559,7 @@ Modes to embed one buffer in another buffer and keep them in sync
     (defun transform-square-brackets-to-round-ones(string-to-transform)
       "Transforms [ into ( and ] into ), other chars left unchanged."
       (concat 
-       (mapcar #'(lambda (c) (if (equal c ?[) ?\( (if (equal c ?]) ?\) c))) string-to-transform))
+       (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c))) string-to-transform))
       )
     (setq org-capture-templates
           `(("i" "Inbox" entry  (file "inbox.org")
@@ -3041,8 +3143,8 @@ Publish & Blog
   (use-package elnode
     :defer
     :ensure (:type git :host github :repo "jcaw/elnode"))
-  (use-package multiple-cursors
-    :bind (("C-!" . mc/mark-next-like-this)))
+  ;; (use-package multiple-cursors
+  ;;   :bind (("C-!" . mc/mark-next-like-this)))
 #+END_SRC
 
 
@@ -3128,6 +3230,7 @@ Publish & Blog
 #+BEGIN_SRC emacs-lisp
   (use-package darkroom
     :config
+    :disabled t
     (setq darkroom-keep-lines t)
     )
 #+END_SRC
@@ -3546,9 +3649,6 @@ Scrolling
   (use-package flymd :after (markdown-mode))
 #+END_SRC
 
-#+BEGIN_SRC emacs-lisp
-#+END_SRC
-
 
 #+begin_src emacs-lisp :tangle yes
   (use-package plantuml
@@ -3576,16 +3676,21 @@ Scrolling
 
 
 #+begin_src emacs-lisp :tangle yes
-  (use-package aider
+  (use-package aidermacs
     :disabled t
-    :ensure (:host github :repo "tninja/aider.el" :files ("aider.el"))
+    :ensure (:host github :repo "MatthewZMD/aidermacs" :files ("*.el"))
     :config
-    ;; Use claude-3-5-sonnet cause it is best in aider benchmark
-    (setq aider-args '("--model" "openai/gpt-4o"))
-    (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/")
+    (setq aidermacs-default-model "openai/gpt-4o")
+    (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
     (setenv "OPENAI_API_KEY" (gptel-api-key))
-    ;;
-    (global-set-key (kbd "C-c k") 'aider-transient-menu))
+    (global-set-key (kbd "C-c k") 'aidermacs-transient-menu)
+                                          ; See the Configuration section below
+
+    (setq aidermacs-backend 'vterm)
+    (setq aidermacs-comint-multiline-newline-key "C-<return>")
+
+    (setq aidermacs-auto-commits t)
+    (setq aidermacs-use-architect-mode nil))
 #+end_src
 
 
@@ -3634,8 +3739,11 @@ Scrolling
 
 
 #+begin_src emacs-lisp :tangle yes
+  (use-package nov)
+  (use-package djvu)
   (use-package org-noter
     :ensure (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
+    :after (nov djvu)
     )
 #+end_src
 
@@ -3723,4 +3831,54 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
 #+begin_src emacs-lisp :tangle yes
   (use-package nova
     :ensure (:host github :repo "thisisran/nova" :files ("*.el")))
+
+
+  (defun show-notification (message)
+    "Show a notification in a floating transparent frame with dark background for 3 seconds."
+    (let* ((notification-buffer (get-buffer-create "*notification*"))
+           (current-frame (selected-frame))
+           (frame-width (frame-pixel-width current-frame))
+           (frame-pos-x (- (+ (frame-parameter current-frame 'left) frame-width)
+                           (* (+ 40 4) (frame-char-width)))) ; Right align with 1 char margin
+           (frame-pos-y (+ (frame-parameter current-frame 'top)
+                           20)) ; Add small offset from top
+           (frame-params `((name . "notification")
+                           (width . 40)
+                           (height . 3)
+                           (minibuffer . nil)
+                           (left . ,frame-pos-x)
+                           (top . ,frame-pos-y)
+                           (no-accept-focus . t)
+                           (no-focus-on-map . t)
+                           (internal-border-width . 10)
+                           (drag-internal-border . t)
+                           (undecorated . t)
+                           (background-color . "#2d2d2d")
+                           (foreground-color . "#ffffff")
+                           (alpha . (95 . 90))
+                           (menu-bar-lines . 0)
+                           (tool-bar-lines . 0)
+                           (mode-line-format . nil)
+                           (header-line-format . nil)
+                           (left-fringe . 0)
+                           (right-fringe . 0)))  ; Added parameters to remove fringes
+           (frame (make-frame frame-params)))
+      (with-current-buffer notification-buffer
+        (erase-buffer)
+        (insert message))
+      (set-window-buffer (frame-selected-window frame) notification-buffer)
+      (set-window-parameter (frame-selected-window frame) 'mode-line-format 'none)
+      (set-window-parameter (frame-selected-window frame) 'header-line-format 'none)
+      (run-with-timer 3 nil
+                      (lambda ()
+                        (when (frame-live-p frame)
+                          (delete-frame frame))
+                        (kill-buffer notification-buffer)))))
+
+  (show-notification "HIHI")
+
+
+
 #+end_src
+
+
