@@ -43,11 +43,11 @@
 
 (unless is-android
   (when (display-graphic-p)
-    (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
-    (scroll-bar-mode nil)
-    (menu-bar-mode nil))
+    (tool-bar-mode -1) ; t for enable, nil for disable, -1 for toggle
+    (scroll-bar-mode -1)
+    (menu-bar-mode -1))
 
-  (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@30--git"))
+  (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@31--git"))
 
   (setq-default
    default-frame-alist

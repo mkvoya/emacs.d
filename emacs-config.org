@@ -74,11 +74,11 @@
 
   (unless is-android
     (when (display-graphic-p)
-      (tool-bar-mode nil) ; t for enable, nil for disable, -1 for toggle
-      (scroll-bar-mode nil)
-      (menu-bar-mode nil))
+      (tool-bar-mode -1) ; t for enable, nil for disable, -1 for toggle
+      (scroll-bar-mode -1)
+      (menu-bar-mode -1))
 
-    (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@30--git"))
+    (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@31--git"))
 
     (setq-default
      default-frame-alist
@@ -222,7 +222,7 @@
 | paradox            | A modern interface for package.el            |
 
 #+BEGIN_SRC emacs-lisp
-  (defvar elpaca-installer-version 0.9)
+  (defvar elpaca-installer-version 0.10)
   (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
   (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
   (defvar elpaca-repos-directory (expand-file-name "repos/" elpaca-directory))
@@ -3833,52 +3833,25 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
     :ensure (:host github :repo "thisisran/nova" :files ("*.el")))
 
 
-  (defun show-notification (message)
-    "Show a notification in a floating transparent frame with dark background for 3 seconds."
-    (let* ((notification-buffer (get-buffer-create "*notification*"))
-           (current-frame (selected-frame))
-           (frame-width (frame-pixel-width current-frame))
-           (frame-pos-x (- (+ (frame-parameter current-frame 'left) frame-width)
-                           (* (+ 40 4) (frame-char-width)))) ; Right align with 1 char margin
-           (frame-pos-y (+ (frame-parameter current-frame 'top)
-                           20)) ; Add small offset from top
-           (frame-params `((name . "notification")
-                           (width . 40)
-                           (height . 3)
-                           (minibuffer . nil)
-                           (left . ,frame-pos-x)
-                           (top . ,frame-pos-y)
-                           (no-accept-focus . t)
-                           (no-focus-on-map . t)
-                           (internal-border-width . 10)
-                           (drag-internal-border . t)
-                           (undecorated . t)
-                           (background-color . "#2d2d2d")
-                           (foreground-color . "#ffffff")
-                           (alpha . (95 . 90))
-                           (menu-bar-lines . 0)
-                           (tool-bar-lines . 0)
-                           (mode-line-format . nil)
-                           (header-line-format . nil)
-                           (left-fringe . 0)
-                           (right-fringe . 0)))  ; Added parameters to remove fringes
-           (frame (make-frame frame-params)))
-      (with-current-buffer notification-buffer
-        (erase-buffer)
-        (insert message))
-      (set-window-buffer (frame-selected-window frame) notification-buffer)
-      (set-window-parameter (frame-selected-window frame) 'mode-line-format 'none)
-      (set-window-parameter (frame-selected-window frame) 'header-line-format 'none)
-      (run-with-timer 3 nil
-                      (lambda ()
-                        (when (frame-live-p frame)
-                          (delete-frame frame))
-                        (kill-buffer notification-buffer)))))
 
-  (show-notification "HIHI")
-
+  (defun childframe-workable-p ()
+    "Whether childframe is workable."
+    (and (>= emacs-major-version 26)
+         (not noninteractive)
+         (not emacs-basic-display)
+         (or (display-graphic-p)
+             (featurep 'tty-child-frames))
+         (eq (frame-parameter (selected-frame) 'minibuffer) 't)))
+  (setq blink-matching-paren-highlight-offscreen t
+        show-paren-context-when-offscreen
+        (if (childframe-workable-p) 'child-frame 'overlay))
 
 
 #+end_src
 
 
+
+#+begin_src emacs-lisp
+  (setq org-modern-fold-stars
+        '(("◉" . "○") ("◈" . "◇") ("⯈" . "⯆") ("◉" . "○") ("◈" . "◇")))
+#+end_src

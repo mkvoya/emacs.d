@@ -24,18 +24,64 @@
 
 (defvar motd--today nil)
 (defvar motd--buffer-name " *motd-message*")
-(defvar motd--popup-frame nil)
 (defvar motd--git-commit-dir nil)
 
 
 (defvar motd--timer nil)
 (defvar motd--fade-timer nil)
 
+(defun show-notification (message)
+  "Show a notification in a floating transparent frame with dark background for 3 seconds."
+  (let* ((notification-buffer (get-buffer-create "*notification*"))
+         (current-frame (selected-frame))
+         (frame-width (frame-pixel-width current-frame))
+         (frame-pos-x (- (+ 0 (frame-parameter current-frame 'left) frame-width)
+                         (* (+ 40 4) (frame-char-width)))) ; Right align with 1 char margin
+         (frame-pos-y (+ (frame-parameter current-frame 'top)
+                         20)) ; Add small offset from top
+         (frame-params `((name . "notification")
+                         (width . 40)
+                         ;; (height . 3)
+                         (minibuffer . nil)
+                         ;; (minibuffer . ,(minibuffer-window parent))
+                         ;; (parent-frame . ,parent)
+                         (left . ,frame-pos-x)
+                         (top . ,frame-pos-y)
+                         (no-accept-focus . t)
+                         (no-focus-on-map . t)
+                         (internal-border-width . 10)
+                         (drag-internal-border . t)
+                         (undecorated . t)
+                         (background-color . "#2d2d2d")
+                         (foreground-color . "#ffffff")
+                         (alpha . (95 . 90))
+                         (menu-bar-lines . 0)
+                         (tool-bar-lines . 0)
+                         (tab-bar-lines . 0)
+                         (header-line-format . nil)
+                         (mode-line-format . nil)
+                         (left-fringe . 0)
+                         (right-fringe . 0)))  ; Added parameters to remove fringes
+         (frame (make-frame frame-params)))
+    (with-current-buffer notification-buffer
+      (erase-buffer)
+      (insert message))
+    (set-window-buffer (frame-selected-window frame) notification-buffer)
+    (set-window-parameter (frame-selected-window frame) 'mode-line-format 'none)
+    (set-window-parameter (frame-selected-window frame) 'header-line-format 'none)
+    (run-with-timer 30 nil
+                    (lambda ()
+                      (when (frame-live-p frame)
+                        (delete-frame frame))
+                      (kill-buffer notification-buffer)))))
+
+;; (show-notification "HIHI")
+
 (defun motd--git-commit ()
   "Generate git commit when motd message is shown."
   (when motd--git-commit-dir
     (shell-command (format "cd %s && git add -A && git commit -m \"%s\""
-                           motd--git-commit-dir (format-time-string "%F")))
+                           motd--git-commit-dir (format-time-string "%F")) "MOTD-Git Log")
     (message (format "[motd-git] %s is committed." motd--git-commit-dir))
     ))
 
@@ -82,142 +128,16 @@ Recent Submission Deadlines:
 %s\n" (motd--confddl-message)))
 
 
-(defun motd--popup-ns (text)
-  "Show TEXT in the NS native popup."
-  (x-popup-dialog t `(,text
-                      ("Love You 😘 .x..." . t)) t)
-  )
-
-(defun motd--fade-timeout-handler ()
-  "Adjust the frame alpha."
-  (when (and motd--popup-frame (frame-live-p motd--popup-frame))
-    (when motd--fade-timer
-      (let ((alp (or (frame-parameter motd--popup-frame 'alpha) 100)))
-        (if (> alp 10)
-            (set-frame-parameter motd--popup-frame 'alpha (- alp 10))
-          (cancel-timer motd--fade-timer)
-          (setq motd-fade-timer nil)
-          (motd--remove-popup)
-          )))))
-
-(defun motd--create-notify-frame (buffer)
-  "Create an auto-dispel floating popup frame with BUFFER as content."
-  (let*  ((parent (window-frame))
-          (f (make-frame `((parent-frame . ,parent)
-                           (undecorated . 1)
-                           (name . "*Motd Frame*")
-                           (border-width . 5)
-                           (internal-border-width . 10)
-                           (minibuffer . ,(minibuffer-window parent))
-                           (left-fringe . 0)
-                           (right-fringe . 0)
-                           (menu-bar-lines . 0)
-                           (tool-bar-lines . 0)
-                           (tab-bar-lines . 0)
-                           (top-bar-lines . 0)
-                           (mode-line-format . nil)
-                           (header-line-format . nil)
-                           )))
-          (win (frame-root-window f))
-          (width (/ (* (frame-inner-width) 1) 3))
-          (height (/ (* (frame-inner-height) 1) 5))
-          )
-    (set-frame-position f (- (frame-inner-width) width) 0)
-    (set-frame-size f width height t)
-    (set-frame-parameter f 'background-color motd-background-color)
-    (set-frame-parameter f 'border-color motd-border-color)
-    (set-window-buffer win buffer)
-    (set-window-dedicated-p win t)
-    (setq motd--fade-timer
-          (run-with-timer 1 0.2 #'motd--fade-timeout-handler))
-  f
-  ))
-
-(defun motd--create-frame (buffer)
-  "Create a floating popup frame with BUFFER as content."
-  (let*  ((parent (window-frame))
-          (f (make-frame `((parent-frame . ,parent)
-                           (undecorated . 1)
-                           (name . "*Motd Frame*")
-                           (border-width . 5)
-                           (internal-border-width . 10)
-                           (minibuffer . ,(minibuffer-window parent))
-                           (left-fringe . 0)
-                           (right-fringe . 0)
-                           (menu-bar-lines . 0)
-                           (tool-bar-lines . 0)
-                           (tab-bar-lines . 0)
-                           (top-bar-lines . 0)
-                           (mode-line-format . nil)
-                           (header-line-format . nil)
-                           )))
-          (win (frame-root-window f)))
-    (set-frame-size f
-                    (/ (* (frame-inner-width) 4) 5)
-                    (/ (frame-inner-height) 3)
-                    t)
-    (set-frame-position f
-                        (/ (frame-inner-width) 10)
-                        (/ (frame-inner-height) 6))
-    (set-frame-parameter f 'background-color motd-background-color)
-    (set-frame-parameter f 'border-color motd-border-color)
-    (set-window-buffer win buffer)
-    (set-window-dedicated-p win t)
-  f
-  ))
-
-(defun motd--popup (text)
-  "Show TEXT in the popup frame."
-  (with-current-buffer (get-buffer-create motd--buffer-name)
-    (read-only-mode -1)
-    (erase-buffer)
-    (motd-message-mode t)
-    (insert text)
-    (insert "\n")
-    (let ((padding (/ (- (frame-width) 40) 2)))
-      (insert (format (format "%%%ds" padding) ""))
-      (insert "[ OK ]")
-      (insert (format (format "%%%ds" padding) ""))
-      (insert "\n"))
-    (insert "\n")
-    (insert "\n")
-    (setq mode-line-format nil)
-    (when evil-mode
-      (evil-change-state 'emacs))
-    (read-only-mode t))
-  (setq motd--popup-frame
-        (motd--create-frame motd--buffer-name)))
-
-(defun motd--notify (text)
-  "Show TEXT in the popup frame."
-  (with-current-buffer (get-buffer-create motd--buffer-name)
-    (read-only-mode -1)
-    (erase-buffer)
-    (insert text)
-    (insert "\n")
-    (let ((padding (/ (- (frame-width) 40) 2)))
-      (insert (format (format "%%%ds" padding) ""))
-      (insert "[ OK ]")
-      (insert (format (format "%%%ds" padding) ""))
-      (insert "\n"))
-    (insert "\n")
-    (insert "\n")
-    (setq mode-line-format nil)
-    (when evil-mode
-      (evil-change-state 'emacs))
-    (read-only-mode t))
-  (setq motd--popup-frame
-        (motd--create-notify-frame motd--buffer-name)))
 
 (defun motd--timeout-handler ()
   "Remind you important things upon the first touch of Emacs in the day."
   (let ((day (format-time-string "%d")))
     (unless (or (equal day motd--today) (not (frame-focus-state)))
-      (let ((text (motd--report-content)))
-        (motd--popup text)
-        ;; (motd--popup-ns text)
-        )
-      (motd--git-commit)
+      (progn
+        (let ((text (motd--report-content)))
+          (show-notification text)
+          )
+        (motd--git-commit))
       (setq motd--today day))))
 
 (defun motd-start-timer ()
