@@ -531,7 +531,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 #+BEGIN_SRC emacs-lisp
   (use-package magit
     :ensure nil  ; built-in
-    :after (project)
+    :after (project transient)
     :defer t
     :init
     (setq magit-diff-refine-hunk t)
@@ -545,7 +545,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
     (add-hook 'magit-status-mode-hook #'(lambda () (visual-line-mode t)))
     )
   (use-package git-link :defer t)
-  (use-package forge :after (magit) :defer t)
+  (use-package forge :after (magit emacsql) :defer t)
   ;; (use-package git-timemachine)
 
   (use-package diff-hl
@@ -1243,6 +1243,47 @@ Alternatives (Check the selectrum repo README)
     :after yasnippet)
 #+END_SRC
 
+#+begin_src emacs-lisp
+  ;; Configure Tempel
+  (use-package tempel
+    ;; Require trigger prefix before template name when completing.
+    ;; :custom
+    ;; (tempel-trigger-prefix "<")
+
+    :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
+           ("M-*" . tempel-insert))
+
+    :init
+
+    ;; Setup completion at point
+    (defun tempel-setup-capf ()
+      ;; Add the Tempel Capf to `completion-at-point-functions'.
+      ;; `tempel-expand' only triggers on exact matches. Alternatively use
+      ;; `tempel-complete' if you want to see all matches, but then you
+      ;; should also configure `tempel-trigger-prefix', such that Tempel
+      ;; does not trigger too often when you don't expect it. NOTE: We add
+      ;; `tempel-expand' *before* the main programming mode Capf, such
+      ;; that it will be tried first.
+      (setq-local completion-at-point-functions
+                  (cons #'tempel-expand
+                        completion-at-point-functions)))
+
+    (add-hook 'conf-mode-hook 'tempel-setup-capf)
+    (add-hook 'prog-mode-hook 'tempel-setup-capf)
+    (add-hook 'text-mode-hook 'tempel-setup-capf)
+
+    ;; Optionally make the Tempel templates available to Abbrev,
+    ;; either locally or globally. `expand-abbrev' is bound to C-x '.
+    ;; (add-hook 'prog-mode-hook #'tempel-abbrev-mode)
+    ;; (global-tempel-abbrev-mode)
+    )
+
+  ;; Optional: Add tempel-collection.
+  ;; The package is young and doesn't have comprehensive coverage.
+  (use-package tempel-collection)
+
+#+end_src
+
 ** LSP
 
 | [[https://github.com/emacs-lsp/lsp-mode][lsp-mode]] |                         |
@@ -1338,7 +1379,9 @@ Alternatives (Check the selectrum repo README)
   (use-package flymake-grammarly
     :ensure (:host github :repo "emacs-grammarly/flymake-grammarly")
     :after grammarly
+    :hook (LaTeX-mode . flymake-grammarly-load)
     :config
+    (setq flymake-grammarly-check-time 0.8)
     )
 
   (use-package eglot :after (exec-path-from-shell)
@@ -1373,41 +1416,6 @@ Alternatives (Check the selectrum repo README)
     )
   (use-package consult-eglot :after eglot)
 
-  (use-package lsp-grammarly
-    :disabled t
-    :ensure t
-    :hook (text-mode . (lambda ()
-                         (require 'lsp-grammarly)
-                         (lsp))))  ; or lsp-deferred
-
-  (use-package lsp-bridge
-    :disabled t
-    :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
-                         :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
-                         :build (:not compile))
-    :init
-    ;; (setq lsp-bridge-tex-lsp-server "texlab-grammarly")
-    (setq lsp-bridge-enable-hover-diagnostic t)
-    (setq acm-enable-capf t)
-    (setq acm-enable-doc t)
-    (setq acm-enable-doc-markdown-render 'async)
-    (setq acm-enable-icon t)
-    (setq acm-enable-tabnine t)
-    (setq acm-enable-quick-access t)
-    (setq acm-enable-citre t)
-    (setq acm-backend-search-file-words-candidate-min-length 3)
-    (setq acm-backend-lsp-show-progress t)
-    (setq acm-backend-yas-candidate-min-length 2)
-    (setq acm-backend-elisp-candidate-min-length 2)
-    (setq acm-backend-search-file-words-enable-fuzzy-match t)
-    (setq acm-backend-search-file-words-enable-fuzzy-match-threshold 1)
-
-    (setq acm-backend-lsp-match-mode "prefix")
-    (setq acm-backend-lsp-frontend-filter-p t)
-    ;; (require 'acm-backend-path)
-    ;; (setq acm-enable-path t)
-
-    (global-lsp-bridge-mode))
 #+END_SRC
 
 
@@ -1571,6 +1579,7 @@ Alternatives (Check the selectrum repo README)
     (add-hook 'TeX-after-compilation-finished-functions #'TeX-revert-document-buffer)
 
     (use-package reftex
+      :ensure nil
       :defer t
       :config
       (add-hook 'LaTeX-mode-hook 'turn-on-reftex)   ; with AUCTeX LaTeX mode
@@ -3525,6 +3534,7 @@ Publish & Blog
     (prog-mode . smerge-mode))
 
   (use-package gptel
+    :ensure (:host github :repo "karthink/gptel" :branch "master" :files ("*"))
     :config
     (defun remove-trailing-newline (str)
       "Remove the trailing newline character from STR, if it exists."
@@ -3854,4 +3864,12 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
 #+begin_src emacs-lisp
   (setq org-modern-fold-stars
         '(("◉" . "○") ("◈" . "◇") ("⯈" . "⯆") ("◉" . "○") ("◈" . "◇")))
+#+end_src
+
+
+
+#+begin_src emacs-lisp
+  (use-package golden-ratio
+    :ensure (:host github :repo "roman/golden-ratio.el" :files ("*.el"))
+    )
 #+end_src

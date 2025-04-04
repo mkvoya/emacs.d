@@ -110,3 +110,41 @@
 
 #+END_SRC
 
+#+BEGIN_SRC emacs-lisp
+
+  (use-package lsp-grammarly
+    :disabled t
+    :ensure t
+    :hook (text-mode . (lambda ()
+                         (require 'lsp-grammarly)
+                         (lsp))))  ; or lsp-deferred
+
+  (use-package lsp-bridge
+    :disabled t
+    :ensure '(lsp-bridge :type git :host github :repo "manateelazycat/lsp-bridge"
+                         :files (:defaults "*.el" "*.py" "acm" "core" "langserver" "multiserver" "resources")
+                         :build (:not compile))
+    :init
+    ;; (setq lsp-bridge-tex-lsp-server "texlab-grammarly")
+    (setq lsp-bridge-enable-hover-diagnostic t)
+    (setq acm-enable-capf t)
+    (setq acm-enable-doc t)
+    (setq acm-enable-doc-markdown-render 'async)
+    (setq acm-enable-icon t)
+    (setq acm-enable-tabnine t)
+    (setq acm-enable-quick-access t)
+    (setq acm-enable-citre t)
+    (setq acm-backend-search-file-words-candidate-min-length 3)
+    (setq acm-backend-lsp-show-progress t)
+    (setq acm-backend-yas-candidate-min-length 2)
+    (setq acm-backend-elisp-candidate-min-length 2)
+    (setq acm-backend-search-file-words-enable-fuzzy-match t)
+    (setq acm-backend-search-file-words-enable-fuzzy-match-threshold 1)
+
+    (setq acm-backend-lsp-match-mode "prefix")
+    (setq acm-backend-lsp-frontend-filter-p t)
+    ;; (require 'acm-backend-path)
+    ;; (setq acm-enable-path t)
+
+    (global-lsp-bridge-mode))
+#+END_SRC
