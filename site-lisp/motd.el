@@ -32,7 +32,7 @@
 
 (defun show-notification (message)
   "Show a notification in a floating transparent frame with dark background for 3 seconds."
-  (let* ((notification-buffer (get-buffer-create "*notification*"))
+  (let* ((notification-buffer (get-buffer-create "*Motd Message*"))
          (current-frame (selected-frame))
          (frame-width (frame-pixel-width current-frame))
          (frame-pos-x (- (+ 0 (frame-parameter current-frame 'left) frame-width)
@@ -40,7 +40,7 @@
          (frame-pos-y (+ (frame-parameter current-frame 'top)
                          20)) ; Add small offset from top
          (frame-params `((name . "notification")
-                         (width . 40)
+                         (width . 80)
                          ;; (height . 3)
                          (minibuffer . nil)
                          ;; (minibuffer . ,(minibuffer-window parent))
@@ -72,18 +72,18 @@
     (run-with-timer 30 nil
                     (lambda ()
                       (when (frame-live-p frame)
-                        (delete-frame frame))
-                      (kill-buffer notification-buffer)))))
+                        (delete-frame frame))))))
 
 ;; (show-notification "HIHI")
 
 (defun motd--git-commit ()
   "Generate git commit when motd message is shown."
   (when motd--git-commit-dir
-    (shell-command (format "cd %s && git add -A && git commit -m \"%s\""
-                           motd--git-commit-dir (format-time-string "%F")) "MOTD-Git Log")
-    (message (format "[motd-git] %s is committed." motd--git-commit-dir))
-    ))
+    (let ((result (shell-command-to-string 
+                   (format "cd %s && git add -A && git commit -m \"%s\""
+                          motd--git-commit-dir (format-time-string "%F")))))
+      (message (format "[motd-git] %s is committed." motd--git-commit-dir))
+      result)))
 
 (defun motd--org-timestamp-day-diff (ts1 ts2)
   "Return the number of days from TS1 to TS2."
@@ -121,23 +121,36 @@
                            (motd--confddl--get-all)))
              "\n"))
 
+(defun motd--gitlab-commit-summary ()
+  "Call gitlab monitor script and return its output."
+  (let ((output (shell-command-to-string "python3 ~/tools/GitlabMonitor/gitlab_monitor.py")))
+    (if (string-empty-p output)
+        "No recent GitLab activity"
+      output)))
+
+
 (defun motd--report-content ()
   "Generate the report content of the motd box."
   (format "<<Emacs Daily Report>>
 Recent Submission Deadlines:
-%s\n" (motd--confddl-message)))
-
+%s\n
+Recent Commit Summary:
+%s\n
+Auto Git Commit:
+%s\n"
+(motd--confddl-message)
+(motd--gitlab-commit-summary)
+(motd--git-commit)
+))
 
 
 (defun motd--timeout-handler ()
   "Remind you important things upon the first touch of Emacs in the day."
   (let ((day (format-time-string "%d")))
     (unless (or (equal day motd--today) (not (frame-focus-state)))
-      (progn
-        (let ((text (motd--report-content)))
-          (show-notification text)
-          )
-        (motd--git-commit))
+      (let ((text (motd--report-content)))
+        (show-notification text)
+        )
       (setq motd--today day))))
 
 (defun motd-start-timer ()

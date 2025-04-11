@@ -27,6 +27,14 @@
 (setq comp-deferred-compilation nil)
 
 
+(setenv "LIBRARY_PATH"
+        (format "%s:%s"
+                (string-join
+                 '("/opt/homebrew/opt/gcc/lib/gcc/current"
+                   "/opt/homebrew/opt/libgccjit/lib/gcc/current"
+                   "/opt/homebrew/opt/gcc/lib/gcc/current/gcc/aarch64-apple-darwin24/14/"
+                   ) ":")
+                (or (getenv "LD_LIBRARY_PATH") "")))
 (when is-android
   (setenv "PATH" (format "%s:%s" "/data/data/com.termux/files/usr/bin"
                          (getenv "PATH")))
