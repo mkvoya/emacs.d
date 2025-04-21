@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 (defvar wc-regexp-chinese-char-and-punc
   (rx (category chinese)))
 (defvar wc-regexp-chinese-punc

@@ -30,9 +30,11 @@
 (defvar motd--timer nil)
 (defvar motd--fade-timer nil)
 
-(defun show-notification (message)
+(defvar motd--buffer (get-buffer-create "*Motd Message*"))
+
+(defun show-notification (buffer-name)
   "Show a notification in a floating transparent frame with dark background for 3 seconds."
-  (let* ((notification-buffer (get-buffer-create "*Motd Message*"))
+  (let* ((notification-buffer buffer-name)
          (current-frame (selected-frame))
          (frame-width (frame-pixel-width current-frame))
          (frame-pos-x (- (+ 0 (frame-parameter current-frame 'left) frame-width)
@@ -63,9 +65,6 @@
                          (left-fringe . 0)
                          (right-fringe . 0)))  ; Added parameters to remove fringes
          (frame (make-frame frame-params)))
-    (with-current-buffer notification-buffer
-      (erase-buffer)
-      (insert message))
     (set-window-buffer (frame-selected-window frame) notification-buffer)
     (set-window-parameter (frame-selected-window frame) 'mode-line-format 'none)
     (set-window-parameter (frame-selected-window frame) 'header-line-format 'none)
@@ -74,16 +73,16 @@
                       (when (frame-live-p frame)
                         (delete-frame frame))))))
 
-;; (show-notification "HIHI")
-
 (defun motd--git-commit ()
   "Generate git commit when motd message is shown."
-  (when motd--git-commit-dir
-    (let ((result (shell-command-to-string 
-                   (format "cd %s && git add -A && git commit -m \"%s\""
-                          motd--git-commit-dir (format-time-string "%F")))))
-      (message (format "[motd-git] %s is committed." motd--git-commit-dir))
-      result)))
+  (format "Auto Git Commit:\n
+%s\n"
+          (when motd--git-commit-dir
+            (let ((result (shell-command-to-string
+                           (format "cd %s && git add -A && git commit -m \"%s\""
+                                   motd--git-commit-dir (format-time-string "%F")))))
+              (message (format "[motd-git] %s is committed." motd--git-commit-dir))
+              result))))
 
 (defun motd--org-timestamp-day-diff (ts1 ts2)
   "Return the number of days from TS1 to TS2."
@@ -113,45 +112,58 @@
 
 (defun motd--confddl-message ()
   "Get first 3 confddl from org files."
-  (mapconcat #'(lambda (pair)
-                 (car (cdr pair)))
-             (-take 3
-                    (-sort #'(lambda (pair1 pair2)
-                               (org-ql--org-timestamp-element< (car pair1) (car pair2)))
-                           (motd--confddl--get-all)))
-             "\n"))
+  (format "Recent Submission Deadlines:\n
+%s\n"
+          (mapconcat #'(lambda (pair)
+                         (car (cdr pair)))
+                     (-take 3
+                            (-sort #'(lambda (pair1 pair2)
+                                       (org-ql--org-timestamp-element< (car pair1) (car pair2)))
+                                   (motd--confddl--get-all)))
+                     "\n")))
 
 (defun motd--gitlab-commit-summary ()
   "Call gitlab monitor script and return its output."
-  (let ((output (shell-command-to-string "python3 ~/tools/GitlabMonitor/gitlab_monitor.py")))
-    (if (string-empty-p output)
-        "No recent GitLab activity"
-      output)))
+  (make-process
+   :name "gitlab-monitor"
+   :command '("python3" "~/tools/GitlabMonitor/gitlab_monitor.py")
+   :buffer "*gitlab-monitor*"
+   :sentinel (lambda (process event)
+               (when (string= event "finished\n")
+                 (let ((output (with-current-buffer "*gitlab-monitor*"
+                                 (buffer-string))))
+                   (kill-buffer "*gitlab-monitor*")
+                   (with-current-buffer motd--buffer
+                     (goto-char (point-max))
+                     (insert (format "Recent Commit Summary:\n%s\n" output)))
+                   (setq motd--data-ready t))))))
 
-
-(defun motd--report-content ()
+(defun motd--report-content-to-buffer ()
   "Generate the report content of the motd box."
-  (format "<<Emacs Daily Report>>
-Recent Submission Deadlines:
-%s\n
-Recent Commit Summary:
-%s\n
-Auto Git Commit:
-%s\n"
-(motd--confddl-message)
-(motd--gitlab-commit-summary)
-(motd--git-commit)
-))
+  (with-current-buffer motd--buffer
+    (erase-buffer)
+    (insert "<<Emacs Daily Report>>\n")
+    (motd--confddl-message)
+    (motd--git-commit))
+  (motd--gitlab-commit-summary))
 
+(defvar motd--data-ready nil)
+(defvar motd--data-ready-timer nil)
 
 (defun motd--timeout-handler ()
   "Remind you important things upon the first touch of Emacs in the day."
   (let ((day (format-time-string "%d")))
     (unless (or (equal day motd--today) (not (frame-focus-state)))
-      (let ((text (motd--report-content)))
-        (show-notification text)
-        )
-      (setq motd--today day))))
+      (setq motd--today day)
+      (setq motd--data-ready nil)
+      (make-thread (lambda () (motd--report-content-to-buffer)))
+      (setq motd--data-ready-timer
+            (run-with-timer 1 nil
+                            (lambda ()
+                              (when motd--data-ready
+                                (show-notification motd--buffer)
+                                (cancel-timer motd--data-ready-timer)
+                                (setq motd--data-ready-timer nil))))))))
 
 (defun motd-start-timer ()
   "Start the timer for the motd daemon."

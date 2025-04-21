@@ -1,4 +1,6 @@
+;; -*- lexical-binding: t; -*-
 (require 'org)
+(require 'svg)
 
 (defvar timeliner-start-hour 4 "The hour of the day to start the timeline.")
 
@@ -43,7 +45,7 @@
 
 (defvar timeliner-svg-height 5 "The height of the timeline SVG.")
 
-(defun timeliner--add-line-to-svg (svg entry color &optional opacity new-y new-height line-width)
+(defun timeliner--add-line-to-svg (svg entry timeline-start color &optional opacity new-y new-height line-width)
   (let* ((start-time (car entry))
          (end-time (cdr entry))
          (start-x (- (float-time start-time) timeline-start))
@@ -70,10 +72,10 @@
                    :fill-opacity 1)
     (dolist (entry clock-entries)
       ;; (princ (format-time-string "%Y-%m-%d %H:%M:%S" (car entry)))
-      (timeliner--add-line-to-svg svg entry "blue" 1 nil nil 1))
+      (timeliner--add-line-to-svg svg entry timeline-start "blue" 1 nil nil 1))
     (when (org-clocking-p)
-      (timeliner--add-line-to-svg svg (cons org-clock-start-time (current-time)) "#32cd32" 1))
-    (timeliner--add-line-to-svg svg (cons timeline-start (current-time)) "#ff0000" 1 (* timeliner-svg-height 0.66) (/ timeliner-svg-height 2))
+      (timeliner--add-line-to-svg svg (cons org-clock-start-time (current-time)) timeline-start "#32cd32" 1))
+    (timeliner--add-line-to-svg svg (cons timeline-start (current-time)) timeline-start "#ff0000" 1 (* timeliner-svg-height 0.66) (/ timeliner-svg-height 2))
     (svg-image svg :ascent 'center)))
 
 (defvar timeliner-result-string "" "The string to display in the header line.")

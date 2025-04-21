@@ -1,4 +1,4 @@
-;;;
+;;;  -*- lexical-binding: t; -*-
 
 (defun tex-autogen ()
   "Compile the current LaTeX file using tex-compile."
