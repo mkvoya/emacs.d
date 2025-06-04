@@ -1,0 +1,18 @@
+# GitLab 配置
+gitlab:
+  url: https://ipads.se.sjtu.edu.cn:1312
+  token: _rh7odo44jzLd2zXvc3H
+
+# 要监控的用户列表
+users:
+  - xujw
+  - promise
+  - jiahaozhou
+  - zhaohr
+  - lirh
+  - xint
+  - caiwj
+  - tianzy
+  - Zengjy
+  - youmz
+  - yanjs

@@ -2668,17 +2668,6 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+END_SRC
 
 
-Publish & Blog
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ox-hugo
-    :after ox
-    :init
-    (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
-      (async-shell-command "cd ~/Dropbox/Public/essay && hugo -D && rsync -rvP ~/Dropbox/Public/essay/public/ dong.mk:/srv/http/essay"))
-    (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
-    )
-#+END_SRC
 
 
 * Bibliography
@@ -3468,13 +3457,14 @@ Publish & Blog
   ;; from https://stackoverflow.com/questions/1250846/wrong-type-argument-commandp-error-when-binding-a-lambda-to-a-key
   (global-set-key (kbd "C-h c") #'describe-char)
   (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+  (global-set-key (kbd "C-c g") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")))
   (global-set-key (kbd "C-c i") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Inbox.org")))
   (global-set-key (kbd "C-c r") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
   (global-set-key (kbd "C-c p") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Projects.org")))
   (global-set-key (kbd "M-s-<left>") 'tab-previous)
   (global-set-key (kbd "M-s-<right>") 'tab-next)
   (global-set-key (kbd "M-s-n") 'tab-new)
-  (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
+  ;; (global-set-key (kbd "C-c w") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Weights.org")))
   ;; Open ibuffer upon "C-c i"
   (global-set-key (kbd "C-c b") 'ibuffer)
   ;; (global-set-key (kbd "C-c C-m e") (lambda () (interactive) (find-file "~/.emacs.d/emacs-config.org")))
@@ -3881,3 +3871,52 @@ Emacs Client Command line: ~/opt/homebrew/bin/emacsclient -n -c -a "" -- "$@"~
     :ensure (:host github :repo "roman/golden-ratio.el" :files ("*.el"))
     )
 #+end_src
+
+
+
+Publish & Blog
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ox-hugo
+    :after ox
+    :init
+    (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
+      (async-shell-command "cd ~/Dropbox/Public/Blog2025 && hugo -D && rsync -rvP ~/Dropbox/Public/Blog2025/public/ dong.mk:/srv/http/blog"))
+    (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
+    :config
+
+    ;; Populates only the EXPORT_FILE_NAME property in the inserted heading.
+    (with-eval-after-load 'org-capture
+      (defun org-hugo-new-subtree-post-capture-template ()
+        "Returns `org-capture' template string for new Hugo post.
+        See `org-capture-templates' for more information."
+        (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+               (title (read-from-minibuffer "Post Title: ")) ;Prompt to enter the post title
+               (fname (org-hugo-slug title)))
+          (mapconcat #'identity
+                     `(
+                       ,(concat "* " title)
+                       ":PROPERTIES:"
+                       ,(concat ":ID:       " (org-id-new))
+                       ,(concat ":CREATED:  " (format-time-string (org-time-stamp-format t t)))
+                       ,(concat ":EXPORT_FILE_NAME: " fname)
+                       ,(concat ":EXPORT_DATE: " date)
+                       ":END:"
+                       "%?\n")          ;Place the cursor here finally
+                     "\n")))
+
+      (add-to-list 'org-capture-templates
+                   '("h"                ;`org-capture' binding + h
+                     "Hugo post"
+                     entry
+                     (file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
+                     (function org-hugo-new-subtree-post-capture-template))))
+    (defun mk/org-new-post ()
+      (interactive)
+      (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
+      (goto-char (point-max))
+      (insert "\n")
+      (insert (org-hugo-new-subtree-post-capture-template))
+      )
+    )
+#+END_SRC

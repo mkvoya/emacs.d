@@ -84,49 +84,11 @@
               (message (format "[motd-git] %s is committed." motd--git-commit-dir))
               result))))
 
-(defun motd--org-timestamp-day-diff (ts1 ts2)
-  "Return the number of days from TS1 to TS2."
-  (let ((start-day (org-time-string-to-absolute (org-timestamp-format ts1 "%F")))
-        (end-day (org-time-string-to-absolute (org-timestamp-format ts2 "%F"))))
-    (- end-day start-day)))
-
-(defun motd--confddl--get-all ()
-  "Get all pairs of conf ddls."
-  (mapcar #'(lambda (h)
-              (let* ((headline (plist-get h 'headline))
-                     (deadline (plist-get headline :deadline))
-                     (now (org-timestamp-from-time (current-time)))
-                     (title (substring-no-properties (car (plist-get headline :title)))))
-                (if (org-ql--org-timestamp-element< deadline now)
-                    nil
-                  (list deadline
-                        (format "%s (%d days left): %s"
-                                (org-timestamp-format deadline "%F")
-                                (motd--org-timestamp-day-diff now deadline)
-                                title)))))
-          (org-ql-query
-            :select 'element
-            :from (org-agenda-files)
-            :where '(todo "CONFDDL")
-            :order-by 'deadline)))
-
-(defun motd--confddl-message ()
-  "Get first 3 confddl from org files."
-  (format "Recent Submission Deadlines:\n
-%s\n"
-          (mapconcat #'(lambda (pair)
-                         (car (cdr pair)))
-                     (-take 3
-                            (-sort #'(lambda (pair1 pair2)
-                                       (org-ql--org-timestamp-element< (car pair1) (car pair2)))
-                                   (motd--confddl--get-all)))
-                     "\n")))
-
 (defun motd--gitlab-commit-summary ()
   "Call gitlab monitor script and return its output."
   (make-process
    :name "gitlab-monitor"
-   :command '("python3" "~/tools/GitlabMonitor/gitlab_monitor.py")
+   :command '("python3" "/Users/dongmk/.emacs.d/site-tools/GitlabMonitor/gitlab_monitor.py")
    :buffer "*gitlab-monitor*"
    :sentinel (lambda (process event)
                (when (string= event "finished\n")
@@ -135,16 +97,32 @@
                    (kill-buffer "*gitlab-monitor*")
                    (with-current-buffer motd--buffer
                      (goto-char (point-max))
-                     (insert (format "Recent Commit Summary:\n%s\n" output)))
-                   (setq motd--data-ready t))))))
+                     (insert (format "%s\n" output)))
+                   (setq motd--data-ready (+ motd--data-ready 1)))))))
+
+(defun motd--ccfddl-summary ()
+  "Call ccfddl script and return its output."
+  (make-process
+   :name "ccfddl"
+   :command '("python3" "/Users/dongmk/.emacs.d/site-tools/CCFDDL/conference_deadlines.py")
+   :buffer "*ccfddl*"
+   :sentinel (lambda (process event)
+               (when (string= event "finished\n")
+                 (let ((output (with-current-buffer "*ccfddl*"
+                                 (buffer-string))))
+                   (kill-buffer "*ccfddl*")
+                   (with-current-buffer motd--buffer
+                     (goto-char (point-max))
+                     (insert (format "%s\n" output)))
+                   (setq motd--data-ready (+ motd--data-ready 1)))))))
 
 (defun motd--report-content-to-buffer ()
   "Generate the report content of the motd box."
   (with-current-buffer motd--buffer
     (erase-buffer)
     (insert "<<Emacs Daily Report>>\n")
-    (motd--confddl-message)
     (motd--git-commit))
+  (motd--ccfddl-summary)
   (motd--gitlab-commit-summary))
 
 (defvar motd--data-ready nil)
@@ -155,12 +133,15 @@
   (let ((day (format-time-string "%d")))
     (unless (or (equal day motd--today) (not (frame-focus-state)))
       (setq motd--today day)
-      (setq motd--data-ready nil)
+      (setq motd--data-ready 0)
       (make-thread (lambda () (motd--report-content-to-buffer)))
       (setq motd--data-ready-timer
-            (run-with-timer 1 nil
+            (run-with-timer 1 3
                             (lambda ()
-                              (when motd--data-ready
+                              (message (format "waiting %d/2" motd--data-ready))
+                              (when (eq motd--data-ready 2)
+                                (with-current-buffer motd--buffer
+                                             (goto-char (point-min)))
                                 (show-notification motd--buffer)
                                 (cancel-timer motd--data-ready-timer)
                                 (setq motd--data-ready-timer nil))))))))
