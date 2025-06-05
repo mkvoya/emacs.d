@@ -23,7 +23,7 @@ def fetch_conference_data():
 
 def get_upcoming_deadlines(conferences, target_conferences=None):
     if target_conferences is None:
-        target_conferences = ['SOSP', 'OSDI', 'FAST', 'ASPLOS', 'MICRO', 'ISCA', 'EuroSys', 'USENIX ATC']
+        target_conferences = ['SOSP', 'OSDI', 'FAST', 'ASPLOS', 'MICRO', 'ISCA', 'EuroSys', 'USENIX ATC', 'HPCA', 'PPoPP']
     
     current_time = datetime.now(pytz.UTC)
     upcoming_deadlines = []
@@ -78,8 +78,9 @@ def main():
         for deadline in upcoming:
             # Convert UTC time to China time
             china_time = deadline['deadline'].astimezone(china_tz)
+            days_left = (deadline['deadline'] - datetime.now(pytz.UTC)).days
             print(f"{deadline['conference']} {deadline['year']}:")
-            print(f"  Deadline: {china_time.strftime('%Y-%m-%d %H:%M:%S')} (China Time)")
+            print(f"  Deadline: {china_time.strftime('%Y-%m-%d %H:%M:%S')} ({days_left} days left) ")
             if deadline['comment']:
                 print(f"  Note: {deadline['comment']}")
             print()
