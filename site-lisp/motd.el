@@ -4,6 +4,7 @@
 
 (require 'dash)
 (require 'org-ql)
+(require 'org)
 
 (defgroup motd nil "Message of the Day." :group 'emacs)
 

@@ -3920,3 +3920,8 @@ Publish & Blog
       )
     )
 #+END_SRC
+
+
+#+BEGIN_SRC emacs-lisp
+  (load-file "~/.emacs.d/site-lisp/swiftbar.el")
+#+END_SRC
