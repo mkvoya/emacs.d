@@ -2331,9 +2331,14 @@ Alternatives (Check the selectrum repo README)
                               (denote-file-is-note-p (buffer-file-name)))
                          (denote-retrieve-filename-identifier (buffer-name))
                        (buffer-name)))
-           (path (concat default-directory
-                         buf-name
-                         ".assets/"))
+           (insert-image-pos (second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
+           (path (cond ((equal insert-image-pos "default-directory") ; default-directory
+                        default-directory)
+                       ((and insert-image-pos (not (equal insert-image-pos "nil"))) ; user-specified
+                        insert-image-pos)
+                       (t (concat default-directory ; default
+                                  buf-name
+                                  ".assets/"))))
            (image-file (concat
                         path
                         buf-name
@@ -3889,7 +3894,7 @@ Publish & Blog
     (with-eval-after-load 'org-capture
       (defun org-hugo-new-subtree-post-capture-template ()
         "Returns `org-capture' template string for new Hugo post.
-        See `org-capture-templates' for more information."
+          See `org-capture-templates' for more information."
         (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
                (title (read-from-minibuffer "Post Title: ")) ;Prompt to enter the post title
                (fname (org-hugo-slug title)))
@@ -3914,9 +3919,11 @@ Publish & Blog
     (defun mk/org-new-post ()
       (interactive)
       (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
-      (goto-char (point-max))
-      (insert "\n")
-      (insert (org-hugo-new-subtree-post-capture-template))
+      (let ((content (org-hugo-new-subtree-post-capture-template)))
+        (goto-char (point-max))
+        (insert "\n")
+        (insert content)
+        )
       )
     )
 #+END_SRC

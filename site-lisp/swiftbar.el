@@ -1,3 +1,5 @@
+;; -*- lexical-binding: t; -*-
+
 (defun swiftbar--get-agenda-swiftbar-items ()
   "Get all headings with swiftbar tag in all agenda files."
   (let ((items nil)
