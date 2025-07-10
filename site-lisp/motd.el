@@ -40,7 +40,8 @@
          (frame-width (frame-pixel-width current-frame))
          (frame-pos-x (- (+ 0 (frame-parameter current-frame 'left) frame-width)
                          (* (+ 40 4) (frame-char-width)))) ; Right align with 1 char margin
-         (frame-pos-y (+ (frame-parameter current-frame 'top)
+         (frame-top (frame-parameter current-frame 'top))
+         (frame-pos-y (+ (if (integerp frame-top) frame-top (car (cdr frame-top)))
                          20)) ; Add small offset from top
          (frame-params `((name . "notification")
                          (width . 80)

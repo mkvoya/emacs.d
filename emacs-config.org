@@ -661,6 +661,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
                             elfeed-search-mode
                             elfeed-show-mode
                             special-mode
+                            evil-collection-mode
                             ))
       (evil-set-initial-state nonevil-mode 'emacs))
 
@@ -2092,6 +2093,15 @@ Alternatives (Check the selectrum repo README)
       ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
       (set-face-attribute 'org-modern-todo nil :height 1)
       (set-face-attribute 'org-modern-todo nil :weight 'light)
+      
+
+      ;; org-modern-tag
+      (custom-set-faces
+       '(org-modern-tag
+         ((((background light)) :foreground "black" :background "#f4f4f4")
+          (((background dark))  :foreground "white" :background "#222222"))))
+
+
       )
     ;;   (setq org-agenda-span 1
     ;; org-agenda-start-day "+0d")
@@ -2265,12 +2275,14 @@ Alternatives (Check the selectrum repo README)
     (nerd-icons-scale-factor 1.1))
 
   (use-package org-tag-beautify
+    :disabled t
     :custom (org-tag-beautify-data-dir "~/.emacs.d/ensure/repos/org-tag-beautify/data/")
     :init (org-tag-beautify-mode 1))
   (use-package org-rainbow-tags
     :custom
-    (org-rainbow-tags-hash-start-index 10)
-    (org-rainbow-tags-extra-face-attributes '(:inverse-video t :box t :weight 'bold))
+    (org-rainbow-tags-hash-start-index 0)
+    ;; (org-rainbow-tags-extra-face-attributes '(:inverse-video t :box t :weight 'bold))
+    (org-rainbow-tags-extra-face-attributes '(:weight 'bold))
     :hook (org-mode . org-rainbow-tags-mode))
 #+END_SRC
 
@@ -3526,7 +3538,7 @@ Modes to embed one buffer in another buffer and keep them in sync
 #+BEGIN_SRC emacs-lisp
   (use-package elysium
     :ensure
-    (:host github :repo "lanceberge/elysium" :branch "main" :files ("*.el"))
+    (:host github :repo "lanceberge/elysium" :branch "master" :files ("*.el"))
     :custom
     ;; Below are the default values
     (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
