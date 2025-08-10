@@ -63,20 +63,58 @@
                    :stroke-width (or line-width 0)
                    )))
 
+(defun timeliner--topbar-pixel-height ()
+  "返回当前 header-line 的像素高度。"
+  (let* ((face-height (face-attribute 'header-line :height nil 'default))
+         (base-height (frame-char-height)))
+    ;; :height 可能是 nil（表示 100%）
+    (truncate (* base-height (/ (float (or face-height 100)) 100)))))
+
 (defun timeliner--generate-svg-image (clock-entries)
-  "Generate an SVG image showing the CLOCK-ENTRIES events."
-  (let* ((svg (svg-create 400 timeliner-svg-height))
+  "Generate an SVG image showing the CLOCK-ENTRIES events, height跟header-line一致."
+  (let* ((topbar-height (timeliner--topbar-pixel-height))
+         (svg (svg-create 400 topbar-height))
          (timeline-start (float-time (timeliner--start-time))))
-    (svg-rectangle svg 0 0 400 timeliner-svg-height
+    ;; 背景
+    (svg-rectangle svg 0 0 400 topbar-height
                    :fill "#dedede"
                    :fill-opacity 1)
+    ;; 绘制 clock entries
     (dolist (entry clock-entries)
-      ;; (princ (format-time-string "%Y-%m-%d %H:%M:%S" (car entry)))
       (timeliner--add-line-to-svg svg entry timeline-start "blue" 1 nil nil 1))
+    ;; 当前正在 clocking
     (when (org-clocking-p)
-      (timeliner--add-line-to-svg svg (cons org-clock-start-time (current-time)) timeline-start "#32cd32" 1))
-    (timeliner--add-line-to-svg svg (cons timeline-start (current-time)) timeline-start "#ff0000" 1 (* timeliner-svg-height 0.66) (/ timeliner-svg-height 2))
+      (timeliner--add-line-to-svg
+       svg (cons org-clock-start-time (current-time))
+       timeline-start "#32cd32" 1))
+    ;; 红色时间轴
+    (timeliner--add-line-to-svg
+     svg (cons timeline-start (current-time))
+     timeline-start "#ff0000" 1 (* topbar-height 0.66) (* topbar-height 0.5))
+    ;; 返回图像
     (svg-image svg :ascent 'center)))
+
+
+;; 当字体大小改变时自动刷新 header-line
+(add-hook 'after-setting-font-hook
+          (lambda ()
+            (when (bound-and-true-p timeliner-mode)
+              (force-mode-line-update t))))
+
+;; (defun timeliner--generate-svg-image (clock-entries)
+;;   "Generate an SVG image showing the CLOCK-ENTRIES events."
+;;   (let* ((svg (svg-create 400 timeliner-svg-height))
+;;          (timeline-start (float-time (timeliner--start-time))))
+;;     (svg-rectangle svg 0 0 400 timeliner-svg-height
+;;                    :fill "#dedede"
+;;                    :fill-opacity 1)
+;;     (dolist (entry clock-entries)
+;;       ;; (princ (format-time-string "%Y-%m-%d %H:%M:%S" (car entry)))
+;;       (timeliner--add-line-to-svg svg entry timeline-start "blue" 1 nil nil 1))
+;;     (when (org-clocking-p)
+;;       (timeliner--add-line-to-svg svg (cons org-clock-start-time (current-time)) timeline-start "#32cd32" 1))
+;;     (timeliner--add-line-to-svg svg (cons timeline-start (current-time)) timeline-start "#ff0000" 1 (* timeliner-svg-height 0.66) (/ timeliner-svg-height 2))
+;;     (svg-image svg :ascent 'center)))
 
 (defvar timeliner-result-string "" "The string to display in the header line.")
 
