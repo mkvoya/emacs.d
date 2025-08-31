@@ -60,6 +60,7 @@
                           elfeed-show-mode
                           special-mode
                           evil-collection-mode
+                          eca-chat-mode
                           ))
     (evil-set-initial-state nonevil-mode 'emacs))
 

@@ -1,6 +1,20 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: AI Tools
 
+(defun remove-trailing-newline (str)
+  "Remove the trailing newline character from STR, if it exists."
+  (if (string-suffix-p "\n" str)
+      (substring str 0 -1)
+    str))
+(defun read-file-contents (file-path)
+  "Read the contents of FILE-PATH and return it as a string."
+  (with-temp-buffer
+    (insert-file-contents file-path)
+    (buffer-string)))
+
+(defun gptel-api-key ()
+  (remove-trailing-newline (read-file-contents "~/.secrets/ipads-chatgpt.key")))
+
 (use-package copilot
   :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
   :config
@@ -9,7 +23,6 @@
   )
 
 (use-package aidermacs
-  :disabled t
   :ensure (:host github :repo "MatthewZMD/aidermacs" :files ("*.el"))
   :config
   (setq aidermacs-default-model "openai/gpt-4o")
@@ -25,7 +38,11 @@
   (setq aidermacs-use-architect-mode nil))
 
 (use-package eca
-  :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el")))
+  :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el"))
+  :config
+  (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
+  (setenv "OPENAI_API_KEY" (gptel-api-key))
+  )
 
 
 (use-package elysium
@@ -43,18 +60,6 @@
 (use-package gptel
   :ensure (:host github :repo "karthink/gptel" :branch "master" :files ("*"))
   :config
-  (defun remove-trailing-newline (str)
-    "Remove the trailing newline character from STR, if it exists."
-    (if (string-suffix-p "\n" str)
-        (substring str 0 -1)
-      str))
-  (defun read-file-contents (file-path)
-    "Read the contents of FILE-PATH and return it as a string."
-    (with-temp-buffer
-      (insert-file-contents file-path)
-      (buffer-string)))
-  (defun gptel-api-key ()
-    (remove-trailing-newline (read-file-contents "~/.secrets/ipads-chatgpt.key")))
   (setq gptel-use-curl nil)
   (setq
    ;; gptel-model "gpt-4o-2024-05-13"

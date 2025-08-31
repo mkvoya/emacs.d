@@ -74,7 +74,20 @@
 ;; The above command works.
 (use-package exec-path-from-shell
   :init
-  (exec-path-from-shell-initialize))
+  ;; Specify the environment variables ECA needs
+  (setq exec-path-from-shell-variables
+        '("ANTHROPIC_API_KEY"
+          "OPENAI_API_KEY"
+          "OLLAMA_API_BASE"
+          "OPENAI_API_URL"
+          "ANTHROPIC_API_URL"
+          "ECA_CONFIG"
+          "XDG_CONFIG_HOME"
+          "PATH"
+          "MANPATH"))
+  ;; For macOS and Linux GUI environments
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize)))
 
 
 (provide 'config-bootstrap)

@@ -1,6 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 (require 'org)
 (require 'org-agenda)
+(require 'org-clock)
 (require 'org-ql)
 (require 'svg)
 
@@ -85,10 +86,10 @@
     (dolist (entry clock-entries)
       (timeliner--add-line-to-svg svg entry timeline-start "blue" 1 nil nil 1))
     ;; 当前正在 clocking
-    ;(when (org-clocking-p)
-    ;  (timeliner--add-line-to-svg
-    ;   svg (cons org-clock-start-time (current-time))
-    ;   timeline-start "#32cd32" 1))
+    (when (org-clocking-p)
+      (timeliner--add-line-to-svg
+       svg (cons org-clock-start-time (current-time))
+       timeline-start "#32cd32" 1))
     ;; 红色时间轴
     (timeliner--add-line-to-svg
      svg (cons timeline-start (current-time))
