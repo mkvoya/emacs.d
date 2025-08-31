@@ -19,7 +19,6 @@
 
 (use-package svg-tag-mode
   :disabled t
-  :if mk-feature/gui
   :commands svg-tag-mode
   :hook (org-mode . svg-tag-mode)
   :demand t

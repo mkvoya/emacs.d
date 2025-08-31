@@ -7,23 +7,51 @@
 (setq gc-cons-threshold (* 4 (expt 2 20))
       gc-cons-percentage 0.6)
 
-(let* (;; (file-name-handler-alist nil)  ; This causes loading issues. Check: https://lists.gnu.org/archive/html/emacs-devel/2022-08/msg00218.html
-       (read-process-output-max (expt 2 22)))
+;; 将lisp目录放到加载路径的前面以加快启动速度
+(add-to-list 'load-path (locate-user-emacs-file "config-frags.d"))
 
-  ;; 将lisp目录放到加载路径的前面以加快启动速度
-  (let ((dir (locate-user-emacs-file "init-lisp")))
-    (add-to-list 'load-path (file-name-as-directory dir)))
-  (let ((dir (locate-user-emacs-file "lisp")))
-    (add-to-list 'load-path (file-name-as-directory dir)))
+(setq global-auto-revert-mode nil) ; hack for bug
+(setq savehist-mode nil) ; hack for bug
 
-  (load "~/.emacs.d/emacs-config.el")
+(require 'config-bootstrap)
 
-  ;; Collect garbage when all else is done
-  ;; (garbage-collect)
-  )
+;; The server part may not be configured so early.
+(require 'server) ; Load and start server if it's not running
+(unless (server-running-p) (server-start))
 
-(setq gc-cons-threshold (expt 2 23)
-      gc-cons-percentage 0.1)
+(require 'config-hl)
+
+(require 'config-basic)     ; basic setups first
+(require 'config-cjk)       ; we need to setup fonts early
+(require 'config-theme)     ; set theme early
+(require 'config-mx)
+
+(require 'config-autocomp)
+(require 'config-autofix)
+(require 'config-auctex)
+(require 'config-bib)
+(require 'config-bindings)
+(require 'config-cal)
+
+(require 'config-dired)
+(require 'config-evil)
+(require 'config-feed)
+
+(require 'config-icons)
+(require 'config-lsp)
+(require 'config-magit)
+(require 'config-mk)
+(require 'config-nsgui)
+(require 'config-org)
+(require 'config-pdf)
+(require 'config-periphery)
+(require 'config-prog)
+(require 'config-term)
+(require 'config-tramp)
+(require 'config-webkit)
+(require 'config-ai)
+(require 'config-misc)
+
 (setq gc-cons-threshold (expt 2 28)
       gc-cons-percentage 0.3)
 

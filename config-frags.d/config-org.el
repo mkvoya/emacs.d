@@ -1,0 +1,791 @@
+;; -*- lexical-binding: t; -*-
+;;; Emacs Config Fragement: Org Mode
+
+;; | appt | MELPA, Appointment package |
+;; Enable Org mode
+(use-package org
+  :after (bind-key)
+  :ensure nil
+  :defer 2
+  :mode ("\\.org\\'" . org-mode)
+  :bind (("C-c a" . #'org-agenda)
+         ("C-c c" . #'org-capture)
+         )
+  :init
+  ;; (setq org-latex-create-formula-image-program 'dvisvgm)
+  ;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
+  ;; But I don't need the odd levels only
+  (setq org-adapt-indentation t
+        org-hide-leading-stars t)
+  ;;org-odd-levels-only t
+  (setq org-startup-indented t) ; disable org-indent-mode for org-margin
+  (setq org-latex-create-formula-image-program 'dvisvgm)
+
+  ;; (setq org-latex-create-formula-image-program 'dvipng)
+  (setq org-support-shift-select t)  ; Use shift to select region when possible.
+  (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
+  ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
+  (defun org-syntax-table-modify ()
+    "Modify `org-mode-syntax-table' for the current org buffer."
+    (modify-syntax-entry ?< "." org-mode-syntax-table)
+    (modify-syntax-entry ?> "." org-mode-syntax-table))
+  (add-hook 'org-mode-hook #'org-syntax-table-modify)
+
+  ;; Thank https://emacs-china.org/t/org-link-echo-area-link/19927/2
+  (defun org-show-link-when-idle()
+    ;; 在echo area中显示链接详情
+    (require 'help-at-pt)
+    (setq help-at-pt-display-when-idle t) ;; 不会立即生效
+    (setq help-at-pt-timer-delay 0.5)
+    (help-at-pt-set-timer) ;; 调用才会生效
+    )
+  (add-hook 'org-mode-hook #'org-show-link-when-idle)
+
+  (setq org-element-use-cache nil)  ; cache sometimes causes problems
+
+  :config
+
+  ;; simple use-packages
+  (use-package org-contrib :ensure (:host github :repo "emacsmirror/org-contrib"))
+  (use-package org-inline-pdf :defer t)
+  (use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
+    :init
+    (setq
+     ;; Edit settings
+     org-auto-align-tags nil
+     org-tags-column 0
+     org-catch-invisible-edits 'show-and-error
+     org-special-ctrl-a/e t
+     org-insert-heading-respect-content t
+     ;; Org styling, hide markup etc.
+     org-hide-emphasis-markers t
+     org-pretty-entities t)
+    ;; Agenda styling
+    ;; org-agenda-tags-column 0
+    ;; org-agenda-block-separator ?─
+    ;; org-agenda-time-grid
+    ;; '((daily today require-timed)
+    ;;   (800 1000 1200 1400 1600 1800 2000)
+    ;;   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
+    ;; org-agenda-current-time-string
+    ;; "◀── now ─────────────────────────────────────────────────"
+
+    (global-org-modern-mode)
+    ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+    (set-face-attribute 'org-modern-todo nil :height 1)
+    (set-face-attribute 'org-modern-todo nil :weight 'light)
+
+    ;; org-modern-tag
+    (custom-set-faces
+     '(org-modern-tag
+       ((((background light)) :foreground "black" :background "#f4f4f4")
+        (((background dark))  :foreground "white" :background "#222222"))))
+
+    )
+  ;;   (setq org-agenda-span 1
+  ;; org-agenda-start-day "+0d")
+
+  (add-to-list 'org-modules 'org-protocol)
+  (require 'org-protocol)
+
+  ;; configs
+  (setq org-directory "~/Dropbox/Dreams/Org/")
+  ;; (setq org-display-remote-inline-images 'download)
+
+  ;; Org mode TODO states
+  (setq org-todo-keywords
+        '((sequence
+           "TODO(t!)" "NEXT(n!)" "TRACK(o!)" "ROUTINE(r)" "HOLD(h!/!)" "IDEA(I)"
+           "PROJECT(p)" "CONFDDL(C)"
+           "|"
+           "ACCEPTED(a@)" "DONE(d!/!)" "CANCELED(c@)"
+           )))
+  ;; Keyword colors
+  (setf org-todo-keyword-faces
+        '(("TODO" . (:foreground "#dfffff" :background "#ff19a3" :weight bold))
+          ("NEXT"  . "orangered")
+          ("ACCEPTED"  . "darkgreen")
+          ("HOLD" . "pink")
+          ("CANCELED" . (:foreground "white" :background "#4d4d4d"))
+          ("DONE" . (:foreground "#008080"))
+          ))
+  (setq org-log-into-drawer t)
+  (setq org-log-done 'time) ;; Auto add DONE TIME
+  (setq org-ellipsis "↴")
+  (set-face-attribute 'org-ellipsis nil :foreground "grey86")
+
+  ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+  (defun org-force-open-current-window ()
+    "Open at current window."
+    (interactive)
+    (let ((org-link-frame-setup (quote
+                                 ((vm . vm-visit-folder)
+                                  (vm-imap . vm-visit-imap-folder)
+                                  (file . find-file)
+                                  (wl . wl)))
+                                ))
+      (org-open-at-point)))
+
+  ;; Depending on universal argument try opening link
+  (defun org-open-maybe (&optional arg)
+    "Open maybe ARG."
+    (interactive "P")
+    (if arg (org-open-at-point)
+      (org-force-open-current-window)))
+  ;; Redefine file opening without clobbering universal argument
+  (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
+
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((dot . t)
+     (C . t)
+     (python . t)
+     (shell . t)))
+
+  ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
+  ;; Always redisplay inline images after executing SRC block
+  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+
+
+  (require 'color)
+
+      (set-face-attribute 'org-block nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-code nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-quote nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 3))
+    (set-face-attribute 'org-block-begin-line nil :background
+                        "#F1E6F8")
+    (set-face-attribute 'org-block-end-line nil :background
+                        (color-darken-name
+                         (face-attribute 'default :background) 4))
+    (set-face-attribute 'outline-1 nil :foreground "firebrick")
+  (set-face-attribute 'org-level-1 nil :height 1.1)
+  (set-face-attribute 'outline-2 nil :foreground "purple2")
+  (set-face-attribute 'outline-3 nil :foreground "violetRed2")
+  (set-face-attribute 'outline-4 nil :foreground "cyan4")
+  ;; (set-face-attribute 'outline-4 nil :foreground "springgreen4")
+
+  (setq org-fontify-quote-and-verse-blocks t)
+
+  (add-hook 'org-mode-hook
+            (lambda ()
+              (electric-indent-local-mode -1)
+              (mkvoya/better-wrap)
+              (prettify-symbols-mode)
+              ;; (org-hide-properties)
+              ))
+
+
+  (use-package org-super-agenda
+    :init (org-super-agenda-mode)
+    :config
+    (setq org-super-agenda-groups
+          '((:name "Next Items"
+                   :time-grid t
+                   :tag ("NEXT" "outbox"))
+            (:name "Important"
+                   :priority "A")
+            (:name "Quick Picks"
+                   :effort< "0:30")
+            (:priority<= "B"
+                         :scheduled future
+                         :order 1)))
+    )
+  (setq org-agenda-custom-commands
+        '(("z" "Super Agenda"
+           ((agenda "" ((org-agenda-span 'day)
+                        (org-super-agenda-groups
+                         '((:name "Today" :time-grid t :date today :scheduled today :order 1)))))
+            (alltodo "" ((org-agenda-overriding-header "")
+                         (org-super-agenda-groups
+                          '((:log t)
+                            (:name "What's Next" :todo "NEXT" :time-grid t :order 1)
+                            (:name "Important" :priority "A" :order 6)
+                            (:name "Due Today" :deadline today :order 2)
+                            (:name "Scheduled Soon" :scheduled future :order 8)
+                            (:name "Due Soon" :deadline future :order 9)
+                            (:name "Overdue" :deadline past :order 7)
+                            (:name "Projects" :tag "Project" :order 14)
+                            ))))))))
+
+  (setq org-hide-emphasis-markers nil)      ; don’t hide markers for like *foo*
+  ;; (setq org-hide-emphasis-markers t)
+  (setq org-emphasis-alist
+        '(("*" bold)
+          ("/" italic)
+          ("_" underline)
+          ("=" org-verbatim verbatim)
+          ;; ("@" (:foreground "red" :background "black"))
+          ("&" (:foreground "red"))
+          ("~" org-code verbatim)
+          ("+"
+           (:strike-through t))))
+  ;; (use-package ov)
+  ;; (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
+  )
+
+(use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
+  :after (org)
+  )
+;; Org Cite
+(use-package oc
+  :ensure nil
+  :ensure nil
+  :after org)
+
+
+
+(use-package org-bars :ensure (:host github :repo "tonyaldon/org-bars")
+  :after (org)
+  :config (setq org-bars-with-dynamic-stars-p nil))
+
+
+(use-package org-tag-beautify
+  :disabled t
+  :custom (org-tag-beautify-data-dir "~/.emacs.d/ensure/repos/org-tag-beautify/data/")
+  :init (org-tag-beautify-mode 1))
+
+(use-package org-rainbow-tags
+  :custom
+  (org-rainbow-tags-hash-start-index 0)
+  ;; (org-rainbow-tags-extra-face-attributes '(:inverse-video t :box t :weight 'bold))
+  (org-rainbow-tags-extra-face-attributes '(:weight 'bold))
+  :hook (org-mode . org-rainbow-tags-mode))
+
+;; agenda 里面时间块彩色显示
+;; From: https://emacs-china.org/t/org-agenda/8679/3
+(defun my:org-agenda-time-grid-spacing ()
+  "Set different line spacing w.r.t. time duration."
+  (save-excursion
+    (let* ((background (alist-get 'background-mode (frame-parameters)))
+           (background-dark-p (string= background "dark"))
+           (colors (if background-dark-p
+                       (list "#aa557f" "DarkGreen" "DarkSlateGray" "DarkSlateBlue")
+                     (list "#F6B1C3" "#FFCF9D" "#BEEB9F" "#ADD5F7")))
+           pos
+           duration)
+      (nconc colors colors)
+      (goto-char (point-min))
+      (while (setq pos (next-single-property-change (point) 'duration))
+        (goto-char pos)
+        (when (and (not (equal pos (point-at-eol)))
+                   (setq duration (org-get-at-bol 'duration)))
+          (let ((line-height (if (< duration 30) 1.0 (+ 0.5 (/ duration 60))))
+                (ov (make-overlay (point-at-bol) (1+ (point-at-eol)))))
+            (overlay-put ov 'face `(:background ,(car colors)
+                                                :foreground
+                                                ,(if background-dark-p "black" "white")))
+            (setq colors (cdr colors))
+            (overlay-put ov 'line-height line-height)
+            (overlay-put ov 'line-spacing (1- line-height))))))))
+
+(add-hook 'org-agenda-finalize-hook #'my:org-agenda-time-grid-spacing)
+(setq org-agenda-start-with-log-mode t)
+
+(font-lock-add-keywords
+ 'org-mode
+ '(("^[[:space:]]*\\(-\\) "
+    (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+
+(use-package org-transclusion
+  :ensure (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
+  :after (org org-modern)
+  :hook (org-mode . org-transclusion-mode)
+  :config
+  ;; (setq org-transclusion-fringe-bitmap 'empty-line)
+  (setq org-transclusion-fringe-bitmap 'right-triangle)
+  (set-face-attribute
+   'org-transclusion-fringe nil
+   :foreground "blue"
+   :background "orange")
+  (set-face-attribute
+   'org-transclusion-source-fringe nil
+   :foreground "lightblue"
+   :background "blue")
+  (require 'org-transclusion-indent-mode)
+  )
+;; :bind (("<f12>" . #'org-transclusion-add))
+;; ("C-n t" . #'org-transclusion-mode)
+
+
+(use-package websocket :defer t)
+(use-package simple-httpd :defer t)
+(use-package org-roam
+  :ensure t
+  :custom
+  (org-roam-directory (file-truename "~/Dropbox/Dreams/Org/"))
+  ;; (org-roam-dailies-directory "Journals/")
+  ;; (org-roam-dailies-capture-templates '(("d" "default" entry
+  ;;                                        "* %<%H:%M>: %?"
+  ;;                                        :target (file+datetree "LatestJournal.org" week))))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n g" . org-roam-graph)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n c" . org-roam-capture)
+         )
+  :config
+  ;; If you're using a vertical completion framework, you might want a more informative completion interface
+  (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+  (org-roam-db-autosync-mode)
+  ;; If using org-roam-protocol
+  (require 'org-roam-protocol)
+  )
+(use-package org-journal
+  :ensure t
+  :after (bind-key)
+  :bind (("C-c j" . org-journal-open-current-journal-file)
+         ("C-c J" . org-journal-new-entry))
+  :config
+  (bind-key "C-c s" 'org-journal-search-forever org-journal-mode-map)
+  (unbind-key "C-c C-s" org-journal-mode-map)
+  (setq org-journal-file-format "%Y-%m-%d-w%V.org")
+  (setq org-journal-enable-agenda-integration t)
+  (setq org-journal-file-type 'weekly)
+  (setq org-journal-dir "~/Dropbox/Dreams/Org/Journals/"
+        org-journal-date-format "%A, %d %B %Y")
+
+  ;; org capture integration
+  (defun org-journal-find-location ()
+    ;; Open today's journal, but specify a non-nil prefix argument in order to
+    ;; inhibit inserting the heading; org-capture will insert the heading.
+    (org-journal-new-entry t)
+    (unless (eq org-journal-file-type 'daily)
+      (org-narrow-to-subtree))
+    (goto-char (point-max)))
+  (defvar org-journal--date-location-scheduled-time nil)
+
+  (defun org-journal-date-location (&optional scheduled-time)
+    (let ((scheduled-time (or scheduled-time (org-read-date nil nil nil "Date:"))))
+      (setq org-journal--date-location-scheduled-time scheduled-time)
+      (org-journal-new-entry t (org-time-string-to-time scheduled-time))
+      (unless (eq org-journal-file-type 'daily)
+        (org-narrow-to-subtree))
+      (goto-char (point-max))))
+
+  (defun transform-square-brackets-to-round-ones(string-to-transform)
+    "Transforms [ into ( and ] into ), other chars left unchanged."
+    (concat
+     (mapcar #'(lambda (c) (if (equal c ?\[) ?\( (if (equal c ?\]) ?\) c))) string-to-transform))
+    )
+  (setq org-capture-templates
+        `(("i" "Inbox" entry  (file "inbox.org")
+           ,(concat "* TODO %?\n"
+                    "/Entered on/ %U"))
+          ("j" "Journal entry" plain (function org-journal-date-location)
+           "** TODO %?\n <%(princ org-journal--date-location-scheduled-time)>\n"
+           :jump-to-captured t)
+          ("J" "Journal entry" plain (function org-journal-find-location)
+           "** %(format-time-string org-journal-time-format)%^{Title}\n%i%?"
+           :jump-to-captured t :immediate-finish t)
+          ("c" "Captured" entry (file "capture.org")
+           "* %t %:description\nlink: %l \n\n%i\n" :prepend t :empty-lines-after 1)
+          ("n" "Captured Now!" entry (file "capture.org")
+           "* %t %:description\nlink: %l \n\n%i\n" :prepend t :emptry-lines-after 1 :immediate-finish t)
+          ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+           "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+          ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+           "* %? [[%:link][%(transform-square-brackets-to-round-ones \"%:description\")]]\n")
+          ("w" "Web site" entry
+           (file "webpages.org")
+           "* %a :website:\n\n%U %?\n\n%:initial")
+          )
+        )
+  )
+
+;; Add CREATED property when creating an entry
+(defun mk/org-add-created-property ()
+  (org-id-get-create)
+  (org-set-property "CREATED" (format-time-string (org-time-stamp-format t t)))
+  )
+(add-hook 'org-insert-heading-hook #'mk/org-add-created-property)
+;; Add today as the default scheduled date when turning into TODO
+(defun mk/org-set-scheduled-today ()
+  (when (and (string= org-state "TODO")
+             (not (org-entry-get nil "SCHEDULED")))
+    (org-schedule nil (format-time-string "%Y-%m-%d"))))
+(defun mk/org-set-next-activation ()
+  (when (and (string= (org-get-todo-state) "NEXT")
+             (not (org-entry-get nil "ACTIVATED")))
+    (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
+(add-hook 'org-after-todo-state-change-hook #'mk/org-set-scheduled-today)
+(add-hook 'org-after-todo-state-change-hook #'mk/org-set-next-activation)
+
+
+(use-package org-roam-ui
+  :ensure
+  (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  :after org-roam
+  ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
+  ;;         a hookable mode anymore, you're advised to pick something yourself
+  ;;         if you don't care about startup time, use
+  ;;  :hook (elpaca-after-init . org-roam-ui-mode)
+  :config
+  (setq org-roam-ui-sync-theme t
+        org-roam-ui-follow t
+        org-roam-ui-update-on-save t
+        org-roam-ui-open-on-start t))
+
+(use-package org-capture
+  :ensure nil
+  :config
+  (defvar mk/org-capture-people-path)
+  (defun mk/org-capture-people ()
+    (interactive)
+    (format "* %s\n%%?" (read-string "姓名: " nil))
+    )
+  (setq org-capture-templates
+        '(("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
+           #'mk/org-capture-people
+           )
+          ("r" "New Research Snippet" entry (file+headline "~/Dropbox/Dreams/Research/Snippets.org" "Research Snippets")
+           "* %?\n%i %a"
+           )
+          ))
+  )
+(use-package consult-notes
+  :ensure (:type git :host github :repo "mclear-tools/consult-notes")
+  :commands (consult-notes
+             consult-notes-search-in-all-notes)
+  :bind ("C-c d f" . consult-notes)
+  :config
+  (setq consult-notes-sources
+        '(("denote"          ?d "~/Dropbox/Dreams/Org")
+          ("People"          ?d "~/Dropbox/Dreams/Org/People")
+          ))
+  )
+
+
+
+(use-package ox-html
+  :ensure nil
+  :after (org)
+  :defer t
+  :config
+  ;; Org export code style
+  (setq org-html-htmlize-output-type 'css)
+  (setq org-src-preserve-indentation nil)
+  (setq-default org-html-doctype "html5")
+  (setq-default org-html-html5-fancy t)
+  (setq org-html-validation-link nil)
+
+  ;; https://emacs.stackexchange.com/a/3512/30542
+  (defun my-org-inline-css-hook (exporter)
+    "Insert custom inline css"
+    (when (eq exporter 'html)
+      (let* ((dir (ignore-errors (file-name-directory (buffer-file-name))))
+             (path (concat dir "style.css"))
+             (homestyle (or (null dir) (null (file-exists-p path))))
+             (final (if homestyle "~/.emacs.d/misc/ox-html-code-style.css" path)))
+        (setq org-html-head-include-default-style t)
+        (setq org-html-head (concat
+                             "<style type=\"text/css\">\n"
+                             "<!--/*--><![CDATA[/*><!--*/\n"
+                             (with-temp-buffer
+                               (insert-file-contents final)
+                               (buffer-string))
+                             "/*]]>*/-->\n"
+                             "</style>\n")))))
+
+  (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
+
+    ;;; Add summary support, from Sachachua
+  (setq org-babel-exp-code-template "#+begin_src %lang%switches%flags :summary %summary\n%body\n#+end_src")
+  (defun my-org-html-src-block (src-block _contents info)
+    (let* ((result (org-html-src-block src-block _contents info))
+           (block-info
+            (org-with-point-at (org-element-property :begin src-block)
+              (org-babel-get-src-block-info)))
+           (summary (assoc-default :summary (elt block-info 2))))
+      (if (member summary '("%summary" ""))
+          result
+        (format "<details><summary>%s</summary>%s</details>"
+                summary
+                result))))
+  (with-eval-after-load 'ox-html
+    (map-put!
+     (org-export-backend-transcoders (org-export-get-backend 'html))
+     'src-block 'my-org-html-src-block))
+  )
+
+
+
+(use-package ox-twbs
+  :after ox-html
+  :config
+  (defun my-org-html-src-block2 (src-block _contents info)
+    (let* ((result (org-twbs-src-block src-block _contents info))
+           (block-info
+            (org-with-point-at (org-element-property :begin src-block)
+              (org-babel-get-src-block-info)))
+           (summary (assoc-default :summary (elt block-info 2))))
+      (if (member summary '("%summary" ""))
+          result
+        (format "<details><summary>%s</summary>%s</details>"
+                summary
+                result))))
+  (with-eval-after-load 'ox-twbs
+    (map-put!
+     (org-export-backend-transcoders (org-export-get-backend 'twbs))
+     'src-block 'my-org-html-src-block2))
+  )
+
+;; Paste Image From https://emacs-china.org/t/topic/6601/4
+(defun org-insert-image ()
+  "Insert a image from clipboard."
+  (interactive)
+  (let* ((buf-name (if (and (fboundp 'denote-file-is-note-p)
+                            (fboundp 'denote-retrieve-filename-identifier)
+                            (denote-file-is-note-p (buffer-file-name)))
+                       (denote-retrieve-filename-identifier (buffer-name))
+                     (buffer-name)))
+         (insert-image-pos (second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
+         (path (cond ((equal insert-image-pos "default-directory") ; default-directory
+                      default-directory)
+                     ((and insert-image-pos (not (equal insert-image-pos "nil"))) ; user-specified
+                      insert-image-pos)
+                     (t (concat default-directory ; default
+                                buf-name
+                                ".assets/"))))
+         (image-file (concat
+                      path
+                      buf-name
+                      (format-time-string "_%Y%m%d_%H%M%S.png"))))
+    (if (not (file-exists-p path))
+        (mkdir path))
+    (do-applescript (concat
+                     "set the_path to \"" image-file "\" \n"
+                     "set png_data to the clipboard as «class PNGf» \n"
+                     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
+                     "write png_data to the_file \n"
+                     "close access the_file"))
+    ;; (shell-command (concat "pngpaste " image-file))
+    (org-insert-link nil
+                     (concat "file:" image-file)
+                     "")
+    (message image-file))
+  (org-display-inline-images)
+  )
+
+(use-package ox-pandoc)
+
+(use-package org-timeline
+  :after org
+  :config
+  (add-hook 'org-agenda-finalize-hook 'org-timeline-insert-timeline :append)
+  )
+
+;; * Org Babel
+(defun org-babel-C-execute/filter-args (args)
+  (when-let* ((params (cadr args))
+              (stdin (cdr (assoc :stdin params)))
+              (res (org-babel-ref-resolve stdin))
+              (stdin (org-babel-temp-file "c-stdin-")))
+    (with-temp-file stdin (insert res))
+    (let* ((cmdline (assoc :cmdline params))
+           (cmdline-val (or (cdr cmdline) "")))
+      (when cmdline (setq params (delq cmdline params)))
+      (setq params
+            (cons (cons :cmdline (concat cmdline-val " <" stdin))
+                  params))
+      (setf (cadr args) params)))
+  args)
+
+(with-eval-after-load 'ob-C
+  (advice-add 'org-babel-C-execute :filter-args
+              #'org-babel-C-execute/filter-args))
+
+
+
+(defun mk/org-archive-to-specified-file ()
+  "Archive the current org entry to a user-specified file."
+  (interactive)
+  (let ((file (read-file-name "Archive to file: ")))
+    (let ((org-archive-location (concat file "::")))
+      (org-archive-subtree))
+    (message "Archived to %s" file)))
+
+
+(use-package ox-hugo
+  :after ox
+  :init
+  (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
+    (async-shell-command "cd ~/Dropbox/Public/Blog2025 && hugo -D && rsync -rvP ~/Dropbox/Public/Blog2025/public/ dong.mk:/srv/http/blog"))
+  (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
+  :config
+
+  ;; Populates only the EXPORT_FILE_NAME property in the inserted heading.
+  (with-eval-after-load 'org-capture
+    (defun org-hugo-new-subtree-post-capture-template ()
+      "Returns `org-capture' template string for new Hugo post.
+          See `org-capture-templates' for more information."
+      (let* ((date (format-time-string (org-time-stamp-format :long :inactive) (org-current-time)))
+             (title (read-from-minibuffer "Post Title: ")) ;Prompt to enter the post title
+             (fname (org-hugo-slug title)))
+        (mapconcat #'identity
+                   `(
+                     ,(concat "* " title)
+                     ":PROPERTIES:"
+                     ,(concat ":ID:       " (org-id-new))
+                     ,(concat ":CREATED:  " (format-time-string (org-time-stamp-format t t)))
+                     ,(concat ":EXPORT_FILE_NAME: " fname)
+                     ,(concat ":EXPORT_DATE: " date)
+                     ":END:"
+                     "%?\n")          ;Place the cursor here finally
+                   "\n")))
+
+    (add-to-list 'org-capture-templates
+                 '("h"                ;`org-capture' binding + h
+                   "Hugo post"
+                   entry
+                   (file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
+                   (function org-hugo-new-subtree-post-capture-template))))
+  (defun mk/org-new-post ()
+    (interactive)
+    (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
+    (let ((content (org-hugo-new-subtree-post-capture-template)))
+      (goto-char (point-max))
+      (insert "\n")
+      (insert content)
+      )
+    )
+  )
+
+
+(setq org-modern-fold-stars
+      '(("◉" . "○") ("◈" . "◇") ("⯈" . "⯆") ("◉" . "○") ("◈" . "◇")))
+
+(use-package emacs
+  :ensure nil
+  ;; :disabled t
+  :after (org org-ql)
+  :init
+  (load-file "~/.emacs.d/site-lisp/org-timeliner.el")
+  ;; (setq-default header-line-format
+  ;;               '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"
+  ;;                 " " (:eval (timeliner-get-string))))
+  (setq-default header-line-format
+                '("" (:eval (timeliner-get-string))))
+
+  (defun my-set-header-line-height-px (pixels)
+    "Set the `header-line` face height to exactly PIXELS in current frame.
+         PIXELS is the desired height in physical pixels."
+    (let* ((char-px (frame-char-height)) ; 当前字体一个字符的像素高度
+           ;; Emacs face :height 100 = 默认字体大小
+           ;; 计算比例（百分比）
+           (percent (truncate (* 100 (/ (float pixels) char-px)))))
+      (set-face-attribute 'header-line nil
+                          :height percent
+                          :foreground nil
+                          :background nil
+                          :box nil)
+      (set-face-attribute 'header-line-inactive nil
+                          :foreground nil
+                          :background nil
+                          :height percent
+                          :box nil
+                          :underline nil)))
+
+  ;; 用法示例：把 header-line 高度设为 20 像素
+  (add-hook 'elpaca-after-init-hook (lambda ()
+                                      (my-set-header-line-height-px 3)))
+  )
+
+(use-package org-timeblock
+  :ensure (org-timeblock :type git
+                         :host github
+                         :repo "ichernyshovvv/org-timeblock"))
+(use-package org-analyzer)
+
+(use-package nov)
+(use-package djvu)
+(use-package org-noter
+  :ensure (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
+  :after (nov djvu)
+  )
+
+(use-package org-zettel-ref-mode
+  :disabled t
+  :ensure (:host github :repo "yibie/org-zettel-ref-mode" :files ("*"))
+  :init
+  (setq org-zettel-ref-overview-directory "~/Dropbox/Dreams/Org/orgzet/source-note/")
+  :config
+  ;; (setq org-zettel-ref-mode-type 'denote)
+  (setq org-zettel-ref-mode-type 'org-roam)
+  ;; (setq org-zettel-ref-mode-type 'normal)
+  (setq org-zettel-ref-python-file "~/.emacs.d/ensure/repos/org-zettel-ref-mode/convert-to-org.py")
+  (setq org-zettel-ref-temp-folder "/Volumes/ramfs/convert/")
+  (setq org-zettel-ref-reference-folder "~/Dropbox/Dreams/Org/orgzet/ref/")
+  (setq org-zettel-ref-archive-folder "~/Dropbox/Dreams/Org/orgzet/archives/")
+  (setq org-zettel-ref-debug t)
+  (setq org-zettel-ref-python-environment 'system)
+  (defun mk/org-get-webpage ()
+    "Retrive a web page from a given url and save it to the temp-folder. Then call org-zettel-run-python-script to convert it to org-mode format."
+    (interactive)
+    (let ((url (read-string "URL: ")))
+      (call-process "curl" nil 0 nil "-o" (concat org-zettel-ref-temp-folder "webpage.html") url)
+      (org-zettel-run-python-script)
+      )
+    )
+  )
+(defun download-webpage-and-rename (url)
+  "Download webpage from URL and rename the file to the webpage title."
+  (interactive "sEnter URL: ")
+  (url-retrieve
+   url
+   (lambda (status)
+     (if (plist-get status :error)
+         (message "Failed to retrieve URL: %s" (plist-get status :error))
+       (goto-char (point-min))
+       (re-search-forward "<title>\\(.*?\\)</title>" nil t)
+       (let ((title (match-string 1))
+             (filename (concat (make-temp-file "webpage-" nil ".html"))))
+         (write-region (point-min) (point-max) filename)
+         (rename-file filename (concat title ".html") t)
+         (message "Downloaded and saved as %s.html" title))))))
+(use-package org-web-tools)
+
+
+(defun how-many-str (regexp str)
+  (cl-loop with start = 0
+           for count from 0
+           while (string-match regexp str start)
+           do (setq start (match-end 0))
+           finally return count))
+(defun how-many-checked (str)
+  (+ (how-many-str "\\[[^[:blank:]]\\]" str)
+     (how-many-str "([^[:blank:]])" str)))
+(defun how-many-unchecked (str)
+  (+ (how-many-str "\\[ \\]" str)
+     (how-many-str "( )" str)))
+(defun mk/org-columns--summary-pomodoro-count (check-boxes _)
+  "Summarize pomodoro CHECK-BOXES with a check-box cookie."
+  (let ((checked (cl-reduce '+ (cl-mapcar #'how-many-checked check-boxes)))
+        (unchecked (cl-reduce '+ (cl-mapcar #'how-many-unchecked check-boxes))))
+    (format "[%d/%d]" checked (+ checked unchecked))))
+(setq org-columns-summary-types
+      '(("P/" . mk/org-columns--summary-pomodoro-count))
+      )
+(defun mk/org-clocking-on-state-change ()
+  "Auto clock-in/-out when state changes."
+  (unless (string= org-last-state org-state)
+    (cond
+     ((string= org-state "ONGOING")
+      (org-clock-in))
+     ((string= org-last-state "ONGOING")
+      (org-clock-out)
+      ))))
+(add-hook 'org-after-todo-state-change-hook #'mk/org-clocking-on-state-change)
+
+(use-package define-word)
+
+(use-package org-download :defer)
+(use-package org-sidebar :defer t)
+
+(provide 'config-org)
