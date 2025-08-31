@@ -1,5 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 (require 'org)
+(require 'org-agenda)
+(require 'org-ql)
 (require 'svg)
 
 (defvar timeliner-start-hour 4 "The hour of the day to start the timeline.")

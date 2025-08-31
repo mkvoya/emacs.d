@@ -148,3 +148,23 @@
 
     (global-lsp-bridge-mode))
 #+END_SRC
+
+
+
+* A list of interesting packges
+
+  | infinite | https://github.com/andreyorst/infinite.el |
+  | eee | https://github.com/eval-exec/eee.el |
+
+#+BEGIN_SRC emacs-lisp
+  (use-package maple-explorer :disabled t)
+  (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
+  (use-package explain-pause-mode :disabled t)
+  (use-package keystrokes :disabled t
+    :ensure (:type git :host gitlab :repo "marcowahl/keystrokes"))
+  (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
+  (use-package elgantt :disabled t
+    :ensure (:type git :host github :repo "legalnonsense/elgantt"))
+  (use-package paper :disabled t
+    :ensure (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
+#+END_SRC

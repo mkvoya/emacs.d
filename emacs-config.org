@@ -22,6 +22,8 @@
           mk-feature/gui nil
           mk-feature/news-mail nil
           mk-feature/noteman nil))
+  (setq global-auto-revert-mode nil) ; hack for bug
+  (setq savehist-mode nil) ; hack for bug
 #+END_SRC
 * early-init.el
 :PROPERTIES:
@@ -287,6 +289,8 @@
           ;; Enable use-package :ensure support for Elpaca.
           (elpaca-use-package-mode))
   (elpaca-wait)
+  (use-package cua-base :ensure nil)
+  (elpaca-wait)
 #+END_SRC
 
 
@@ -353,7 +357,7 @@
    history-delete-duplicates t
    savehist-save-minibuffer-history 1
    savehist-additional-variables '(kill-ring search-ring regex-search-ring))
-  (savehist-mode 1)
+  ;; (savehist-mode 1)
   (setq-default
    ;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
    compilation-scroll-output t
@@ -504,7 +508,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
   ;; Highlight current line
   (use-package hl-line :ensure nil :hook (elpaca-after-init . global-hl-line-mode))
   ;; Remember the cursor position of files
-  (use-package saveplace :ensure nil :hook (elpaca-after-init . save-place-mode))
+  ;; (use-package saveplace :ensure nil :hook (elpaca-after-init . save-place-mode))
   (use-package so-long :ensure nil :config (global-so-long-mode 1))
 
   (use-package paren :ensure nil :config
@@ -537,8 +541,11 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
 | diff-hl | Hightlight uncommitted changes | https://github.com/dgutov/diff-hl |
 
 #+BEGIN_SRC emacs-lisp
+  (use-package cond-let
+    :ensure (:host github :repo "tarsius/cond-let"))
   (use-package magit
-    :ensure nil  ; built-in
+    ;; :disabled t
+    :ensure (:host github :repo "magit/magit")
     :after (project transient)
     :defer t
     :init
@@ -622,6 +629,7 @@ We need to setup fonts early. Or displayed characters will be rendered and cache
     (setq evil-want-fine-undo t)
     (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
     (evil-set-undo-system 'undo-fu)
+    (setq evil-symbol-word-search t)
     (use-package evil-numbers
       :demand t
       :config
@@ -1323,6 +1331,7 @@ Alternatives (Check the selectrum repo README)
     (setq flymake-no-changes-timeout 2)
     )
   (use-package jinx
+    :disabled t
     :hook (emacs-startup . global-jinx-mode)
     :bind (("C-;" . jinx-correct)
            ("C-M-;" . jinx-languages))
@@ -1407,15 +1416,16 @@ Alternatives (Check the selectrum repo README)
            (python-base-mode . mk/eglot-ensure)
            )
     :config
-    (add-to-list 'eglot-server-programs
-               '(LaTeX-mode . ("texlab")))
+    (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
+    (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
+    (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
     )
   (use-package eldoc-box :after eglot
     :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode)
                                           ;(eglot-managed-mode . eldoc-box-hover-mode)
     :custom (eldoc-box-clear-with-C-g t)
-    (eldoc-box-offset 1)
-    :config (add-to-list 'eldoc-box-frame-parameters '(alpha . 0.80))
+    ;; (eldoc-box-offset 1)
+    :config (add-to-list 'eldoc-box-frame-parameters '(alpha . 0.90))
     )
   (use-package eglot-x :ensure (:host github :repo "nemethf/eglot-x")
     :after eglot
@@ -3625,23 +3635,7 @@ Scrolling
                   "\\|iso\\|epub\\|pdf\\)"))
     )
 #+end_src
-* A list of interesting packges
 
-  | infinite | https://github.com/andreyorst/infinite.el |
-  | eee | https://github.com/eval-exec/eee.el |
-
-#+BEGIN_SRC emacs-lisp
-  (use-package maple-explorer :disabled t)
-  (use-package org-real :disabled t) ; https://gitlab.com/tygrdev/org-real
-  (use-package explain-pause-mode :disabled t)
-  (use-package keystrokes :disabled t
-    :ensure (:type git :host gitlab :repo "marcowahl/keystrokes"))
-  (use-package ns-auto-titlebar :disabled t)  ; We used a better patch.
-  (use-package elgantt :disabled t
-    :ensure (:type git :host github :repo "legalnonsense/elgantt"))
-  (use-package paper :disabled t
-    :ensure (:host github :repo "ymarco/paper-mode" :files("*.el" "*.so")))
-#+END_SRC
 
 * Misc major modes
 
@@ -3656,9 +3650,21 @@ Scrolling
   (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
   (use-package vue-mode :mode "\\.vue\\'" :defer t)
   ;; Python Support
-  (use-package elpy :defer t)
-  (use-package py-autopep8 :defer t :config (setq py-autopep8-options '("--max-line-length=120")))
-  (use-package blacken :defer t :config (setq blacken-line-length 120))
+  (use-package flymake-ruff
+    :ensure (flymake-ruff :type git :host github :repo "erickgnavar/flymake-ruff")
+    :hook (eglot-managed-mode . flymake-ruff-load)
+    :config
+
+    ;; (defun my-filter-eglot-diagnostics (diags)
+    ;;   "Drop Pyright 'variable not accessed' notes from DIAGS."
+    ;;   (list (seq-remove (lambda (d)
+    ;;                       (and (eq (flymake-diagnostic-type d) 'eglot-note)
+    ;;                            (s-starts-with? "Pyright:" (flymake-diagnostic-text d))
+    ;;                            (s-ends-with? "is not accessed" (flymake-diagnostic-text d))))
+    ;;                     (car diags))))
+    ;; (advice-add 'eglot--report-to-flymake :filter-args #'my-filter-eglot-diagnostics)
+    )
+
   (use-package ein :defer t)
   (use-package live-py-mode :defer t)
   ;; Markdown Support
@@ -3717,6 +3723,9 @@ Scrolling
 
     (setq aidermacs-auto-commits t)
     (setq aidermacs-use-architect-mode nil))
+
+  (use-package eca
+    :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el")))
 #+end_src
 
 
@@ -4015,33 +4024,53 @@ Publish & Blog
 * Org-timeliner
 
 #+BEGIN_SRC emacs-lisp
-  (load-file "~/.emacs.d/site-lisp/org-timeliner.el")
-  ;; (setq-default header-line-format
-  ;;               '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"
-  ;;                 " " (:eval (timeliner-get-string))))
-  (setq-default header-line-format
-                '("" (:eval (timeliner-get-string))))
+  (use-package emacs
+    :ensure nil
+    ;; :disabled t
+    :after (org org-ql)
+    :init
+    (load-file "~/.emacs.d/site-lisp/org-timeliner.el")
+    ;; (setq-default header-line-format
+    ;;               '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"
+    ;;                 " " (:eval (timeliner-get-string))))
+    (setq-default header-line-format
+                  '("" (:eval (timeliner-get-string))))
 
-  (defun my-set-header-line-height-px (pixels)
-    "Set the `header-line` face height to exactly PIXELS in current frame.
-       PIXELS is the desired height in physical pixels."
-    (let* ((char-px (frame-char-height)) ; 当前字体一个字符的像素高度
-           ;; Emacs face :height 100 = 默认字体大小
-           ;; 计算比例（百分比）
-           (percent (truncate (* 100 (/ (float pixels) char-px)))))
-      (set-face-attribute 'header-line nil
-                          :height percent
-                          :foreground nil
-                          :background nil
-                          :box nil)
-      (set-face-attribute 'header-line-inactive nil
-                          :foreground nil
-                          :background nil
-                          :height percent
-                          :box nil
-                          :underline nil)))
+    (defun my-set-header-line-height-px (pixels)
+      "Set the `header-line` face height to exactly PIXELS in current frame.
+         PIXELS is the desired height in physical pixels."
+      (let* ((char-px (frame-char-height)) ; 当前字体一个字符的像素高度
+             ;; Emacs face :height 100 = 默认字体大小
+             ;; 计算比例（百分比）
+             (percent (truncate (* 100 (/ (float pixels) char-px)))))
+        (set-face-attribute 'header-line nil
+                            :height percent
+                            :foreground nil
+                            :background nil
+                            :box nil)
+        (set-face-attribute 'header-line-inactive nil
+                            :foreground nil
+                            :background nil
+                            :height percent
+                            :box nil
+                            :underline nil)))
 
-  ;; 用法示例：把 header-line 高度设为 20 像素
-  (my-set-header-line-height-px 3)
-
+    ;; 用法示例：把 header-line 高度设为 20 像素
+    (add-hook 'elpaca-after-init-hook (lambda ()
+                                        (my-set-header-line-height-px 3)))
+    )
 #+END_SRC
+
+
+#+begin_src emacs-lisp
+  (use-package ekp
+    :disabled
+    :ensure (:type git :host github :repo "Kinneyzhang/emacs-kp" :files ("*")))
+  (use-package etml
+    :disabled
+    :ensure (:type git :host github :repo "Kinneyzhang/ETML")
+    :after (ekp))
+  (use-package bug-hunter
+    :ensure (:type git :host github :repo "Malabarba/elisp-bug-hunter"))
+#+end_src
+
