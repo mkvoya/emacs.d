@@ -17,6 +17,13 @@
   (setq doom-modeline-time t)
   (setq doom-modeline-time-icon t)
   (setq doom-modeline-time-live-icon t)
+  (setq doom-modeline-time-analogue-clock t)
+  (setq doom-modeline-time-clock-size 0.7)
+
+  (setq doom-modeline-percent-position '(-3 "%p"))
+  (setq doom-modeline-position-column-line-format '("%l:%c"))
+
+
 
   (setq doom-modeline-minor-modes nil)
 
@@ -30,6 +37,8 @@
   (setq doom-modeline-always-show-macro-register t)
   (setq doom-modeline-support-imenu t)
   (setq doom-modeline-bar-width 2)
+  (setq doom-modeline-hud nil)
+  (setq doom-modeline-project-detection 'auto)
 
   ;; (setq doom-modeline-window-width-limit 85)
   (setq doom-modeline-height 1) ; optional

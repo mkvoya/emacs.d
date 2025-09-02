@@ -117,6 +117,7 @@
 ;; * Calfw
 (use-package calfw
   :ensure (:host github :repo "haji-ali/emacs-calfw" :files ("*"))
+  :defer t
   :init
   (use-package calfw-org :after (org))
   (use-package calfw-blocks

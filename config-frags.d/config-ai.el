@@ -22,29 +22,6 @@
   (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
   )
 
-(use-package aidermacs
-  :ensure (:host github :repo "MatthewZMD/aidermacs" :files ("*.el"))
-  :config
-  (setq aidermacs-default-model "openai/gpt-4o")
-  (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
-  (setenv "OPENAI_API_KEY" (gptel-api-key))
-  (global-set-key (kbd "C-c k") 'aidermacs-transient-menu)
-                                        ; See the Configuration section below
-
-  (setq aidermacs-backend 'vterm)
-  (setq aidermacs-comint-multiline-newline-key "C-<return>")
-
-  (setq aidermacs-auto-commits t)
-  (setq aidermacs-use-architect-mode nil))
-
-(use-package eca
-  :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el"))
-  :config
-  (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
-  (setenv "OPENAI_API_KEY" (gptel-api-key))
-  )
-
-
 (use-package elysium
   :ensure
   (:host github :repo "lanceberge/elysium" :branch "master" :files ("*.el"))

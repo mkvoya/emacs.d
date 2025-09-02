@@ -240,7 +240,7 @@
 
 ;; * biblio: |Lookup & import bib |
 (use-package biblio
-  :defer
+  :defer t
   :init
 
   (setq biblio-arxiv-bibtex-header "misc")

@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: Custom Key Bindings
 
-(require 'consult)
+;; (require 'consult)
 (defun mk/live-search-config-frags ()
   "Live search in ~/.emacs.d/config-frags.d/ using consult-ripgrep.
 If nothing is entered, open config-misc.el."

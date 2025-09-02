@@ -108,8 +108,7 @@
   :ensure (image-slicing :type git
                          :host github
                          :repo "ginqi7/image-slicing")
-  :config
-  )
+  :defer t)
 
 ;; (use-package org-sliced-images
 ;;   :ensure t

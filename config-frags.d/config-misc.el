@@ -82,4 +82,10 @@
 (use-package xkcd :defer)
 (use-package all-the-icons)
 
+
+(use-package nyan-mode
+  :ensure (:repo "TeMPOraL/nyan-mode")
+  )
+
+
 (provide 'config-misc)

@@ -21,6 +21,7 @@
   )
 (use-package xwidget-apps
   :after (websocket)
+  :defer t
   :ensure nil
   :load-path "~/.emacs.d/site-lisp/xwidget-apps/"
   :config
@@ -37,7 +38,6 @@
          30 30
          '(lambda()
             (emacs-badge-update (format "%s" (mk/count-today-todos))))))
-
   )
 
 

@@ -8,6 +8,7 @@
                 :host github
                 :repo "DogLooksGood/emacs-rime"
                 :files ("*.el" "Makefile" "lib.c"))
+  :defer t
   :custom
   (default-input-method "rime")
   (rime-librime-root "~/.emacs.d/librime/dist")
@@ -44,15 +45,12 @@
 (use-package emt
   :ensure (:host github :repo "roife/emt"
                  :files ("*.el" "module/*" "module"))
+  :after (evil)
   :hook (elpaca-after-init . emt-mode)
   :config
   (define-key evil-motion-state-map (kbd "w") #'emt-forward-word)
   (define-key evil-motion-state-map (kbd "b") #'emt-backward-word)
   )
 
-;; * Super Alignment
-(use-package valign :disabled t ; org-modern has this feature (and they conflict)
-  :hook (org-mode . valign-mode)
-  )
 
 (provide 'config-cjk)
