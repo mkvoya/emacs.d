@@ -239,6 +239,8 @@
   :after org)
 
 
+(use-package websocket :defer t)
+(use-package simple-httpd :defer t)
 
 (use-package org-bars :ensure (:host github :repo "tonyaldon/org-bars")
   :after (org)

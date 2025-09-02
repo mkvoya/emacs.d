@@ -76,11 +76,6 @@
   (advice-add #'register-preview :override #'consult-register-window)
   )
 
-;; (use-package all-the-icons-completion
-;;   :after (all-the-icons marginalia)
-;;   :init
-;;   (all-the-icons-completion-mode)
-;;   (add-hook 'marginalia-mode-hook #'all-the-icons-completion-marginalia-setup))
 
 (use-package embark
   :demand
