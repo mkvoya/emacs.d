@@ -2,7 +2,8 @@
 ;;; Emacs Config Fragement: Org Mode
 
 ;; | appt | MELPA, Appointment package |
-;; Enable Org mode
+
+;; * Org mode
 (use-package org
   :after (bind-key)
   :ensure nil
@@ -10,13 +11,94 @@
   :mode ("\\.org\\'" . org-mode)
   :bind (("C-c a" . #'org-agenda)
          ("C-c c" . #'org-capture)
+         ("C-c C-o" . #'org-open-maybe) ; Redefine file opening without clobbering universal argument
          )
+  :hook ((org-insert-heading . mk/org-add-created-property) ; Add CREATED property when creating an entry
+         (org-after-todo-state-change . mk/org-set-scheduled-today)
+         (org-after-todo-state-change . mk/org-set-next-activation)
+         (org-after-todo-state-change . mk/org-clocking-on-state-change)
+         (org-mode . mk/org-syntax-table-modify) ; Modify syntax table
+         (org-mode . mk/org-show-link-when-idle)
+         (org-babel-after-execute . org-redisplay-inline-images) ; Always redisplay inline images after executing SRC block
+
+  )
   :init
+
+  ;; Hook functions
+
+  (defun mk/org-add-created-property ()
+    "Record creation time."
+    (org-id-get-create)
+    (org-set-property "CREATED" (format-time-string (org-time-stamp-format t t))))
+
+  (defun mk/org-set-scheduled-today ()
+    "Add today as the default scheduled date when turning into TODO."
+    (when (and (string= org-state "TODO")
+               (not (org-entry-get nil "SCHEDULED")))
+      (org-schedule nil (format-time-string "%Y-%m-%d"))))
+
+  (defun mk/org-set-next-activation ()
+    (when (and (string= (org-get-todo-state) "NEXT")
+               (not (org-entry-get nil "ACTIVATED")))
+      (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
+
+  (defun mk/org-syntax-table-modify ()
+    "Modify `org-mode-syntax-table' for the current org buffer."
+    (modify-syntax-entry ?< "." org-mode-syntax-table)
+    (modify-syntax-entry ?> "." org-mode-syntax-table))
+
+  (defun mk/org-show-link-when-idle()
+    "在echo area中显示链接详情"
+    (require 'help-at-pt)
+    (setq help-at-pt-display-when-idle t) ;; 不会立即生效
+    (setq help-at-pt-timer-delay 0.5)
+    (help-at-pt-set-timer)) ;; 调用才会生效
+
+  ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
+  (defun org-force-open-current-window ()
+    "Open at current window."
+    (interactive)
+    (let ((org-link-frame-setup (quote
+                                 ((vm . vm-visit-folder)
+                                  (vm-imap . vm-visit-imap-folder)
+                                  (file . find-file)
+                                  (wl . wl)))
+                                ))
+      (org-open-at-point)))
+
+  ;; Depending on universal argument try opening link
+  (defun org-open-maybe (&optional arg)
+    "Open maybe ARG."
+    (interactive "P")
+    (if arg (org-open-at-point)
+      (org-force-open-current-window)))
+
+  (defun mk/org-clocking-on-state-change ()
+    "Auto clock-in/-out when state changes."
+    (unless (string= org-last-state org-state)
+      (cond
+       ((string= org-state "ONGOING")
+        (org-clock-in))
+       ((string= org-last-state "ONGOING")
+        (org-clock-out)
+        ))))
+
+  :config
+
+  ;; simple use-packages
+  ;; don't remember these packages, re-enable if necessary.
+  ;; (use-package org-contrib :ensure (:host github :repo "emacsmirror/org-contrib"))
+  ;; (use-package org-inline-pdf :defer t)
+
+  (add-to-list 'org-modules 'org-protocol)
+  (require 'org-protocol)
+
+
   ;; (setq org-latex-create-formula-image-program 'dvisvgm)
   ;; According to https://orgmode.org/manual/Hard-indentation.html#Hard-indentation
   ;; But I don't need the odd levels only
-  (setq org-adapt-indentation t
-        org-hide-leading-stars t)
+  (setq org-adapt-indentation t)
+  (setq org-hide-leading-stars t)
   ;;org-odd-levels-only t
   (setq org-startup-indented t) ; disable org-indent-mode for org-margin
   (setq org-latex-create-formula-image-program 'dvisvgm)
@@ -24,69 +106,18 @@
   ;; (setq org-latex-create-formula-image-program 'dvipng)
   (setq org-support-shift-select t)  ; Use shift to select region when possible.
   (setq org-clock-idle-time 10)  ; Clock will prompt to stop after 10 min of idle.
-  ;; Thanks! https://emacs.stackexchange.com/a/68321/30542
-  (defun org-syntax-table-modify ()
-    "Modify `org-mode-syntax-table' for the current org buffer."
-    (modify-syntax-entry ?< "." org-mode-syntax-table)
-    (modify-syntax-entry ?> "." org-mode-syntax-table))
-  (add-hook 'org-mode-hook #'org-syntax-table-modify)
-
-  ;; Thank https://emacs-china.org/t/org-link-echo-area-link/19927/2
-  (defun org-show-link-when-idle()
-    ;; 在echo area中显示链接详情
-    (require 'help-at-pt)
-    (setq help-at-pt-display-when-idle t) ;; 不会立即生效
-    (setq help-at-pt-timer-delay 0.5)
-    (help-at-pt-set-timer) ;; 调用才会生效
-    )
-  (add-hook 'org-mode-hook #'org-show-link-when-idle)
-
   (setq org-element-use-cache nil)  ; cache sometimes causes problems
 
-  :config
 
-  ;; simple use-packages
-  (use-package org-contrib :ensure (:host github :repo "emacsmirror/org-contrib"))
-  (use-package org-inline-pdf :defer t)
-  (use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
-    :init
-    (setq
-     ;; Edit settings
-     org-auto-align-tags nil
-     org-tags-column 0
-     org-catch-invisible-edits 'show-and-error
-     org-special-ctrl-a/e t
-     org-insert-heading-respect-content t
-     ;; Org styling, hide markup etc.
-     org-hide-emphasis-markers t
-     org-pretty-entities t)
-    ;; Agenda styling
-    ;; org-agenda-tags-column 0
-    ;; org-agenda-block-separator ?─
-    ;; org-agenda-time-grid
-    ;; '((daily today require-timed)
-    ;;   (800 1000 1200 1400 1600 1800 2000)
-    ;;   " ┄┄┄┄┄ " "┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄")
-    ;; org-agenda-current-time-string
-    ;; "◀── now ─────────────────────────────────────────────────"
-
-    (global-org-modern-mode)
-    ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
-    (set-face-attribute 'org-modern-todo nil :height 1)
-    (set-face-attribute 'org-modern-todo nil :weight 'light)
-
-    ;; org-modern-tag
-    (custom-set-faces
-     '(org-modern-tag
-       ((((background light)) :foreground "black" :background "#f4f4f4")
-        (((background dark))  :foreground "white" :background "#222222"))))
-
-    )
-  ;;   (setq org-agenda-span 1
-  ;; org-agenda-start-day "+0d")
-
-  (add-to-list 'org-modules 'org-protocol)
-  (require 'org-protocol)
+   ;; Edit settings
+  (setq org-auto-align-tags nil)
+  (setq org-tags-column 0)
+  (setq org-catch-invisible-edits 'show-and-error)
+  (setq org-special-ctrl-a/e t)
+  (setq org-insert-heading-respect-content t)
+   ;; Org styling, hide markup etc.
+  (setq org-hide-emphasis-markers t)
+  (setq org-pretty-entities t)
 
   ;; configs
   (setq org-directory "~/Dropbox/Dreams/Org/")
@@ -114,26 +145,6 @@
   (setq org-ellipsis "↴")
   (set-face-attribute 'org-ellipsis nil :foreground "grey86")
 
-  ;; https://stackoverflow.com/questions/17590784/how-to-let-org-mode-open-a-link-like-file-file-org-in-current-window-inste
-  (defun org-force-open-current-window ()
-    "Open at current window."
-    (interactive)
-    (let ((org-link-frame-setup (quote
-                                 ((vm . vm-visit-folder)
-                                  (vm-imap . vm-visit-imap-folder)
-                                  (file . find-file)
-                                  (wl . wl)))
-                                ))
-      (org-open-at-point)))
-
-  ;; Depending on universal argument try opening link
-  (defun org-open-maybe (&optional arg)
-    "Open maybe ARG."
-    (interactive "P")
-    (if arg (org-open-at-point)
-      (org-force-open-current-window)))
-  ;; Redefine file opening without clobbering universal argument
-  (define-key org-mode-map "\C-c\C-o" 'org-open-maybe)
 
   (org-babel-do-load-languages
    'org-babel-load-languages
@@ -142,28 +153,35 @@
      (python . t)
      (shell . t)))
 
-  ;; https://emacs.stackexchange.com/questions/3302/live-refresh-of-inline-images-with-org-display-inline-images
-  ;; Always redisplay inline images after executing SRC block
-  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+  ;; * Org Babel
+  (defun org-babel-C-execute/filter-args (args)
+    (when-let* ((params (cadr args))
+                (stdin (cdr (assoc :stdin params)))
+                (res (org-babel-ref-resolve stdin))
+                (stdin (org-babel-temp-file "c-stdin-")))
+      (with-temp-file stdin (insert res))
+      (let* ((cmdline (assoc :cmdline params))
+             (cmdline-val (or (cdr cmdline) "")))
+        (when cmdline (setq params (delq cmdline params)))
+        (setq params
+              (cons (cons :cmdline (concat cmdline-val " <" stdin))
+                    params))
+        (setf (cadr args) params)))
+    args)
+
+  (with-eval-after-load 'ob-C
+    (advice-add 'org-babel-C-execute :filter-args
+                #'org-babel-C-execute/filter-args))
 
 
   (require 'color)
 
-      (set-face-attribute 'org-block nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
-    (set-face-attribute 'org-code nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
-    (set-face-attribute 'org-quote nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 3))
-    (set-face-attribute 'org-block-begin-line nil :background
-                        "#F1E6F8")
-    (set-face-attribute 'org-block-end-line nil :background
-                        (color-darken-name
-                         (face-attribute 'default :background) 4))
-    (set-face-attribute 'outline-1 nil :foreground "firebrick")
+  (set-face-attribute 'org-block nil :background (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-code nil :background (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-quote nil :background (color-darken-name (face-attribute 'default :background) 3))
+  (set-face-attribute 'org-block-begin-line nil :background "#F1E6F8")
+  (set-face-attribute 'org-block-end-line nil :background (color-darken-name (face-attribute 'default :background) 4))
+  (set-face-attribute 'outline-1 nil :foreground "firebrick")
   (set-face-attribute 'org-level-1 nil :height 1.1)
   (set-face-attribute 'outline-2 nil :foreground "purple2")
   (set-face-attribute 'outline-3 nil :foreground "violetRed2")
@@ -179,7 +197,6 @@
               (prettify-symbols-mode)
               ;; (org-hide-properties)
               ))
-
 
   (use-package org-super-agenda
     :init (org-super-agenda-mode)
@@ -228,6 +245,20 @@
   ;; (use-package ov)
   ;; (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
   )
+
+(use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
+  :after (org)
+  :demand t
+  :defer 3
+  :config
+  ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
+  (set-face-attribute 'org-modern-todo nil :height 1)
+  (set-face-attribute 'org-modern-todo nil :weight 'light)
+  ;; org-modern-tag
+  (custom-set-faces '(org-modern-tag
+                      ((((background light)) :foreground "black" :background "#f4f4f4")
+                       (((background dark))  :foreground "white" :background "#222222"))))
+  (global-org-modern-mode))
 
 (use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
   :after (org)
@@ -316,14 +347,32 @@
 ;; ("C-n t" . #'org-transclusion-mode)
 
 
+(use-package org-capture
+  :ensure nil ; org built-in
+  :after (org)
+  :config
+  (defun mk/org-capture-people ()
+    (interactive)
+    (format "* %s\n%%?" (read-string "姓名: " nil))
+    )
+  (setq org-capture-templates
+        '(("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
+           #'mk/org-capture-people
+           )
+          ("r" "New Research Snippet" entry (file+headline "~/Dropbox/Dreams/Research/Snippets.org" "Research Snippets")
+           "* %?\n%i %a"
+           )))
+  )
+
 (use-package org-journal
   :ensure t
-  :after (bind-key)
+  :after (org)
   :bind (("C-c j" . org-journal-open-current-journal-file)
-         ("C-c J" . org-journal-new-entry))
+         ("C-c J" . org-journal-new-entry)
+         ("C-c s"  . org-journal-search-forever)
+         ("C-c C-s"  . nil) ; unbind
+         )
   :config
-  (bind-key "C-c s" 'org-journal-search-forever org-journal-mode-map)
-  (unbind-key "C-c C-s" org-journal-mode-map)
   (setq org-journal-file-format "%Y-%m-%d-w%V.org")
   (setq org-journal-enable-agenda-integration t)
   (setq org-journal-file-type 'weekly)
@@ -378,43 +427,7 @@
         )
   )
 
-;; Add CREATED property when creating an entry
-(defun mk/org-add-created-property ()
-  (org-id-get-create)
-  (org-set-property "CREATED" (format-time-string (org-time-stamp-format t t)))
-  )
-(add-hook 'org-insert-heading-hook #'mk/org-add-created-property)
-;; Add today as the default scheduled date when turning into TODO
-(defun mk/org-set-scheduled-today ()
-  (when (and (string= org-state "TODO")
-             (not (org-entry-get nil "SCHEDULED")))
-    (org-schedule nil (format-time-string "%Y-%m-%d"))))
-(defun mk/org-set-next-activation ()
-  (when (and (string= (org-get-todo-state) "NEXT")
-             (not (org-entry-get nil "ACTIVATED")))
-    (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
-(add-hook 'org-after-todo-state-change-hook #'mk/org-set-scheduled-today)
-(add-hook 'org-after-todo-state-change-hook #'mk/org-set-next-activation)
 
-
-
-(use-package org-capture
-  :ensure nil
-  :config
-  (defvar mk/org-capture-people-path)
-  (defun mk/org-capture-people ()
-    (interactive)
-    (format "* %s\n%%?" (read-string "姓名: " nil))
-    )
-  (setq org-capture-templates
-        '(("p" "New People" entry (file+headline "~/Dropbox/Dreams/Org/People/General.org" "People")
-           #'mk/org-capture-people
-           )
-          ("r" "New Research Snippet" entry (file+headline "~/Dropbox/Dreams/Research/Snippets.org" "Research Snippets")
-           "* %?\n%i %a"
-           )
-          ))
-  )
 (use-package consult-notes
   :ensure (:type git :host github :repo "mclear-tools/consult-notes")
   :commands (consult-notes
@@ -430,7 +443,7 @@
 
 
 (use-package ox-html
-  :ensure nil
+  :ensure nil ; org built-in
   :after (org)
   :defer t
   :config
@@ -548,25 +561,6 @@
   (add-hook 'org-agenda-finalize-hook 'org-timeline-insert-timeline :append)
   )
 
-;; * Org Babel
-(defun org-babel-C-execute/filter-args (args)
-  (when-let* ((params (cadr args))
-              (stdin (cdr (assoc :stdin params)))
-              (res (org-babel-ref-resolve stdin))
-              (stdin (org-babel-temp-file "c-stdin-")))
-    (with-temp-file stdin (insert res))
-    (let* ((cmdline (assoc :cmdline params))
-           (cmdline-val (or (cdr cmdline) "")))
-      (when cmdline (setq params (delq cmdline params)))
-      (setq params
-            (cons (cons :cmdline (concat cmdline-val " <" stdin))
-                  params))
-      (setf (cadr args) params)))
-  args)
-
-(with-eval-after-load 'ob-C
-  (advice-add 'org-babel-C-execute :filter-args
-              #'org-babel-C-execute/filter-args))
 
 
 
@@ -717,16 +711,6 @@
 (setq org-columns-summary-types
       '(("P/" . mk/org-columns--summary-pomodoro-count))
       )
-(defun mk/org-clocking-on-state-change ()
-  "Auto clock-in/-out when state changes."
-  (unless (string= org-last-state org-state)
-    (cond
-     ((string= org-state "ONGOING")
-      (org-clock-in))
-     ((string= org-last-state "ONGOING")
-      (org-clock-out)
-      ))))
-(add-hook 'org-after-todo-state-change-hook #'mk/org-clocking-on-state-change)
 
 (use-package define-word :disabled t)
 
