@@ -44,3 +44,5 @@
         (message "Clocked in to: %s" heading)))
     (unless found
       (message "No heading found with title: %s" heading))))
+
+(provide 'swiftbar)

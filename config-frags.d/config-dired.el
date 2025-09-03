@@ -24,8 +24,11 @@
       (url-copy-file url target)
       )))
 
-(use-package diredfl :config (diredfl-global-mode))
-(use-package dired+ :ensure (:host github :repo "emacsmirror/dired-plus"))
+(use-package diredfl
+  :defer t
+  :config (diredfl-global-mode))
+(use-package dired+ :ensure (:host github :repo "emacsmirror/dired-plus")
+  :defer t)
 (use-package dired-preview
   :config
   ;; Default values for demo purposes
@@ -36,8 +39,8 @@
                 "\\(mkv\\|webm\\|mp4\\|mp3\\|ogg\\|m4a"
                 "\\|gz\\|zst\\|tar\\|xz\\|rar\\|zip"
                 "\\|iso\\|epub\\|pdf\\)"))
-  )
+  :defer t)
 
-(use-package dirvish)
+(use-package dirvish :defer t)
 
 (provide 'config-dired)

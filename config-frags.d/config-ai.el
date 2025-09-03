@@ -6,6 +6,7 @@
   (if (string-suffix-p "\n" str)
       (substring str 0 -1)
     str))
+
 (defun read-file-contents (file-path)
   "Read the contents of FILE-PATH and return it as a string."
   (with-temp-buffer
@@ -17,22 +18,21 @@
 
 (use-package copilot
   :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
-  :config
-  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-  (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
-  )
+  :bind (:map copilot-completion-map ("<tab>" . #'copilot-accept-completion)
+              ("TAB" . #'copilot-accept-completion))
+  :defer t)
 
 (use-package elysium
-  :ensure
-  (:host github :repo "lanceberge/elysium" :branch "master" :files ("*.el"))
+  :ensure (:host github :repo "lanceberge/elysium" :branch "master" :files ("*.el"))
+  :defer t
   :custom
   ;; Below are the default values
   (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
   (elysium-window-style 'vertical)) ; Can be customized to horizontal
+
 (use-package smerge-mode
   :ensure nil
-  :hook
-  (prog-mode . smerge-mode))
+  :hook (prog-mode . smerge-mode))
 
 (use-package gptel
   :ensure (:host github :repo "karthink/gptel" :branch "master" :files ("*"))
@@ -55,8 +55,7 @@
 (use-package claude-code
   :ensure (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main"
                  :files ("*.el" (:exclude "images/*")))
-  :bind-keymap
-  ("C-c c" . claude-code-command-map) ;; or your preferred key
+  :bind-keymap ("C-c c" . claude-code-command-map) ;; or your preferred key
   :config
   (setq claude-code-terminal-backend 'vterm)
 

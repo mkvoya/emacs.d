@@ -51,6 +51,7 @@
   (let* ((cmd (concat "find " autolink-directory " -iname \"*" (string-replace ":" "?" text) "*\""))
          (candidates (mapcar 'abbreviate-file-name (delete "" (split-string (shell-command-to-string cmd) "\n")))))
     (completing-read "Choose the one to link: " candidates)))
+
 (defun paper-link (start end)
   "Try to guess the file to link according to the region between START and END."
   (interactive "r") ; The "r" here will fill the start and end automatically.
@@ -93,7 +94,6 @@
    ((string= journal "the australian universities' review") (format "aur.%s" year))
    ((string= journal "nature computational science") (format "nat.comput.sci.%s" year))
    ((string= journal "nature reviews genetics") (format "nat.rev.genet.%s" year))
-
    ;; arXiv
    ((string= publisher "arxiv") (format "arxiv%s" year))
    (t "XXXX")))
@@ -189,19 +189,19 @@
   (setq bibtex-completion-pdf-open-function
         (lambda (fpath) (call-process "open" nil 0 nil fpath)))
   :config
-  (use-package bibtex-completion
-    :defer
-    :config
-    (bibtex-completion-init)  ; This will set the XXX-format-internal variable
-    )
+  )
+(use-package bibtex-completion
+  :defer
+  :after (bibtex)
+  :config
+  (bibtex-completion-init)  ; This will set the XXX-format-internal variable
   )
 
 
 ;; * citar
 (use-package citar
   :ensure (:host github :repo "bdarcus/citar")
-  :defer
-  :demand
+  :defer t
   :bind (;; ("C-c B" . citar-insert-citation)
          ;; :map minibuffer-local-map
          ;; ("M-b" . citar-insert-preset)
@@ -236,22 +236,16 @@
 
 ;; * biblio: |Lookup & import bib |
 (use-package biblio
-  :defer t
   :init
-
   (setq biblio-arxiv-bibtex-header "misc")
   (setq biblio-bibtex-use-autokey nil)  ; Don't use autokey of biblio
-
-  ;; Some backends fail upon async queries.
-  (setq biblio-synchronous t)
-
+  (setq biblio-synchronous t) ; Some backends fail upon async queries.
+  :defer t
   :config
-
   ;; Override
   (defun biblio--completing-read-function ()
     "Override to always return the defualt one"
     completing-read-function)
-
   ;; Override to add url
   (defun biblio-arxiv--build-bibtex-1 (metadata)
     "Create an unformated BibTeX record for METADATA."
@@ -271,18 +265,13 @@
   )
 
 ;; * ebib: |bib manager
-
 (use-package ebib
-  :defer
-  ;; :after (biblio bibtex citar)
+  :after (biblio bibtex citar)
+  :defer t
+  :bind (:map ebib-index-mode-map ("O" . #'mk/ebib-open-dir))
   :init
-  (require 'biblio)
-  (require 'bibtex)
-  (require 'citar)
-  (require 'dbus)  ; A function from dbus is used in ebib.
   (defun mk/ebib-create-org-schedule (_key _db)
-    (format "SCHEDULED: <%s>" (org-read-date nil nil "+1d"))
-    )
+    (format "SCHEDULED: <%s>" (org-read-date nil nil "+1d")))
   (setq ebib-reading-list-template-specifiers '((?K . ebib-reading-list-create-org-identifier)
                                                 (?T . ebib-create-org-title)
                                                 (?M . ebib-reading-list-todo-marker)
@@ -379,9 +368,6 @@
                                          (?U . ebib-create-org-url-link)
                                          (?P . mk/ebib-complete-rest-note-content)))
   (setq ebib-notes-template "%%?%P\n")
-
-  (define-key ebib-index-mode-map (kbd "O") #'mk/ebib-open-dir)
-
   )
 
 (defun mk/ebib-reading-list-show-entry ()
@@ -395,18 +381,20 @@
         ))))
 
 (use-package ebib-biblio
-  :after (ebib biblio)
   :ensure nil
-  :demand
+  :after (ebib biblio)
+  :defer t
   :bind (:map biblio-selection-mode-map
               ("e" . ebib-biblio-selection-import)))
 (use-package zotra
+  :defer t
   :config
   (setq zotra-backend 'zotra-server)
   (setq zotra-local-server-directory "~/.emacs.d/third-parties/zotra-server/")
   )
 (use-package ebib-collection
   :ensure (:type git :host github :repo "mkvoya/ebib-collection" :files ("*"))
-  :after (ebib))
+  :after (ebib)
+  :defer t)
 
 (provide 'config-bib)

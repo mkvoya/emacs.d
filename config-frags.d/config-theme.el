@@ -98,12 +98,13 @@
   )
 
 
+;; (use-package page-break-lines :ensure t :defer nil)
 
 (use-package dashboard
   :if (< (length command-line-args) 2)
   :diminish dashboard-mode
-  :init
-  (use-package page-break-lines :ensure t :defer nil)
+  :after (nerd-icons)
+  :ensure t
   :config
   (setq dashboard-banner-logo-title "What a nice day!")
   ;;(setq dashboard-startup-banner "/path/to/image")
@@ -116,8 +117,14 @@
                           ))
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
+  (setq dashboard-display-icons-p t)     ; display icons on both GUI and terminal
+  (setq dashboard-icon-type 'nerd-icons) ; use `nerd-icons' package
+  ;; (setq dashboard-center-content t)
+  ;; (setq dashboard-vertically-center-content t)
   (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
+  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
   (dashboard-setup-startup-hook))
 
 

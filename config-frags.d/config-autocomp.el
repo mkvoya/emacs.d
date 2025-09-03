@@ -74,6 +74,7 @@
 ;;   (add-to-list 'dabbrev-ignored-buffer-modes 'tags-table-mode))
 
 (use-package nerd-icons-corfu
+  :defer t
   :config
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter)
 
@@ -83,9 +84,6 @@
           (boolean :style "cod" :icon "symbol_boolean" :face font-lock-builtin-face)
           ;; ...
           (t :style "cod" :icon "code" :face font-lock-warning-face)))
-  ;; Remember to add an entry for `t', the library uses that as default.
-
-  ;; The Custom interface is also supported for tuning the variable above.
   )
 
 (use-package yasnippet

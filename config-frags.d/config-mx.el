@@ -16,21 +16,26 @@
   (setq enable-recursive-minibuffers nil)
   (vertico-mode)
   )
+
 (use-package orderless
+  :defer t
   :init
   (setq completion-styles '(orderless))
   (setq completion-category-defaults nil)
-  (setq completion-category-overrides '((file (styles partial-completion))))
-  )
+  (setq completion-category-overrides '((file (styles partial-completion)))))
+
 (use-package marginalia
-  :init
-  (marginalia-mode))
+  :defer t
+  :init (marginalia-mode))
 
 (use-package rg
+  :defer t
   :ensure-system-package
   (rg . ripgrep))
 
+(use-package recentf :ensure nil :defer t)
 (use-package consult
+  :after (recentf)
   :bind (
          ;; C-x bindings (ctl-x-map)
          ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
@@ -78,7 +83,7 @@
 
 
 (use-package embark
-  :demand
+  :defer t
   :bind
   (("C-." . embark-act)         ;; pick some comfortable binding
    ("C-;" . embark-dwim)        ;; good alternative: M-.
@@ -93,13 +98,8 @@
                  nil
                  (window-parameters (mode-line-format . none)))))
 
-;; Consult users will also want the embark-consult package.
 (use-package embark-consult
   :after (embark consult)
-  :demand t ; only necessary if you have the hook below
-  ;; if you want to have consult previews as you move around an
-  ;; auto-updating embark collect buffer
-  :hook
-  (embark-collect-mode . consult-preview-at-point-mode))
+  :hook (embark-collect-mode . consult-preview-at-point-mode))
 
 (provide 'config-mx)

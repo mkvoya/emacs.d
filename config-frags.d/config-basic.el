@@ -117,6 +117,7 @@
          ("C-h ,t" . which-key-show-top-level)
          ("C-h ,n" . which-key-show-next-page)
          )
+  :defer t
   :init
   (setq which-key-show-remaining-keys t)
 
@@ -127,5 +128,9 @@
   ;; (which-key-setup-minibuffer)
   (which-key-mode)
   )
+
+(use-package ffap
+  :ensure nil ; built-in
+  :defer t)
 
 (provide 'config-basic)

@@ -40,9 +40,7 @@ case "$1" in
 esac
 
 # Get current clocking task from Emacs org-mode
-current_clock=$(emacsclient -e '(if (org-clocking-p)
-								(substring-no-properties (org-clock-get-clock-string))
-                                  "")')
+current_clock=$(emacsclient -e '(progn (require (quote org-clock)) (if (org-clocking-p) (substring-no-properties (org-clock-get-clock-string)) ""))')
 
 current_clock=$(echo "$current_clock" | sed 's/^"\(.*\)"$/\1/')
 
@@ -55,6 +53,6 @@ echo "--📝 New Entry | bash=\"$0\" param1=today terminal=false"
 echo "--📊 View Journal | bash=\"$0\" param1=view-journal terminal=false"
 echo "🔚 Clock Out | bash=\"$0\" param1=clock-out terminal=false"
 echo "🔜 Clock in | bash=\"$0\" param1=clock-in terminal=false"
-emacsclient -e '(swiftbar-list-agenda-swiftbar-items)' | sed 's/^"\(.*\)"$/\1/' | tr ',' '\n' | while read -r line; do
+emacsclient -e '(progn (require (quote swiftbar)) (swiftbar-list-agenda-swiftbar-items))' | sed 's/^"\(.*\)"$/\1/' | tr ',' '\n' | while read -r line; do
     echo "--$line | bash=\"$0\" param1=clock-in param2=\"$line\" terminal=false"
 done

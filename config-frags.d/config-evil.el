@@ -5,26 +5,21 @@
 ;; * Evil
 (use-package evil
   :ensure t
+  :demand t
   :after (undo-fu bind-key)
-  :init
+  :bind (:map evil-normal-state-map ("C-u" . #'evil-scroll-up))
+  :config
+  ;; ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
+  ;; ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
+  ;; (evil-define-motion evil-lookup ()
+  ;;   "Look up the keyword at point. Calls `evil-lookup-func'."
+  ;;   (call-interactively #'man))
+
   (setq evil-want-C-i-jump nil)
   (setq evil-move-beyond-eol t)
-  :config
-  ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
-  ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
-  (evil-define-motion evil-lookup ()
-    "Look up the keyword at point. Calls `evil-lookup-func'."
-    (call-interactively #'man))
-
   (setq evil-want-fine-undo t)
-  (define-key evil-normal-state-map (kbd "C-u") 'evil-scroll-up)
-  (evil-set-undo-system 'undo-fu)
   (setq evil-symbol-word-search t)
-  (use-package evil-numbers
-    :demand t
-    :config
-    (define-key evil-normal-state-map (kbd "C-a") 'evil-numbers/inc-at-pt)
-    (define-key evil-normal-state-map (kbd "C-S-a") 'evil-numbers/dec-at-pt))
+  (evil-set-undo-system 'undo-fu)
   ;; Evil rebind
   ;; :q should kill the current buffer rather than quitting emacs entirely
   (defun mk/ex-quit ()
@@ -66,15 +61,18 @@
 
   (evil-mode 1))
 
+(use-package evil-numbers
+  :after evil
+  :demand t
+  :bind (:map evil-normal-state-map
+              ("C-a" . #'evil-numbers/inc-at-pt)
+              ("C-A" . #'evil-numbers/dec-at-pt)))
+
 ;; *Evil's Easy Motion
 
-(use-package avy)
+(use-package avy :defer t)
 (use-package evil-easymotion
-  :after (evil)
-  :demand t
-  :config
-  (evilem-default-keybindings "SPC")
-
+  :init
   (defun avy-goto-char (char &optional arg)
     "Jump to the currently visible CHAR.
        The window scope is determined by `avy-all-windows' (ARG negates it)."
@@ -88,7 +86,10 @@
              "\n"
            (regexp-quote (string char)))
          :window-flip arg))))
-  (define-key evil-normal-state-map (kbd "SPC") 'avy-goto-char))
+  :bind (:map evil-normal-state-map
+              ("SPC" . #'avy-goto-char))
+  :after (evil avy)
+  :defer t)
 
 ;; optional: this is the evil state that evil-magit will use
 ;; (setq evil-magit-state 'normal)

@@ -2,23 +2,18 @@
 ;;; Emacs Config Fragement: MK's customized packages
 
 
-
-
 (use-package motd
-  :after (dash)
+  :after (dash org)
+  :defer 20
   :ensure nil
   :load-path "~/.emacs.d/site-lisp/"
   :config
-     ;; (progn
-     ;;   (setq motd-background-color "#EFE0C0")
-      ;;  (setq motd-border-color "#910471")
-      ;;  )
-    (setq motd-background-color "#204230")
-    (setq motd-border-color "#444444")
-
+  (setq motd-background-color "#204230")
+  (setq motd-border-color "#444444")
   (setq motd--git-commit-dir "~/Dropbox/Dreams")
   (motd-start-timer)
   )
+
 (use-package xwidget-apps
   :after (websocket)
   :defer t
@@ -29,16 +24,14 @@
   )
 
 (use-package emacs-badge
-  :defer t
+  :demand
   :ensure (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
   :config
-  (require 'emacs-badge)
   (setq emacs-badge-timer
         (run-with-timer
          30 30
          '(lambda()
-            (emacs-badge-update (format "%s" (mk/count-today-todos))))))
-  )
+            (emacs-badge-update (format "%s" (mk/count-today-todos)))))))
 
 
 (provide 'init-writing)

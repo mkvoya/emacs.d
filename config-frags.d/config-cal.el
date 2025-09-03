@@ -58,6 +58,7 @@
 ;; 中国节日设置
 (use-package cal-china-x
   :ensure t
+  :defer t
   :commands cal-china-x-setup
   :hook (elpaca-after-init . cal-china-x-setup)
   :config
@@ -119,15 +120,17 @@
   :ensure (:host github :repo "haji-ali/emacs-calfw" :files ("*"))
   :defer t
   :init
-  (use-package calfw-org :after (org))
+  (use-package calfw-org :after (org) :defer t)
   (use-package calfw-blocks
-    :ensure (:host github :repo "haji-ali/calfw-blocks" :files ("*")))
+    :ensure (:host github :repo "haji-ali/calfw-blocks" :files ("*"))
+    :defer t)
   (use-package maccalfw
     :commands maccalfw-open
     :ensure (:host github
                    :repo "haji-ali/maccalfw"
-                   :files ("maccalfw.el" ("src" . "src"))))
-  (require 'calfw-cal)
+                   :files ("maccalfw.el" ("src" . "src")))
+    :defer t)
+  (use-package calfw-cal :ensure nil :defer t)
   :config
   (defun mk/open-calendar ()
     (interactive)
@@ -157,11 +160,11 @@
         org-icalendar-use-scheduled
         '(event-if-not-todo event-if-todo event-if-todo-not-done todo-start))
   )
+(use-package async)
 (use-package org-caldav
   :defer t
-  ;; :after (async)
+  :after (async)
   :init
-  (require 'async)
   (setq org-caldav-url "https://dong.mk/radicale/mkvoya/")
   (setq org-caldav-todo-percent-states
         '(

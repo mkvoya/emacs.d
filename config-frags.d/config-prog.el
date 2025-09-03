@@ -3,26 +3,27 @@
 
 ;; Citre: Tag jumps
 (use-package citre
-  :defer t
   :after (evil)
+  :defer t
   :init
   ;; This is needed in `:init' block for lazy load to work.
   (require 'citre-config)
+  :bind (("C-x c j" . citre-jump)
+         ("C-x c J" . citre-jump-back)
+         ("C-x c p" . citre-ace-peek)
+         ("C-]" . citre-jump)
+         ("C-t" . citre-jump-back)
+         (:map evil-motion-state-map
+               ("C-]" . citre-jump)
+               ("C-t" . citre-jump-back))
+         (:map evil-normal-state-map
+               ("C-]" . citre-jump)
+               ("C-t" . citre-jump-back)))
   :config
-  ;; Bind your frequently used commands.
-  (global-set-key (kbd "C-x c j") 'citre-jump)
-  (global-set-key (kbd "C-x c J") 'citre-jump-back)
-  (global-set-key (kbd "C-x c p") 'citre-ace-peek)
-  (global-set-key (kbd "C-]") 'citre-jump)
-  (global-set-key (kbd "C-t") 'citre-jump-back)
-  (define-key evil-motion-state-map (kbd "C-]") 'citre-jump)
-  (define-key evil-motion-state-map (kbd "C-t") 'citre-jump-back)
-  (define-key evil-normal-state-map (kbd "C-]") 'citre-jump)
-  (define-key evil-normal-state-map (kbd "C-t") 'citre-jump-back)
   (setq citre-project-root-function
         #'(lambda ()
             (when-let* ((project (project-current nil)))
-              (expand-file-name (nth 2 project)))))
+              (expand-file-name (nth  project)))))
   )
 
 
@@ -35,12 +36,12 @@
   )
 
 (use-package ws-butler
+  :disabled t
   :delight ws-butler-mode
-  :config (progn
-            ;; adding it to prog-mode-hook causes problems for emacsclient
-            (add-hook 'cython-mode-hook     #'ws-butler-mode)
-            (add-hook 'LaTeX-mode-hook      #'ws-butler-mode)
-            (add-hook 'emacs-lisp-mode-hook #'ws-butler-mode)))
+  :hook ((cython-mode . #'ws-butler-mode)
+         (LaTeX-mode . #'ws-butler-mode)
+         (emacs-lisp-mode . #'ws-butler-mode)
+         ))
 ;; * C/C++
 ;; style I want to use in c++ mode
 (c-add-style "my-style"
@@ -70,12 +71,17 @@
           (add-to-list 'major-mode-remap-alist '(c++-mode . c++-ts-mode))
           (add-to-list 'auto-mode-alist '("\\.inl\\'" . c++-ts-mode))))
 
-(use-package clang-format :config (setq clang-format-executable "clang-format"))
-(use-package clang-format+ :commands clang-format+-mode)
+(use-package clang-format
+  :defer t
+  :config (setq clang-format-executable "clang-format"))
+(use-package clang-format+
+  :defer t
+  :commands clang-format+-mode)
 
 
 ;; * treesitter
 (use-package treesit-auto
+  :defer t
   :custom
   (treesit-auto-install 'prompt)
   :config
@@ -90,6 +96,8 @@
   ;;; Use whitespace (instead of column-marker, column-enforce-mode)
 (use-package whitespace
   :ensure nil
+  :defer t
+  :hook (prog-mode . whitespace-mode)
   :config
   (setq whitespace-style
         '(face trailing tabs newline tab-mark newline-mark))
@@ -101,17 +109,16 @@
   (set-face-background 'whitespace-trailing "#ffaf5f")
       (set-face-background 'whitespace-tab "#FAFAFA")
   ;; (global-whitespace-mode t)
-  (add-hook 'prog-mode-hook 'whitespace-mode)
   )
 
 
 (use-package gitlab-ci-mode :defer t)
 (use-package dockerfile-mode :mode "Dockerfile" :defer t)
-(use-package lua-mode :defer)
+(use-package lua-mode :defer t)
 (use-package swift-mode :disabled t)
-(use-package typescript-mode)
+(use-package typescript-mode :defer t)
 (use-package adoc-mode :defer t :ensure (:host github :repo "sensorflo/adoc-mode"))
-(use-package elm-mode)
+(use-package elm-mode :defer t)
 (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
 (use-package vue-mode :mode "\\.vue\\'" :defer t)
 ;; Python Support
@@ -133,17 +140,18 @@
 (use-package ein :defer t)
 (use-package live-py-mode :defer t)
 ;; Markdown Support
-(use-package markdown-mode :defer t
+(use-package markdown-mode
   :mode (("README\\.md\\'" . gfm-mode)
          ("\\.md\\'" . markdown-mode)
          ("\\.markdown\\'" . markdown-mode))
+  :defer t
   :config
   ;; (setq markdown-command "multimarkdown")
   (setq markdown-command "/usr/local/bin/pandoc")
   (setq markdown-preview-stylesheets (list "https://raw.githubusercontent.com/sindresorhus/github-markdown-css/gh-pages/github-markdown.css"))
   ;;"http://thomasf.github.io/solarized-css/solarized-light.min.css"
   )
-(use-package flymd :after (markdown-mode))
+(use-package flymd :after (markdown-mode) :defer t)
 
 
 (provide 'config-prog)

@@ -7,7 +7,6 @@
 (use-package org
   :after (bind-key)
   :ensure nil
-  :defer 2
   :mode ("\\.org\\'" . org-mode)
   :bind (("C-c a" . #'org-agenda)
          ("C-c c" . #'org-capture)
@@ -20,9 +19,9 @@
          (org-mode . mk/org-syntax-table-modify) ; Modify syntax table
          (org-mode . mk/org-show-link-when-idle)
          (org-babel-after-execute . org-redisplay-inline-images) ; Always redisplay inline images after executing SRC block
-
   )
   :init
+  ;; (setq org-modules-loaded t)
 
   ;; Hook functions
 
@@ -198,21 +197,38 @@
               ;; (org-hide-properties)
               ))
 
-  (use-package org-super-agenda
-    :init (org-super-agenda-mode)
-    :config
-    (setq org-super-agenda-groups
-          '((:name "Next Items"
-                   :time-grid t
-                   :tag ("NEXT" "outbox"))
-            (:name "Important"
-                   :priority "A")
-            (:name "Quick Picks"
-                   :effort< "0:30")
-            (:priority<= "B"
-                         :scheduled future
-                         :order 1)))
-    )
+
+  (setq org-hide-emphasis-markers nil)      ; don’t hide markers for like *foo*
+  ;; (setq org-hide-emphasis-markers t)
+  (setq org-emphasis-alist
+        '(("*" bold)
+          ("/" italic)
+          ("_" underline)
+          ("=" org-verbatim verbatim)
+          ;; ("@" (:foreground "red" :background "black"))
+          ("&" (:foreground "red"))
+          ("~" org-code verbatim)
+          ("+"
+           (:strike-through t))))
+  (use-package ov)
+  (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
+  )
+
+(use-package org-super-agenda
+  :after (org)
+  :init (org-super-agenda-mode)
+  :config
+  (setq org-super-agenda-groups
+        '((:name "Next Items"
+                 :time-grid t
+                 :tag ("NEXT" "outbox"))
+          (:name "Important"
+                 :priority "A")
+          (:name "Quick Picks"
+                 :effort< "0:30")
+          (:priority<= "B"
+                       :scheduled future
+                       :order 1)))
   (setq org-agenda-custom-commands
         '(("z" "Super Agenda"
            ((agenda "" ((org-agenda-span 'day)
@@ -229,26 +245,10 @@
                             (:name "Overdue" :deadline past :order 7)
                             (:name "Projects" :tag "Project" :order 14)
                             ))))))))
-
-  (setq org-hide-emphasis-markers nil)      ; don’t hide markers for like *foo*
-  ;; (setq org-hide-emphasis-markers t)
-  (setq org-emphasis-alist
-        '(("*" bold)
-          ("/" italic)
-          ("_" underline)
-          ("=" org-verbatim verbatim)
-          ;; ("@" (:foreground "red" :background "black"))
-          ("&" (:foreground "red"))
-          ("~" org-code verbatim)
-          ("+"
-           (:strike-through t))))
-  ;; (use-package ov)
-  ;; (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
   )
 
 (use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
   :after (org)
-  :demand t
   :defer 3
   :config
   ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
@@ -265,7 +265,6 @@
   )
 ;; Org Cite
 (use-package oc
-  :ensure nil
   :ensure nil
   :after org)
 
@@ -497,6 +496,7 @@
 
 (use-package ox-twbs
   :after ox-html
+  :defer t
   :config
   (defun my-org-html-src-block2 (src-block _contents info)
     (let* ((result (org-twbs-src-block src-block _contents info))
@@ -557,11 +557,7 @@
 
 (use-package org-timeline
   :after org
-  :config
-  (add-hook 'org-agenda-finalize-hook 'org-timeline-insert-timeline :append)
-  )
-
-
+  :hook (org-agenda-finalize . org-timeline-insert-timeline))
 
 
 (defun mk/org-archive-to-specified-file ()
@@ -660,18 +656,20 @@
   )
 
 (use-package org-timeblock
-  :ensure (org-timeblock :type git
-                         :host github
-                         :repo "ichernyshovvv/org-timeblock"))
-(use-package org-analyzer)
+  :ensure (:type git :host github :repo "ichernyshovvv/org-timeblock")
+  :after (org)
+  :defer t)
 
-(use-package nov)
-(use-package djvu)
+(use-package org-analyzer
+  :after (org)
+  :defer t)
+
+(use-package nov :defer t)
+(use-package djvu :defer t)
 (use-package org-noter
   :ensure (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
-  :defer t
-  :after (nov djvu)
-  )
+  :after (org nov djvu)
+  :defer t)
 
 (defun download-webpage-and-rename (url)
   "Download webpage from URL and rename the file to the webpage title."
@@ -688,7 +686,9 @@
          (write-region (point-min) (point-max) filename)
          (rename-file filename (concat title ".html") t)
          (message "Downloaded and saved as %s.html" title))))))
-(use-package org-web-tools)
+
+(use-package org-web-tools
+  :defer t)
 
 
 (defun how-many-str (regexp str)

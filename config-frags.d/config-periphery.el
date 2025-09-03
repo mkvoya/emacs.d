@@ -1,6 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: Periphery Tools
 
-(load-file "~/.emacs.d/site-lisp/swiftbar.el")
+(use-package swiftbar
+  :load-path "~/.emacs.d/site-lisp/"
+  :ensure nil
+  :demand t)
 
 (provide 'config-periphery)
