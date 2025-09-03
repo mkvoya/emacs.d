@@ -1,32 +1,27 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: Periphery Tools
 
+(use-package shrink-path :ensure (:host github :repo "zbelial/shrink-path.el"))
+
 (use-package doom-modeline
   :after (shrink-path)
   :init (doom-modeline-mode 1)
   :config
   (setq inhibit-compacting-font-caches t)
   (setq mode-line-right-align-edge 'right-fringe)
-
   (setq doom-modeline-icon t)
   (setq doom-modeline-major-mode-icon t)
   (setq doom-modeline-major-mode-color-icon t)
   (setq doom-modeline-buffer-state-icon t)
   (setq doom-modeline-buffer-modification-icon t)
-
   (setq doom-modeline-time t)
   (setq doom-modeline-time-icon t)
   (setq doom-modeline-time-live-icon t)
   (setq doom-modeline-time-analogue-clock t)
   (setq doom-modeline-time-clock-size 0.7)
-
   (setq doom-modeline-percent-position '(-3 "%p"))
   (setq doom-modeline-position-column-line-format '("%l:%c"))
-
-
-
   (setq doom-modeline-minor-modes nil)
-
   (setq doom-modeline-enable-word-count nil)
   (setq doom-modeline-modal t)
   (setq doom-modeline-modal-icon nil)
@@ -48,6 +43,11 @@
    '(mode-line-inactive ((t (:height 0.95))))
    '(doom-modeline-evil-emacs-state ((t (:italic nil)))))
   )
+
+(use-package nyan-mode :ensure (:repo "TeMPOraL/nyan-mode")
+  :after (doom-modeline)
+  :demand t
+  :config (nyan-mode))
 
 (use-package ef-themes :ensure (:host github :repo "protesilaos/ef-themes")
   :after (hl-todo doom-modeline)

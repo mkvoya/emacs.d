@@ -23,9 +23,4 @@
                ("s-n" . vterm-toggle-forward)
                ("s-p" . vterm-toggle-backward))))
 
-(use-package shrink-path
-  :ensure (:host github :repo "zbelial/shrink-path.el" :fetcher github)
-  :defer t)
-
-
 (provide 'config-term)

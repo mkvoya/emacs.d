@@ -98,7 +98,6 @@
   ;; But I don't need the odd levels only
   (setq org-adapt-indentation t)
   (setq org-hide-leading-stars t)
-  ;;org-odd-levels-only t
   (setq org-startup-indented t) ; disable org-indent-mode for org-margin
   (setq org-latex-create-formula-image-program 'dvisvgm)
 
@@ -249,7 +248,7 @@
 
 (use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
   :after (org)
-  :defer 3
+  :demand
   :config
   ;; (set-face-attribute 'org-modern-symbol nil :family "Iosevka")
   (set-face-attribute 'org-modern-todo nil :height 1)
@@ -258,7 +257,7 @@
   (custom-set-faces '(org-modern-tag
                       ((((background light)) :foreground "black" :background "#f4f4f4")
                        (((background dark))  :foreground "white" :background "#222222"))))
-  (global-org-modern-mode))
+  (with-eval-after-load 'org (global-org-modern-mode)))
 
 (use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
   :after (org)

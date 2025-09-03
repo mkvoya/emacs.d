@@ -77,14 +77,9 @@
   (message (mk/--pick-project)))
 
 (use-package chronos :defer t)
-(use-package elquery :defer)
-(use-package citeproc :defer)
+(use-package elquery :defer t)
+(use-package citeproc :defer t)
 
-(use-package xkcd :defer)
-
-(use-package nyan-mode
-  :ensure (:repo "TeMPOraL/nyan-mode")
-  )
-
+(use-package xkcd :defer t)
 
 (provide 'config-misc)
