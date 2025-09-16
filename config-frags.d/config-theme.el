@@ -103,22 +103,22 @@
 (use-package dashboard
   :if (< (length command-line-args) 2)
   :diminish dashboard-mode
-  :after (nerd-icons)
+  :after (org-agenda)
   :ensure t
   :config
   (setq dashboard-banner-logo-title "What a nice day!")
   ;;(setq dashboard-startup-banner "/path/to/image")
   (setq dashboard-projects-backend 'project-el)
-  (setq dashboard-items '((recents  . 10)
-                          ;; (bookmarks . 10)
+  (setq dashboard-items '((recents  . 5)
+                          (bookmarks . 5)
                           (projects . 5)
                           (agenda . 5)
                           ;; (registers . 5)
                           ))
   (setq dashboard-set-heading-icons t)
   (setq dashboard-set-file-icons t)
-  (setq dashboard-display-icons-p t)     ; display icons on both GUI and terminal
-  (setq dashboard-icon-type 'nerd-icons) ; use `nerd-icons' package
+  ;; (setq dashboard-display-icons-p t)     ; display icons on both GUI and terminal
+  ;; (setq dashboard-icon-type 'nerd-icons) ; use `nerd-icons' package
   ;; (setq dashboard-center-content t)
   ;; (setq dashboard-vertically-center-content t)
   (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))

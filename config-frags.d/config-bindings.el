@@ -18,6 +18,7 @@ If nothing is entered, open config-misc.el."
 
 (global-set-key (kbd "C-h c") #'describe-char)
 (global-set-key (kbd "C-c h") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Main.org")))
+(global-set-key (kbd "C-c t") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Tasks.org")))
 (global-set-key (kbd "C-c g") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")))
 (global-set-key (kbd "C-c i") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Inbox.org")))
 (global-set-key (kbd "C-c p") (lambda () (interactive) (find-file "~/Dropbox/Dreams/Org/Projects.org")))

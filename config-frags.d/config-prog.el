@@ -19,11 +19,6 @@
          (:map evil-normal-state-map
                ("C-]" . citre-jump)
                ("C-t" . citre-jump-back)))
-  :config
-  (setq citre-project-root-function
-        #'(lambda ()
-            (when-let* ((project (project-current nil)))
-              (expand-file-name (nth  project)))))
   )
 
 
@@ -36,12 +31,14 @@
   )
 
 (use-package ws-butler
-  :disabled t
-  :delight ws-butler-mode
-  :hook ((cython-mode . #'ws-butler-mode)
-         (LaTeX-mode . #'ws-butler-mode)
-         (emacs-lisp-mode . #'ws-butler-mode)
-         ))
+  ;; :delight ws-butler-mode
+  :config
+  (ws-butler-global-mode 1))
+
+  ;; :hook ((cython-mode . #'ws-butler-mode)
+  ;;        (LaTeX-mode . #'ws-butler-mode)
+  ;;        (emacs-lisp-mode . #'ws-butler-mode)
+  ;;        )
 ;; * C/C++
 ;; style I want to use in c++ mode
 (c-add-style "my-style"
@@ -81,14 +78,13 @@
 
 ;; * treesitter
 (use-package treesit-auto
-  :defer t
   :custom
   (treesit-auto-install 'prompt)
+  :demand
   :config
   (setq treesit-font-lock-level 4)
   (treesit-auto-add-to-auto-mode-alist 'all)
   (global-treesit-auto-mode))
-
 
 (setq python-shell-completion-native-disabled-interpreters nil)
 

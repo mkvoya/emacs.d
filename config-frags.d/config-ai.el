@@ -40,15 +40,25 @@
   (setq gptel-use-curl nil)
   (setq
    ;; gptel-model "gpt-4o-2024-05-13"
-   gptel-model 'gpt-4o
-   gptel-backend
+   gptel-model 'gpt-4o)
+  (setq gptel-backend
    (gptel-make-openai "IPADS GPT"
      :host "ipads.chat.gpt:3006"
      :protocol "http"
      :stream t
      :key #'gptel-api-key
-     :models '("claude-3-5"
-               "gpt-4o-2024-05-13"
+     :models '(
+               "gemini-2.5-flash"
+               "gemini-2.5-pro"
+               "claude-3-5"
+               "gpt-5",
+               "gpt-5-mini",
+               "gpt-5-nano",
+               "gpt-image-1",
+               "anthropic/claude-sonnet-4",
+               "anthropic/claude-opus-4",
+               "deepseek-r1",
+               "deepseek-v3",
                "gpt-4o"))))
 
 ;; install claude-code.el:

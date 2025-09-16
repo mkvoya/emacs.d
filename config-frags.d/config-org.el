@@ -7,6 +7,7 @@
 (use-package org
   :after (bind-key)
   :ensure nil
+  :demand
   :mode ("\\.org\\'" . org-mode)
   :bind (("C-c a" . #'org-agenda)
          ("C-c c" . #'org-capture)
@@ -209,9 +210,16 @@
           ("~" org-code verbatim)
           ("+"
            (:strike-through t))))
-  (use-package ov)
-  (load-file "~/.emacs.d/site-lisp/org-colored-text.el")
   )
+
+(use-package ov)
+(use-package org-colored-text
+  :after (org ov)
+  :demand
+  :ensure nil
+  :load-path "~/.emacs.d/site-lisp/"
+  )
+
 
 (use-package org-super-agenda
   :after (org)
@@ -650,8 +658,8 @@
                           :underline nil)))
 
   ;; 用法示例：把 header-line 高度设为 20 像素
-  ;; (add-hook 'elpaca-after-init-hook (lambda ()
-  ;;                                     (my-set-header-line-height-px 3)))
+  (add-hook 'elpaca-after-init-hook (lambda ()
+                                      (my-set-header-line-height-px 3)))
   )
 
 (use-package org-timeblock

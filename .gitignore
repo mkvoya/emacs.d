@@ -60,3 +60,6 @@ games
 /places
 .aider*
 .env
+/.tags
+/.ctags.d/
+/config-frags.d/*.elc

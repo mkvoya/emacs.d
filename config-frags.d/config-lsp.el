@@ -12,6 +12,7 @@
          (python-base-mode . mk/eglot-ensure)
          )
   :config
+  (eglot-inlay-hints-mode -1)
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))

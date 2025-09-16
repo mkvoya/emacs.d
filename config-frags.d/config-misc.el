@@ -37,25 +37,6 @@
 (use-package focus)
 
 
-(defun mk/count-today-todos ()
-  "Count the number of today's to-do tasks."
-  (interactive)
-  (let ((count 0)
-        (today (format-time-string "%Y-%m-%d")))
-    (when (fboundp 'org-compile-prefix-format)
-      (org-compile-prefix-format 'todo)
-      (org-map-entries
-       (lambda ()
-         (when (and (string= (org-get-todo-state) "TODO")
-                    (or (string= (org-entry-get nil "SCHEDULED") today)
-                        (and (org-entry-get nil "DEADLINE")
-                             (string< today (org-entry-get nil "DEADLINE")))
-                        ))
-           (setq count (1+ count))))
-       nil 'agenda))
-    count)
-  )
-
 (use-package format-all)
 
 (defun mk/--pick-project ()
@@ -81,5 +62,7 @@
 (use-package citeproc :defer t)
 
 (use-package xkcd :defer t)
+
+(use-package restclient :defer t)
 
 (provide 'config-misc)

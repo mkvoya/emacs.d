@@ -8,6 +8,7 @@
   :demand t
   :after (undo-fu bind-key)
   :bind (:map evil-normal-state-map ("C-u" . #'evil-scroll-up))
+  :init
   :config
   ;; ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
   ;; ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -15,7 +16,7 @@
   ;;   "Look up the keyword at point. Calls `evil-lookup-func'."
   ;;   (call-interactively #'man))
 
-  (setq evil-want-C-i-jump nil)
+  (setopt evil-want-C-i-jump nil)
   (setq evil-move-beyond-eol t)
   (setq evil-want-fine-undo t)
   (setq evil-symbol-word-search t)

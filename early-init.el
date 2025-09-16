@@ -35,57 +35,41 @@
                    "/opt/homebrew/opt/gcc/lib/gcc/current/gcc/aarch64-apple-darwin24/14/"
                    ) ":")
                 (or (getenv "LD_LIBRARY_PATH") "")))
-(when is-android
-  (setenv "PATH" (format "%s:%s" "/data/data/com.termux/files/usr/bin"
-                         (getenv "PATH")))
-  (setenv "LD_LIBRARY_PATH" (format "%s:%s"
-                                    "/data/data/com.termux/files/usr/lib"
-                                    (getenv "LD_LIBRARY_PATH")))
-  (push "/data/data/com.termux/files/usr/bin" exec-path)
-  )
-(when (string-equal system-type "android")
-  ;; Add Termux binaries to PATH environment
-  (let ((termuxpath "/data/data/com.termux/files/usr/bin"))
-    (setenv "PATH" (concat (getenv "PATH") ":" termuxpath))
-    (setq exec-path (append exec-path (list termuxpath)))))
 
-(unless is-android
-  (when (display-graphic-p)
-    (tool-bar-mode -1) ; t for enable, nil for disable, -1 for toggle
-    (scroll-bar-mode -1)
-    (menu-bar-mode -1))
+;; (when (display-graphic-p)
+;;   (tool-bar-mode -1) ; t for enable, nil for disable, -1 for toggle
+;;   (scroll-bar-mode -1)
+;;   (menu-bar-mode -1))
 
-  (setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@31--git"))
+(setq source-directory (expand-file-name "~/Library/Caches/Homebrew/emacs-plus@31--git"))
 
-  (setq-default
-   default-frame-alist
-   `(
-     (left-fringe . 8)                    ;; Thin left fringe
-     (menu-bar-lines . 0)                 ; No menu bar
-     (right-divider-width . 1)            ;; Thin vertical window divider
-     (right-fringe . 3)                   ;; Thin right fringe
-     (tool-bar-lines . 0)                 ; No tool bar
-     (tab-bar-lines . 0)                  ; No tab bar
-     ;; (undecorated . 1)                 ; this will completely remove the titlebar
-     (ns-titlebar-height-adjust . -10)    ; this is actually not used
-     (ns-title-hidden . 1)                ; hide the title text in the titlebar
-     (ns-fullsize-content . 1)            ; make the content full size
-     (ns-transparent-titlebar . 1)        ; make the titlebar transparent
-     (vertical-scroll-bars . nil)         ; No vertical scroll-bars
-     (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
-     (undecorated . t)
-     (width . 120)
-     (height . 50)
-     (font . "Monaco-12")
-     (minibuffer . t)
-     (drag-with-header-line . t)
-     (drag-with-mode-line . t)
-     (drag-with-internal-border . t)
-     ))
-  ;; (set-frame-font "Monaco-12" nil t)
-  (set-face-attribute 'fixed-pitch nil :family "Monaco")
-
-  ) ; End of unless is-android
+(setq-default
+ default-frame-alist
+ `(
+   (left-fringe . 8)                    ;; Thin left fringe
+   ;; (menu-bar-lines . 0)                 ; No menu bar
+   (right-divider-width . 1)            ;; Thin vertical window divider
+   (right-fringe . 3)                   ;; Thin right fringe
+   ;; (tool-bar-lines . 0)                 ; No tool bar
+   ;; (tab-bar-lines . 0)                  ; No tab bar
+   ;; (undecorated . 1)                 ; this will completely remove the titlebar
+   ;; (ns-titlebar-height-adjust . -10)    ; this is actually not used
+   (ns-title-hidden . 1)                ; hide the title text in the titlebar
+   (ns-fullsize-content . 1)            ; make the content full size
+   (ns-transparent-titlebar . 1)        ; make the titlebar transparent
+   (vertical-scroll-bars . nil)         ; No vertical scroll-bars
+   (horizontal-scroll-bars . nil)       ; No horizontal scroll-bars
+   (undecorated . t)
+   (width . 120)
+   (height . 50)
+   (font . "Monaco-12")
+   (minibuffer . t)
+   (drag-with-header-line . t)
+   (drag-with-mode-line . t)
+   (drag-with-internal-border . t)
+   ))
+;; (set-frame-font "Monaco-12" nil t)
+(set-face-attribute 'fixed-pitch nil :family "Monaco")
 
 ;; (when window-system (set-frame-size (selected-frame) 120 50))
 
