@@ -12,6 +12,7 @@
   (setq flymake-no-changes-timeout 2)
   )
 (use-package jinx
+	     ;; :disabled t
   :hook (emacs-startup . global-jinx-mode)
   :bind (("C-;" . jinx-correct)
          ("C-M-;" . jinx-languages))

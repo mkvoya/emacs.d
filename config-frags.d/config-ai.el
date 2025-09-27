@@ -37,29 +37,29 @@
 (use-package gptel
   :ensure (:host github :repo "karthink/gptel" :branch "master" :files ("*"))
   :config
-  (setq gptel-use-curl nil)
-  (setq
-   ;; gptel-model "gpt-4o-2024-05-13"
-   gptel-model 'gpt-4o)
+  (setq gptel-use-curl t)
+  (setq gptel-model 'gpt-4.1)
   (setq gptel-backend
    (gptel-make-openai "IPADS GPT"
+     ;; :host "10.0.0.10:3006"
      :host "ipads.chat.gpt:3006"
      :protocol "http"
      :stream t
      :key #'gptel-api-key
      :models '(
+               "gpt-4.1"
                "gemini-2.5-flash"
                "gemini-2.5-pro"
                "claude-3-5"
-               "gpt-5",
-               "gpt-5-mini",
-               "gpt-5-nano",
-               "gpt-image-1",
-               "anthropic/claude-sonnet-4",
-               "anthropic/claude-opus-4",
-               "deepseek-r1",
-               "deepseek-v3",
-               "gpt-4o"))))
+               "gpt-5"
+               "gpt-5-mini"
+               "gpt-5-nano"
+               "gpt-image-1"
+               "anthropic/claude-sonnet-4"
+               "anthropic/claude-opus-4.1"
+               "x-ai/grok-4"
+               "deepseek-r1"
+               "deepseek-v3"))))
 
 ;; install claude-code.el:
 (use-package claude-code
@@ -121,4 +121,6 @@
   (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
 
 
+
 (provide 'config-ai)
+;;; config-ai.el ends here

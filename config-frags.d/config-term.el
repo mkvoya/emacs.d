@@ -15,8 +15,7 @@
   :ensure (:host github :repo "jixiuf/vterm-toggle")
   :after (vterm)
   :defer t
-  :bind (("C-c t" . vterm-toggle)
-         ("C-`" . vterm-toggle)
+  :bind (("C-`" . vterm-toggle)
          ("<C-f2>" . vterm-toggle-cd)
          (:map vterm-mode-map
                ("C-<return>" . vterm-toggle-insert-cd)

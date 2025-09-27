@@ -245,7 +245,7 @@
                          (org-super-agenda-groups
                           '((:log t)
                             (:name "What's Next" :todo "NEXT" :time-grid t :order 1)
-                            (:name "Important" :priority "A" :order 6)
+                            ;; (:name "Important" :priority "A" :order 6)
                             (:name "Due Today" :deadline today :order 2)
                             (:name "Scheduled Soon" :scheduled future :order 8)
                             (:name "Due Soon" :deadline future :order 9)
@@ -628,7 +628,7 @@
 
 (use-package emacs
   :ensure nil
-  ;; :disabled t
+  :disabled t
   :after (org org-ql)
   :init
   (load-file "~/.emacs.d/site-lisp/org-timeliner.el")

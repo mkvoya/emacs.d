@@ -264,10 +264,10 @@
               .title .year .url .year .identifier .category)))
   )
 
-;; * ebib: |bib manager
+;; * ebib: bib manager
 (use-package ebib
-  :after (biblio bibtex citar)
-  :defer t
+  ;; :after (biblio bibtex citar)
+  ;; :defer t
   :bind (:map ebib-index-mode-map ("O" . #'mk/ebib-open-dir))
   :init
   (defun mk/ebib-create-org-schedule (_key _db)

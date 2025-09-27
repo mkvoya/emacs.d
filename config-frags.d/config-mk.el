@@ -1,6 +1,9 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: MK's customized packages
 
+(use-package async-cmd
+  :ensure (:type git :host github :repo "mkvoya/async-cmd.el"))
+
 
 (use-package motd
   :after (dash org)
