@@ -4,6 +4,7 @@
 
 ;; * Evil
 (use-package evil
+  :disabled t
   :ensure t
   :demand t
   :after (undo-fu bind-key)
@@ -100,5 +101,124 @@
   :ensure nil
   :after (evil magit)
   :defer t)
+
+(defun meow-toggle-case ()
+  "Toggle case of character at point or region (like Vim's `~`)."
+  (interactive)
+  (if (use-region-p)
+      ;; 如果有选区，就在整个选区上切换大小写
+      (let ((beg (region-beginning))
+            (end (region-end)))
+        (save-excursion
+          (goto-char beg)
+          (while (< (point) end)
+            (let ((ch (char-after)))
+              (when (and ch (char-equal (upcase ch) (downcase ch)))
+                (insert (if (eq ch (upcase ch))
+                            (downcase ch)
+                          (upcase ch)))
+                (delete-char 1)))
+            (forward-char 1))))
+    ;; 否则只切换光标所在字符
+    (let ((ch (char-after)))
+      (when ch
+        (insert (if (eq ch (upcase ch))
+                    (downcase ch)
+                  (upcase ch)))
+        (delete-char 1)))))
+
+
+
+(defun meow-setup ()
+  (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+  (meow-motion-define-key
+   '("j" . meow-next)
+   '("k" . meow-prev)
+   '("<escape>" . ignore))
+  (meow-leader-define-key
+   ;; Use SPC (0-9) for digit arguments.
+   '("1" . meow-digit-argument)
+   '("2" . meow-digit-argument)
+   '("3" . meow-digit-argument)
+   '("4" . meow-digit-argument)
+   '("5" . meow-digit-argument)
+   '("6" . meow-digit-argument)
+   '("7" . meow-digit-argument)
+   '("8" . meow-digit-argument)
+   '("9" . meow-digit-argument)
+   '("0" . meow-digit-argument)
+   '("/" . meow-keypad-describe-key)
+   '("?" . meow-cheatsheet))
+  (meow-normal-define-key
+   '("0" . meow-expand-0)
+   '("9" . meow-expand-9)
+   '("8" . meow-expand-8)
+   '("7" . meow-expand-7)
+   '("6" . meow-expand-6)
+   '("5" . meow-expand-5)
+   '("4" . meow-expand-4)
+   '("3" . meow-expand-3)
+   '("2" . meow-expand-2)
+   '("1" . meow-expand-1)
+   '("-" . negative-argument)
+   '(";" . meow-reverse)
+   '("," . meow-inner-of-thing)
+   '("." . meow-bounds-of-thing)
+   '("[" . meow-beginning-of-thing)
+   '("]" . meow-end-of-thing)
+   '("a" . meow-append)
+   '("A" . meow-open-below)
+   '("b" . meow-back-word)
+   '("B" . meow-back-symbol)
+   '("c" . meow-change)
+   '("d" . meow-delete)
+   '("D" . meow-backward-delete)
+   '("e" . meow-next-word)
+   '("E" . meow-next-symbol)
+   '("f" . meow-find)
+   '("g" . meow-cancel-selection)
+   '("G" . meow-grab)
+   '("h" . meow-left)
+   '("H" . meow-left-expand)
+   '("i" . meow-insert)
+   '("I" . meow-open-above)
+   '("j" . meow-next)
+   '("J" . meow-next-expand)
+   '("k" . meow-prev)
+   '("K" . meow-prev-expand)
+   '("l" . meow-right)
+   '("L" . meow-right-expand)
+   '("m" . meow-join)
+   '("n" . meow-search)
+   '("o" . meow-block)
+   '("O" . meow-to-block)
+   '("p" . meow-yank)
+   '("q" . meow-quit)
+   '("Q" . meow-goto-line)
+   '("r" . meow-replace)
+   ;; '("R" . meow-swap-grab)
+   '("R" . undo-fu-only-redo)
+   '("s" . meow-kill)
+   '("t" . meow-till)
+   ;; '("u" . meow-undo)
+   '("u" . undo-fu-only-undo)
+   '("U" . meow-undo-in-selection)
+   '("v" . meow-visit)
+   '("w" . meow-mark-word)
+   '("W" . meow-mark-symbol)
+   '("x" . meow-line)
+   '("X" . meow-goto-line)
+   '("y" . meow-save)
+   '("Y" . meow-sync-grab)
+   '("z" . meow-pop-selection)
+   '("'" . repeat)
+   '("~" . meow-toggle-case)
+   '("<escape>" . ignore)))
+
+(use-package meow
+  :config
+  (meow-setup)
+  (meow-global-mode 1))
+
 
 (provide 'config-evil)

@@ -578,14 +578,20 @@
 
 (use-package ox-hugo
   :defer t
-  :after ox
+  :after (ox org-capture)
   :init
   (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
     (async-shell-command "cd ~/Dropbox/Public/Blog2025 && hugo -D && rsync -rvP ~/Dropbox/Public/Blog2025/public/ dong.mk:/srv/http/blog"))
   (advice-add 'org-hugo-export-wim-to-md :after #'mk/sync-to-server)
-  :config
 
-  ;; Populates only the EXPORT_FILE_NAME property in the inserted heading.
+  (defun mk/org-new-post ()
+    (interactive)
+    (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
+    (let ((content (org-hugo-new-subtree-post-capture-template)))
+      (goto-char (point-max))
+      (insert "\n")
+      (insert content)))
+
   (with-eval-after-load 'org-capture
     (defun org-hugo-new-subtree-post-capture-template ()
       "Returns `org-capture' template string for new Hugo post.
@@ -611,15 +617,6 @@
                    entry
                    (file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
                    (function org-hugo-new-subtree-post-capture-template))))
-  (defun mk/org-new-post ()
-    (interactive)
-    (find-file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
-    (let ((content (org-hugo-new-subtree-post-capture-template)))
-      (goto-char (point-max))
-      (insert "\n")
-      (insert content)
-      )
-    )
   )
 
 
@@ -723,5 +720,7 @@
 
 (use-package org-download :defer t)
 (use-package org-sidebar :defer t)
+
+(use-package org-tempo :ensure nil :after org)
 
 (provide 'config-org)

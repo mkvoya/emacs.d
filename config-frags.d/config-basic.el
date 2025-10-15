@@ -57,7 +57,12 @@
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
 
 (use-package undo-fu
-  :ensure (:host github :repo "emacsmirror/undo-fu"))
+  :ensure (:host github :repo "emacsmirror/undo-fu")
+  :config
+  (setq undo-fu-allow-undo-in-region t))
+
+(use-package vundo
+  :ensure (:host github :repo "casouri/vundo"))
 
 (use-package ctrlf :defer t
   :config (ctrlf-mode +1))
@@ -79,7 +84,7 @@
 
 
 (use-package crux :defer t)
-(use-package ranger :defer t)  ; The ranger mode
+(use-package ranger :defer t :disabled t)  ; The ranger mode
 (use-package vlf :defer t)  ; View large files
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist :ensure nil :hook (elpaca-after-init . savehist-mode))
@@ -133,5 +138,10 @@
   :ensure nil ; built-in
   :defer t)
 
+(use-package visual-replace
+   :defer t
+   :bind (("C-c r" . visual-replace)
+          :map isearch-mode-map
+          ("C-c r" . visual-replace-from-isearch)))
 
 (provide 'config-basic)

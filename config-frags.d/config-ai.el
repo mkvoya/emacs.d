@@ -42,7 +42,8 @@
   (setq gptel-backend
    (gptel-make-openai "IPADS GPT"
      ;; :host "10.0.0.10:3006"
-     :host "ipads.chat.gpt:3006"
+     ;; :host "ipads.chat.gpt:3006"
+     :host "dong.mk:3006"
      :protocol "http"
      :stream t
      :key #'gptel-api-key
@@ -60,6 +61,37 @@
                "x-ai/grok-4"
                "deepseek-r1"
                "deepseek-v3"))))
+
+(use-package inline-diff
+  :ensure (:repo "https://code.tecosaur.net/tec/inline-diff")
+  :after gptel-rewrite)
+
+;; Updated version available at https://github.com/karthink/gptel/wiki
+(use-package gptel-rewrite
+  :ensure nil
+  :after gptel
+  :bind (:map gptel-rewrite-actions-map
+         ("C-c C-i" . gptel--rewrite-inline-diff))
+  :config
+  (defun gptel--rewrite-inline-diff (&optional ovs)
+    "Start an inline-diff session on OVS."
+    (interactive (list (gptel--rewrite-overlay-at)))
+    (unless (require 'inline-diff nil t)
+      (user-error "Inline diffs require the inline-diff package."))
+    (when-let* ((ov-buf (overlay-buffer (or (car-safe ovs) ovs)))
+                ((buffer-live-p ov-buf)))
+      (with-current-buffer ov-buf
+        (cl-loop for ov in (ensure-list ovs)
+                 for ov-beg = (overlay-start ov)
+                 for ov-end = (overlay-end ov)
+                 for response = (overlay-get ov 'gptel-rewrite)
+                 do (delete-overlay ov)
+                 (inline-diff-words
+                  ov-beg ov-end response)))))
+  (when (boundp 'gptel--rewrite-dispatch-actions)
+    (add-to-list
+     'gptel--rewrite-dispatch-actions '(?i "inline-diff")
+     'append)))
 
 ;; install claude-code.el:
 (use-package claude-code

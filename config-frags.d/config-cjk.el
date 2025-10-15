@@ -11,6 +11,12 @@
   :defer t
   :custom
   (default-input-method "rime")
+  (rime-disable-predicates
+   '(rime-predicate-org-latex-mode-p
+     rime-predicate-hydra-p
+     rime-predicate-org-in-src-block-p
+     rime-predicate-ace-window-p
+     meow-normal-mode-p))
   (rime-librime-root "~/.emacs.d/librime/dist")
   (rime-share-data-dir "~/Library/Rime")
   (rime-user-data-dir "~/Library/Rime")

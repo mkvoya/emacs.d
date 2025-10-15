@@ -1,1 +1,48 @@
-emacs-config.org
+#+#+title: MK's Emacs Configuration
+
+
+This configuration is designed for Emacs 27.1 and above, focusing on daily editing, development, and writing, with an emphasis on simplicity and efficiency.
+
+* Installation
+
+1. Clone this repository into your ~.emacs.d~ directory or a custom location:
+
+   #+begin_src shell
+   git clone https://github.com/mkvoya/emacs-config.git ~/.emacs.d
+   #+end_src
+
+2. Start Emacs. All required packages and dependencies will be installed automatically.
+
+* File Structure
+
+This configuration uses a modular organization. The directory structure is as follows:
+
+#+begin_example
+init.el             Entry point for configuration
+early-init.el       Startup optimizations (Emacs 27+)
+lisp/
+  core.el           Core settings and startup tweaks
+  packages.el       Package management
+  lang/
+    prog-python.el  Python-related settings
+    prog-cpp.el     C/C++-related settings
+    prog-lisp.el    Lisp language configurations
+  ui.el             UI and appearance customization
+  keybindings.el    Custom keybindings
+  org-mode.el       Enhancements for org-mode
+#+end_example
+
+You can freely add, remove, or modify modules to fit your needs.
+
+* Troubleshooting
+
+- A reliable internet connection is recommended for package downloads.
+- If any dependencies fail to install, run =M-x package-refresh-contents= manually.
+
+* Feedback
+
+Feel free to open an issue or submit a pull request for questions or suggestions.
+
+-----
+
+Happy hacking with Emacs!
