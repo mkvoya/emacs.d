@@ -14,6 +14,23 @@
     (message "Opening %s done" file)))
 ;;(define-key dired-mode-map "E" 'mk/dired-open-pdf)
 
+(defvar mk/original-dired-E-fn
+  nil
+  "Original keybinding")
+(defun mk/dired-open-pdf-or-fallback ()
+  (interactive)
+  (let ((file (dired-get-file-for-visit)))
+    (if (string-match-p "\\.pdf\\'" file)
+        (start-process "open-pdf-expert" nil "open" "-a" "PDF Expert" file)
+      ;; fallback
+      (when (commandp mk/original-dired-E-fn)
+        (call-interactively mk/original-dired-E-fn)))))
+
+(with-eval-after-load 'dired
+  (setq mk/original-dired-E-fn (lookup-key dired-mode-map (kbd "E")))
+  (define-key dired-mode-map (kbd "E") #'mk/dired-open-pdf-or-fallback))
+
+
 (defun mk/dired-curl ()
   "Get file from url to dired."
   (interactive)

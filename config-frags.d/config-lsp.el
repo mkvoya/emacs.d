@@ -4,7 +4,8 @@
 (use-package eglot :after (exec-path-from-shell)
   :preface
   (defun mk/eglot-ensure ()
-    (exec-path-from-shell-initialize)
+    (unless (file-remote-p (buffer-file-name (current-buffer)))
+      (exec-path-from-shell-initialize))
     (eglot-ensure))
   :hook (
          (rust-mode . mk/eglot-ensure)

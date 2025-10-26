@@ -90,7 +90,7 @@
               ("XXX+" . ,red-warmer)
               ("REVIEW" . ,red)
               ("DEPRECATED" . ,yellow)))))
-  (add-hook 'ef-themes-post-load-hook #'my-ef-themes-hl-todo-faces)
+  ;; (add-hook 'ef-themes-post-load-hook #'my-ef-themes-hl-todo-faces)
 
   ;; Disable all other themes to avoid awkward blending:
   (mapc #'disable-theme custom-enabled-themes)

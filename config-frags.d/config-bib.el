@@ -94,6 +94,7 @@
    ((string= journal "the australian universities' review") (format "aur.%s" year))
    ((string= journal "nature computational science") (format "nat.comput.sci.%s" year))
    ((string= journal "nature reviews genetics") (format "nat.rev.genet.%s" year))
+   ((string= journal "nature biotechnology") (format "nat.biotechnol.%s" year))
    ;; arXiv
    ((string= publisher "arxiv") (format "arxiv%s" year))
    (t "XXXX")))

@@ -4,12 +4,37 @@
 
 ;; * Evil
 (use-package evil
-  :disabled t
+  ;; :disabled t
   :ensure t
   :demand t
   :after (undo-fu bind-key)
   :bind (:map evil-normal-state-map ("C-u" . #'evil-scroll-up))
   :init
+  (defvar mk/original-evil-normal-spc-binding nil
+    "Original SPC binding for Evil normal mode.")
+  (defun mk/evil-toggle-checkbox ()
+    "Toggle [ ] and [X] at the point"
+    (interactive)
+    (if (and (eq evil-state 'normal)
+               (not (region-active-p)))
+      (save-excursion
+        ;; 获取当前位置附近的两个字符
+        (let ((two-chars (buffer-substring-no-properties
+                          (max (point-min) (- (point) 0))
+                          (min (point-max) (+ (point) 3)))))
+          (cond
+           ;; 如果是 [ ]
+           ((string-match "\\[ \\]" two-chars)
+            (search-backward "[" (line-beginning-position) t)
+            (delete-char 3)
+            (insert "[X]"))
+           ;; 如果是 [X]
+           ((string-match "\\[X\\]" two-chars)
+            (search-backward "[" (line-beginning-position) t)
+            (delete-char 3)
+            (insert "[ ]")))))
+      (when (commandp mk/original-evil-normal-spc-binding)
+        (call-interactively mk/original-evil-normal-spc-binding))))
   :config
   ;; ;; Use man (instead of WoMan) for man pages, although is slow in Emacs.
   ;; ;; Install man-db, check this: https://www.reddit.com/r/emacs/comments/mfmg3x/disabling_ivy_for_a_specific_command/
@@ -60,6 +85,9 @@
                           eca-chat-mode
                           ))
     (evil-set-initial-state nonevil-mode 'emacs))
+  (setq mk/original-evil-normal-spc-binding
+        (lookup-key evil-normal-state-map (kbd "SPC")))
+  (define-key evil-normal-state-map (kbd "SPC") #'mk/evil-toggle-checkbox)
 
   (evil-mode 1))
 
@@ -127,7 +155,19 @@
                   (upcase ch)))
         (delete-char 1)))))
 
+(defun meow-undo-fu-undo ()
+  "Cancel current selection then undo."
+  (interactive)
+  (when (region-active-p)
+    (meow--cancel-selection))
+  (undo-fu-only-undo))
 
+(defun meow-undo-fu-redo ()
+  "Cancel current selection then undo."
+  (interactive)
+  (when (region-active-p)
+    (meow--cancel-selection))
+  (undo-fu-only-redo))
 
 (defun meow-setup ()
   (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
@@ -166,6 +206,8 @@
    '("." . meow-bounds-of-thing)
    '("[" . meow-beginning-of-thing)
    '("]" . meow-end-of-thing)
+   '("{" . meow-page-up)
+   '("}" . meow-page-down)
    '("a" . meow-append)
    '("A" . meow-open-below)
    '("b" . meow-back-word)
@@ -197,11 +239,11 @@
    '("Q" . meow-goto-line)
    '("r" . meow-replace)
    ;; '("R" . meow-swap-grab)
-   '("R" . undo-fu-only-redo)
+   '("R" . meow-undo-fu-redo)
    '("s" . meow-kill)
    '("t" . meow-till)
    ;; '("u" . meow-undo)
-   '("u" . undo-fu-only-undo)
+   '("u" . meow-undo-fu-undo)
    '("U" . meow-undo-in-selection)
    '("v" . meow-visit)
    '("w" . meow-mark-word)
@@ -216,6 +258,7 @@
    '("<escape>" . ignore)))
 
 (use-package meow
+  :disabled t
   :config
   (meow-setup)
   (meow-global-mode 1))

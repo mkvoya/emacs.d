@@ -50,6 +50,8 @@
   (volatile-highlights-mode t)
   )
 
-(use-package hl-todo :ensure (:host github :repo "tarsius/hl-todo"))
+(use-package hl-todo
+  :ensure (:host github :repo "tarsius/hl-todo")
+  :custom (hl-todo-color-background t))
 
 (provide 'config-hl)

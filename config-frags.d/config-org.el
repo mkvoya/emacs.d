@@ -623,6 +623,9 @@
 (setq org-modern-fold-stars
       '(("◉" . "○") ("◈" . "◇") ("⯈" . "⯆") ("◉" . "○") ("◈" . "◇")))
 
+(setq-default header-line-format
+              '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"))
+
 (use-package emacs
   :ensure nil
   :disabled t
