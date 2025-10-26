@@ -150,6 +150,10 @@
   :ensure (:type git :host github :repo "manzaltu/claude-code-ide.el")
   :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
   :config
+  (setenv "ANTHROPIC_BASE_URL" "https://anyrouter.top")
+  (setenv "ANTHROPIC_AUTH_TOKEN" (remove-trailing-newline (read-file-contents "~/.secrets/anyrouter.key")))
+  (setenv "ANTHROPIC_BASE_URL" "https://open.bigmodel.cn/api/anthropic")
+  (setenv "ANTHROPIC_AUTH_TOKEN" (remove-trailing-newline (read-file-contents "~/.secrets/bigmodel.key")))
   (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
 
 
