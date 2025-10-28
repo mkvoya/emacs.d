@@ -289,10 +289,14 @@
   (setq ebib-index-window-size 10)
   (setq ebib-preload-bib-files `(,mk/bib-main-file))
   (setq ebib-file-search-dirs `(,mk/bib-pdf-dir))
-  (setq ebib-notes-storage 'one-file-per-note)
-  (setq ebib-reading-list-file "~/Dropbox/Dreams/Org/Ebib-ReadingList.org")
+  ;; (setq ebib-notes-storage 'one-file-per-note)
+
+  (setq ebib-notes-storage 'multiple-notes-per-file) ; use a single file for notes
   (setq ebib-notes-directory "~/Dropbox/Dreams/Org/PaperNotes/")
-  (setq ebib-notes-locations `(,ebib-notes-directory))
+  (setq ebib-notes-default-file "~/Dropbox/Dreams/Org/PaperNotes.org") ; new note goes here
+  (setq ebib-notes-locations `(,ebib-notes-directory)) ; locations to search notes
+
+  (setq ebib-reading-list-file "~/Dropbox/Dreams/Org/Ebib-ReadingList.org")
   ;; ebib-keywords-file "~/Dropbox/Bibliography/ebib-keywords.txt"
   (setq ebib-keywords-field-keep-sorted t)
   (setq ebib-keywords-file-save-on-exit 'always)
@@ -349,7 +353,8 @@
     "Gerneate the rest content of the note template accroding to KEY in DB."
     (let ((template (mk/read-file-content "~/.emacs.d/snippets/ebib/ebib-notes-template.org"))
           (title (mk/ebib--clean-field key db "title"))
-          (date (format-time-string "%FT%T%z"))
+          ;; (date (format-time-string "%FT%T%z"))
+          (date (format-time-string (org-time-stamp-format t t)))
           (authors (mk/ebib--clean-field key db "author"))
           (series (mk/ebib--clean-field key db "series")))
       (setq template (string-replace "${citekey}" key template))

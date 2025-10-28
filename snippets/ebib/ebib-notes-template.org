@@ -1,15 +1,9 @@
+* ${title}
 :PROPERTIES:
 :ID:        ${orgid}
 :Custom_id: ${citekey}
 :ROAM_REFS: [cite:@${citekey}]
+:CREATED:   ${date}
+:SERIES:    ${series}
 :END:
 
-#+TITLE: Notes on /${title}/
-#+DATE: ${date}
-#+SERIES: ${series}
-
-<Brief Here>
-
-* Details
-
-* Remarks

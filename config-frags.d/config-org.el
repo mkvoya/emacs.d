@@ -531,7 +531,7 @@
                             (denote-file-is-note-p (buffer-file-name)))
                        (denote-retrieve-filename-identifier (buffer-name))
                      (buffer-name)))
-         (insert-image-pos (second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
+         (insert-image-pos (cl-second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
          (path (cond ((equal insert-image-pos "default-directory") ; default-directory
                       default-directory)
                      ((and insert-image-pos (not (equal insert-image-pos "nil"))) ; user-specified
