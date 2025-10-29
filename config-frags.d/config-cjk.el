@@ -4,10 +4,7 @@
 
 ;; * Rime: the input method
 (use-package rime
-  :ensure (rime :type git
-                :host github
-                :repo "DogLooksGood/emacs-rime"
-                :files ("*.el" "Makefile" "lib.c"))
+  :ensure (:host github :repo "DogLooksGood/emacs-rime" :files ("*.el" "Makefile" "lib.c"))
   :defer t
   :custom
   (default-input-method "rime")
@@ -16,7 +13,6 @@
      rime-predicate-hydra-p
      rime-predicate-org-in-src-block-p
      rime-predicate-ace-window-p
-                                        ; meow-normal-mode-p
      ))
   (rime-librime-root "~/.emacs.d/librime/dist")
   (rime-share-data-dir "~/Library/Rime")
@@ -44,20 +40,17 @@
   (set-face-attribute 'rime-code-face nil
                       :background "#719ae7"
                       :foreground "#efefef"
-                      :font "Hei-20")
-  )
+                      :font "Hei-20"))
 
 ;; * CJK jumping
 (setq word-wrap-by-category t)
-(use-package emt
-  :ensure (:host github :repo "roife/emt"
-                 :files ("*.el" "module/*" "module"))
+(use-package emt :ensure (:host github :repo "roife/emt" :files ("*.el" "module/*" "module"))
+  :if (eq system-type 'darwin)
   :after (evil)
   :hook (elpaca-after-init . emt-mode)
   :config
   (define-key evil-motion-state-map (kbd "w") #'emt-forward-word)
-  (define-key evil-motion-state-map (kbd "b") #'emt-backward-word)
-  )
+  (define-key evil-motion-state-map (kbd "b") #'emt-backward-word))
 
 
 (provide 'config-cjk)

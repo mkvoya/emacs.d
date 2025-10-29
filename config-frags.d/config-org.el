@@ -210,6 +210,10 @@
           ("~" org-code verbatim)
           ("+"
            (:strike-through t))))
+
+  ;; set for imenu
+  (setq org-imenu-depth 5)
+
   )
 
 (use-package ov)

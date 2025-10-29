@@ -87,22 +87,19 @@
   )
 
 (use-package yasnippet
+  :disabled t
   :init (yas-global-mode 1))
 (use-package yasnippet-snippets
+  :disabled t
   :after yasnippet)
 
 ;; TODO: which one?
 ;; Configure Tempel
 (use-package tempel
-  ;; Require trigger prefix before template name when completing.
-  ;; :custom
-  ;; (tempel-trigger-prefix "<")
-
+  ;; :custom (tempel-trigger-prefix "<")
   :bind (("M-+" . tempel-complete) ;; Alternative tempel-expand
          ("M-*" . tempel-insert))
-
   :init
-
   ;; Setup completion at point
   (defun tempel-setup-capf ()
     ;; Add the Tempel Capf to `completion-at-point-functions'.
@@ -113,12 +110,10 @@
     ;; `tempel-expand' *before* the main programming mode Capf, such
     ;; that it will be tried first.
     (setq-local completion-at-point-functions
-                (cons #'tempel-expand
-                      completion-at-point-functions)))
-
-  (add-hook 'conf-mode-hook 'tempel-setup-capf)
-  (add-hook 'prog-mode-hook 'tempel-setup-capf)
-  (add-hook 'text-mode-hook 'tempel-setup-capf)
+                (cons #'tempel-expand completion-at-point-functions)))
+  :hook ((conf-mode . tempel-setup-capf)
+         (prog-mode . tempel-setup-capf)
+         (text-mode . tempel-setup-capf))
 
   ;; Optionally make the Tempel templates available to Abbrev,
   ;; either locally or globally. `expand-abbrev' is bound to C-x '.
@@ -126,8 +121,6 @@
   ;; (global-tempel-abbrev-mode)
   )
 
-;; Optional: Add tempel-collection.
-;; The package is young and doesn't have comprehensive coverage.
 (use-package tempel-collection)
 
 (provide 'config-autocomp)

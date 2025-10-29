@@ -1,18 +1,35 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Config Fragement: Highlight
 
-(use-package highlight-indent-guides :defer t)
+
+;; Highlight current line
+(use-package hl-line :ensure nil
+  :hook (elpaca-after-init . global-hl-line-mode))
+
+;; Highlight todo
+(use-package hl-todo :ensure (:host github :repo "tarsius/hl-todo")
+  :custom (hl-todo-color-background t))
+
+;; Highlight matching parenthesis
+(use-package paren :ensure nil
+  :config
+  (setq show-paren-when-point-inside-paren t)
+  (setq show-paren-when-point-in-periphery t)
+  (show-paren-mode))
+
+;; Highlight indentations
+(use-package highlight-indent-guides
+  :hook (prog-mode . highlight-indent-guides-mode))
+
+;; Show color codes
 (use-package rainbow-mode
-  :defer t
-  :config (rainbow-mode t)
-  (add-hook 'after-change-major-mode-hook #'rainbow-mode)
-  )
+  :hook ((prog-mode org-mode) . rainbow-mode))
+
+;; Show color delimiters like parenthesis
 (use-package rainbow-delimiters
-  :defer t
   :hook (prog-mode . rainbow-delimiters-mode))
 
-(use-package emacs
-  :ensure nil
+(use-package emacs :ensure nil
   :config
   (setq-default prettify-symbols-alist '(("#+BEGIN_SRC" . "λ")  ; previously ✎
                                          ("#+END_SRC" . "□")
@@ -37,9 +54,8 @@
               ("M-i" . symbol-overlay-put)
               ("M-n" . symbol-overlay-jump-next)
               ("M-p" . symbol-overlay-jump-prev)))
-(use-package volatile-highlights
-  :delight
-  :ensure (:host github :repo "k-talo/volatile-highlights.el")
+
+(use-package volatile-highlights :ensure (:host github :repo "k-talo/volatile-highlights.el")
   :config
   ;;-----------------------------------------------------------------------------
   ;; Supporting evil-mode.
@@ -49,9 +65,5 @@
   (vhl/install-extension 'evil)
   (volatile-highlights-mode t)
   )
-
-(use-package hl-todo
-  :ensure (:host github :repo "tarsius/hl-todo")
-  :custom (hl-todo-color-background t))
 
 (provide 'config-hl)
