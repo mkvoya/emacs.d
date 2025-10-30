@@ -127,4 +127,6 @@
 
 (pixel-scroll-precision-mode t)
 
+(setq elisp-fontify-semantically t)
+
 (provide 'config-basic)
