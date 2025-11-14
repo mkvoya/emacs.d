@@ -1,10 +1,9 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: CJK
-
+;;; Emacs Configuration Fragment: CJK
 
 ;; * Rime: the input method
-(use-package rime
-  :ensure (:host github :repo "DogLooksGood/emacs-rime" :files ("*.el" "Makefile" "lib.c"))
+(use-package rime :ensure (:host github :repo "DogLooksGood/emacs-rime" :files ("*.el" "Makefile" "lib.c"))
+  :if (eq system-type 'darwin)
   :defer t
   :custom
   (default-input-method "rime")

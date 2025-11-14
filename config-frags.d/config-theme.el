@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: Periphery Tools
+;;; Emacs Configuration Fragment: Periphery Tools
 
 (use-package shrink-path :ensure (:host github :repo "zbelial/shrink-path.el"))
 
