@@ -41,7 +41,7 @@
 
   (add-hook 'TeX-mode-hook (lambda () (setq TeX-command-default "Make")))
   (add-hook 'LaTeX-mode-hook (lambda()
-                               (mkvoya/better-wrap)
+                               (visual-line-mode t)
                                ;; (flyspell-mode)
                                ;; (add-hook 'after-save-hook #'flyspell-buffer)
                                (LaTeX-math-mode)

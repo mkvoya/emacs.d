@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: Bootstrap (should be loaded first)
+;;; Emacs Configuration Fragment: Bootstrap (should be loaded first)
 
 ;; Setup Elpaca
 (defvar elpaca-installer-version 0.11)

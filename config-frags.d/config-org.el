@@ -192,7 +192,7 @@
   (add-hook 'org-mode-hook
             (lambda ()
               (electric-indent-local-mode -1)
-              (mkvoya/better-wrap)
+              (visual-line-mode t)
               (prettify-symbols-mode)
               ;; (org-hide-properties)
               ))

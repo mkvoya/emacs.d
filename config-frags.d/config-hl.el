@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: Highlight
+;;; Emacs Configuration Fragment: Highlight
 
 
 ;; Highlight current line

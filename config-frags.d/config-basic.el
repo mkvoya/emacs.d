@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: Basic Editing
+;;; Emacs Configuration Fragment: Basic Editing
 
 
 ;; Backups
@@ -22,33 +22,22 @@
 (setq savehist-save-minibuffer-history 1)
 (setq savehist-additional-variables '(kill-ring search-ring regex-search-ring))
 
-;; (savehist-mode 1)
-(setq-default
- ;; From: https://stackoverflow.com/questions/4657142/how-do-i-encourage-emacs-to-follow-the-compilation-buffer
- compilation-scroll-output t
+(setq-default compilation-scroll-output t)
  ;; (setq compilation-scroll-output 'first-error)
- ;; Prevent Extraneous Tabs
- indent-tabs-mode nil
- fill-column 100
+(setq-default indent-tabs-mode nil) ; indention does not insert tabs
+(setq-default fill-column 100)
  ;; line-spacing 0.1
- )
+
 (setq enable-recursive-minibuffers t)
 (minibuffer-depth-indicate-mode 1)
-(defun mkvoya/better-wrap ()
-  "Make the word wrap better."
-  (interactive)
-  (progn
-    (visual-line-mode t)
-    ;; (setq word-wrap nil)
-    ))
-
 (blink-cursor-mode 1)
 
 (setq delete-by-moving-to-trash t)
 
+;; 2025/11/14: Precision mode works well now, so we don't need the following tweaks.
 ;; Let's disable the precision mode since it brings some troubles with the precision mode
 ;; (pixel-scroll-precision-mode)
-(setq scroll-preserve-screen-position 'always)
+;; (setq scroll-preserve-screen-position 'always)
 
 ;; Mouse scrolling in terminal emacs
 (unless (display-graphic-p)
@@ -82,27 +71,28 @@
 (use-package ranger :defer t :disabled t)  ; The ranger mode
 (use-package vlf :defer t)  ; View large files
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
-(use-package savehist :ensure nil :hook (elpaca-after-init . savehist-mode))
+(use-package savehist :ensure nil
+  :hook (elpaca-after-init . savehist-mode))
 
 ;; Check https://emacs-china.org/t/emacs-builtin-mode/11937
 ;; Winner mode
-(use-package winner :ensure nil :hook (elpaca-after-init . winner-mode))
+(use-package winner :ensure nil
+  :hook (elpaca-after-init . winner-mode))
 
 ;; Remember the cursor position of files
 ;; (use-package saveplace :ensure nil :hook (elpaca-after-init . save-place-mode))
-(use-package so-long :ensure nil :config (global-so-long-mode 1))
 
-(use-package simple :ensure nil
-  :hook (elpaca-after-init . (lambda ()
-                               (line-number-mode)
-                               (column-number-mode)
-                               (size-indication-mode)
-                               ;; better line wrapping for cjk. Try =toggle-word-wrap=
-                               ;; (setq-default word-wrap nil)
-                               ;; (setq word-wrap nil)
-                               )))
+;; Better handle of files containing long lines
+(use-package so-long :ensure nil
+  :config (global-so-long-mode 1))
 
-(modify-syntax-entry ?_ "w")
+(line-number-mode 1)
+(column-number-mode 1)
+(size-indication-mode 1)
+
+(add-hook 'prog-mode-hook
+          (lambda ()
+            (modify-syntax-entry ?_ "w")))
 
 ;; * which-key: displays available keybindings in popup
 (use-package which-key :defer t
@@ -125,16 +115,13 @@
          :map isearch-mode-map
          ("C-c r" . visual-replace-from-isearch)))
 
-(pixel-scroll-precision-mode t)
-(setq pixel-scroll-precision-interpolate-page t)
-
+;; This implies (pixel-scroll-precision-mode t)
 (use-package ultra-scroll :ensure (:host github :repo "jdtsmith/ultra-scroll")
   :init
-  (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
-        scroll-margin 0)        ; important: scroll-margin>0 not yet supported
+  (setq pixel-scroll-precision-interpolate-page t)
+  (setq scroll-conservatively 3) ; or whatever value you prefer, since v0.4
+  (setq scroll-margin 0)        ; important: scroll-margin>0 not yet supported
   :config
   (ultra-scroll-mode 1))
-
-(setq elisp-fontify-semantically t)
 
 (provide 'config-basic)

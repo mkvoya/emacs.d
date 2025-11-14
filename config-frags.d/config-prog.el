@@ -21,6 +21,7 @@
                ("C-t" . citre-jump-back)))
   )
 
+(setq elisp-fontify-semantically t)
 
 ;; Built-in native line number display
 (use-package display-line-numbers
