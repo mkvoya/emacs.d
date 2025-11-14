@@ -43,6 +43,7 @@
 (require 'config-mk)
 (require 'config-nsgui)
 (require 'config-org)
+(require 'config-org-pub)
 (require 'config-pdf)
 (require 'config-periphery)
 (require 'config-prog)

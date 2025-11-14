@@ -25,7 +25,7 @@
   "Return all headings with swiftbar tag from agenda files as a string."
   (interactive)
   (let ((items (swiftbar--get-agenda-swiftbar-items)))
-    (mapconcat (lambda (item) 
+    (mapconcat (lambda (item)
                  (substring-no-properties (plist-get item :heading)))
                items
                ",")))

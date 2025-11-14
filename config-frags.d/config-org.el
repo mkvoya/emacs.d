@@ -1,5 +1,5 @@
 ;; -*- lexical-binding: t; -*-
-;;; Emacs Config Fragement: Org Mode
+;;; Emacs Configuration Fragment: Org Mode
 
 ;; | appt | MELPA, Appointment package |
 
@@ -274,6 +274,7 @@
 (use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
   :after (org)
   )
+
 ;; Org Cite
 (use-package oc
   :ensure nil
@@ -452,18 +453,12 @@
 
 
 
-(use-package ox-html
-  :ensure nil ; org built-in
+;; * Org Exporters
+;; ** org -> html
+(use-package ox-html :ensure nil ; org built-in
   :after (org)
   :defer t
-  :config
-  ;; Org export code style
-  (setq org-html-htmlize-output-type 'css)
-  (setq org-src-preserve-indentation nil)
-  (setq-default org-html-doctype "html5")
-  (setq-default org-html-html5-fancy t)
-  (setq org-html-validation-link nil)
-
+  :init
   ;; https://emacs.stackexchange.com/a/3512/30542
   (defun my-org-inline-css-hook (exporter)
     "Insert custom inline css"
@@ -481,11 +476,6 @@
                                (buffer-string))
                              "/*]]>*/-->\n"
                              "</style>\n")))))
-
-  (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
-
-    ;;; Add summary support, from Sachachua
-  (setq org-babel-exp-code-template "#+begin_src %lang%switches%flags :summary %summary\n%body\n#+end_src")
   (defun my-org-html-src-block (src-block _contents info)
     (let* ((result (org-html-src-block src-block _contents info))
            (block-info
@@ -497,17 +487,25 @@
         (format "<details><summary>%s</summary>%s</details>"
                 summary
                 result))))
-  (with-eval-after-load 'ox-html
-    (map-put!
-     (org-export-backend-transcoders (org-export-get-backend 'html))
-     'src-block 'my-org-html-src-block))
+  :config
+  ;; Org export code style
+  (setq org-html-htmlize-output-type 'css)
+  (setq org-src-preserve-indentation nil)
+  (setq-default org-html-doctype "html5")
+  (setq-default org-html-html5-fancy t)
+  (setq org-html-validation-link nil)
+  (add-hook 'org-export-before-processing-hook 'my-org-inline-css-hook)
+
+    ;;; Add summary support, from Sachachua
+  (setq org-babel-exp-code-template "#+begin_src %lang%switches%flags :summary %summary\n%body\n#+end_src")
+  (map-put! (org-export-backend-transcoders (org-export-get-backend 'html))
+            'src-block 'my-org-html-src-block)
   )
 
 
-
-(use-package ox-twbs
+;; ** org -> html (twbs)
+(use-package ox-twbs :defer t
   :after ox-html
-  :defer t
   :config
   (defun my-org-html-src-block2 (src-block _contents info)
     (let* ((result (org-twbs-src-block src-block _contents info))
@@ -520,68 +518,12 @@
         (format "<details><summary>%s</summary>%s</details>"
                 summary
                 result))))
-  (with-eval-after-load 'ox-twbs
-    (map-put!
-     (org-export-backend-transcoders (org-export-get-backend 'twbs))
-     'src-block 'my-org-html-src-block2))
+  (map-put! (org-export-backend-transcoders (org-export-get-backend 'twbs))
+            'src-block 'my-org-html-src-block2)
   )
 
-;; Paste Image From https://emacs-china.org/t/topic/6601/4
-(defun org-insert-image ()
-  "Insert a image from clipboard."
-  (interactive)
-  (let* ((buf-name (if (and (fboundp 'denote-file-is-note-p)
-                            (fboundp 'denote-retrieve-filename-identifier)
-                            (denote-file-is-note-p (buffer-file-name)))
-                       (denote-retrieve-filename-identifier (buffer-name))
-                     (buffer-name)))
-         (insert-image-pos (cl-second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
-         (path (cond ((equal insert-image-pos "default-directory") ; default-directory
-                      default-directory)
-                     ((and insert-image-pos (not (equal insert-image-pos "nil"))) ; user-specified
-                      insert-image-pos)
-                     (t (concat default-directory ; default
-                                buf-name
-                                ".assets/"))))
-         (image-file (concat
-                      path
-                      buf-name
-                      (format-time-string "_%Y%m%d_%H%M%S.png"))))
-    (if (not (file-exists-p path))
-        (mkdir path))
-    (do-applescript (concat
-                     "set the_path to \"" image-file "\" \n"
-                     "set png_data to the clipboard as «class PNGf» \n"
-                     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
-                     "write png_data to the_file \n"
-                     "close access the_file"))
-    ;; (shell-command (concat "pngpaste " image-file))
-    (org-insert-link nil
-                     (concat "file:" image-file)
-                     "")
-    (message image-file))
-  (org-display-inline-images)
-  )
-
-(use-package ox-pandoc
-  :defer t)
-
-(use-package org-timeline
-  :after org
-  :hook (org-agenda-finalize . org-timeline-insert-timeline))
-
-
-(defun mk/org-archive-to-specified-file ()
-  "Archive the current org entry to a user-specified file."
-  (interactive)
-  (let ((file (read-file-name "Archive to file: ")))
-    (let ((org-archive-location (concat file "::")))
-      (org-archive-subtree))
-    (message "Archived to %s" file)))
-
-
-(use-package ox-hugo
-  :defer t
+;; ** org -> hugo -> html
+(use-package ox-hugo :defer t
   :after (ox org-capture)
   :init
   (defun mk/sync-to-server (&optional all-subtrees async visible-only noerror)
@@ -622,6 +564,62 @@
                    (file "~/Dropbox/Dreams/Org/Blog/all-posts.org")
                    (function org-hugo-new-subtree-post-capture-template))))
   )
+
+
+;; ** org -> pandoc -> everything
+(use-package ox-pandoc :defer t)
+
+
+;; Paste Image From https://emacs-china.org/t/topic/6601/4
+(defun org-insert-image ()
+  "Insert a image from clipboard."
+  (interactive)
+  (let* ((buf-name (if (and (fboundp 'denote-file-is-note-p)
+                            (fboundp 'denote-retrieve-filename-identifier)
+                            (denote-file-is-note-p (buffer-file-name)))
+                       (denote-retrieve-filename-identifier (buffer-name))
+                     (buffer-name)))
+         (insert-image-pos (cl-second (assoc "INSERT_IMAGE_POS" (org-collect-keywords '("insert_image_pos")))))
+         (path (cond ((equal insert-image-pos "default-directory") ; default-directory
+                      default-directory)
+                     ((and insert-image-pos (not (equal insert-image-pos "nil"))) ; user-specified
+                      insert-image-pos)
+                     (t (concat default-directory ; default
+                                buf-name
+                                ".assets/"))))
+         (image-file (concat
+                      path
+                      buf-name
+                      (format-time-string "_%Y%m%d_%H%M%S.png"))))
+    (if (not (file-exists-p path))
+        (mkdir path))
+    (do-applescript (concat
+                     "set the_path to \"" image-file "\" \n"
+                     "set png_data to the clipboard as «class PNGf» \n"
+                     "set the_file to open for access (POSIX file the_path as string) with write permission \n"
+                     "write png_data to the_file \n"
+                     "close access the_file"))
+    ;; (shell-command (concat "pngpaste " image-file))
+    (org-insert-link nil
+                     (concat "file:" image-file)
+                     "")
+    (message image-file))
+  (org-display-inline-images)
+  )
+
+(use-package org-timeline
+  :after org
+  :hook (org-agenda-finalize . org-timeline-insert-timeline))
+
+
+(defun mk/org-archive-to-specified-file ()
+  "Archive the current org entry to a user-specified file."
+  (interactive)
+  (let ((file (read-file-name "Archive to file: ")))
+    (let ((org-archive-location (concat file "::")))
+      (org-archive-subtree))
+    (message "Archived to %s" file)))
+
 
 
 (setq org-modern-fold-stars
@@ -698,8 +696,7 @@
          (rename-file filename (concat title ".html") t)
          (message "Downloaded and saved as %s.html" title))))))
 
-(use-package org-web-tools
-  :defer t)
+(use-package org-web-tools :defer t)
 
 
 (defun how-many-str (regexp str)

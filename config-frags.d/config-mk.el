@@ -68,4 +68,47 @@
 (load-file "~/.emacs.d/site-lisp/tex-autogen.el")
 (load-file "~/.emacs.d/site-lisp/wc.el")
 
+
+
+
+;; Helper: 判断当前是否交互打开文件
+(defun my/find-file-interactive-p ()
+  "Return non-nil if the current file is opened interactively (e.g., via C-x C-f)."
+  (or (called-interactively-p 'any)
+      (not (bound-and-true-p noninteractive))))
+
+;; Advice: 当非交互调用 `find-file` 时临时禁用 Tree-sitter
+(defun my/disable-treesit-when-noninteractive (orig-fun &rest args)
+  "Disable Tree-sitter remapping when not opening interactively."
+  (if (my/find-file-interactive-p)
+      ;; 正常交互打开：照常启用 Tree-sitter
+      (apply orig-fun args)
+    ;; 非交互打开：临时禁用 major-mode remapping
+    (let ((major-mode-remap-alist nil))
+      (apply orig-fun args))))
+
+(advice-add 'find-file :around #'my/disable-treesit-when-noninteractive)
+(advice-add 'find-file-noselect :around #'my/disable-treesit-when-noninteractive)
+
+
+
+;;; --- Tree-sitter Performance Optimization ---
+
+(defvar my/treesit-available-cache (make-hash-table :test 'equal)
+  "Cache for treesit-language-available-p results.")
+
+(advice-add 'treesit-language-available-p :around
+            (lambda (orig-fun &rest args)
+              (let ((lang (car args))) ;; treesit-language-available-p 只有一个参数
+                (or (gethash lang my/treesit-available-cache)
+                    (puthash lang
+                             (apply orig-fun args)
+                             my/treesit-available-cache)))))
+
+;; 非交互模式下禁用 Tree-sitter
+(when noninteractive
+  (setq major-mode-remap-alist nil)
+  (defun treesit-language-available-p (&rest _) nil))
+
+
 (provide 'config-mk)
