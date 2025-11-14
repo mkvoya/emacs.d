@@ -3,12 +3,26 @@
 ;;; The vim inside Emacs
 
 ;; * Evil
+
 (use-package evil
   ;; :disabled t
   :ensure t
   :demand t
-  :after (undo-fu bind-key)
-  :bind (:map evil-normal-state-map ("C-u" . #'evil-scroll-up))
+  :preface
+  (defun mk/scroll-page-forward ()
+    "Scroll page forward."
+    (interactive)
+    (let* ((pix (floor (* (window-body-height (selected-window) t) -0.618))))
+      (pixel-scroll-precision-interpolate pix nil 1)))
+  (defun mk/scroll-page-backward ()
+    "Scroll page backward."
+    (interactive)
+    (let* ((pix (floor (* (window-body-height (selected-window) t) +0.618))))
+      (pixel-scroll-precision-interpolate pix nil 1)))
+  :after (undo-fu)
+  :bind (:map evil-normal-state-map
+              ("C-u" . #'mk/scroll-page-backward)
+              ("C-f" . #'mk/scroll-page-forward))
   :init
   (defvar mk/original-evil-normal-spc-binding nil
     "Original SPC binding for Evil normal mode.")

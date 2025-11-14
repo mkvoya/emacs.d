@@ -126,6 +126,14 @@
          ("C-c r" . visual-replace-from-isearch)))
 
 (pixel-scroll-precision-mode t)
+(setq pixel-scroll-precision-interpolate-page t)
+
+(use-package ultra-scroll :ensure (:host github :repo "jdtsmith/ultra-scroll")
+  :init
+  (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
+        scroll-margin 0)        ; important: scroll-margin>0 not yet supported
+  :config
+  (ultra-scroll-mode 1))
 
 (setq elisp-fontify-semantically t)
 

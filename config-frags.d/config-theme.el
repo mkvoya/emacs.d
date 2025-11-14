@@ -51,9 +51,11 @@
 
 (use-package ef-themes :ensure (:host github :repo "protesilaos/ef-themes")
   :after (hl-todo doom-modeline)
+  :demand t
   :config
+  (modus-themes-include-derivatives-mode 1)
   (setq ef-cyprus-palette-overrides '((bg-main "#fdfefd")))
-  (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
+  ;; (setq ef-themes-to-toggle '(ef-cyprus ef-frost))
   (setq ef-themes-headings ; read the manual's entry or the doc string
         '((0 variable-pitch bold 1.1)
           (1 variable-pitch bold 1.1)
@@ -64,8 +66,8 @@
           (6 variable-pitch 1.1)
           (7 variable-pitch 1.1)
           (t variable-pitch 1.1)))
-  (setq ef-themes-mixed-fonts t
-        ef-themes-variable-pitch-ui t)
+  (setq modus-themes-mixed-fonts t)
+  (setq modus-themes-italic-constructs t)
 
   (defun my-ef-themes-hl-todo-faces ()
     "Configure `hl-todo-keyword-faces' with Ef themes colors.
@@ -94,7 +96,8 @@
 
   ;; Disable all other themes to avoid awkward blending:
   (mapc #'disable-theme custom-enabled-themes)
-  (ef-themes-select 'ef-cyprus)
+;;  (ef-themes-select 'ef-cyprus)
+  (modus-themes-load-theme 'ef-cyprus)
   )
 
 

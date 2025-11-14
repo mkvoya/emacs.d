@@ -56,6 +56,8 @@
 (setq custom-file "~/.emacs.d/customs.el")
 (add-hook 'elpaca-after-init-hook (lambda () (load custom-file 'noerror)))
 
+(setq elpaca-queue-limit 10)
+
 (use-package benchmark-init
   :ensure t
   :config

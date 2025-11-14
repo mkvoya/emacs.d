@@ -105,7 +105,7 @@
          (erase-buffer)
          (insert "<<Emacs Daily Report>>\n")
          (dolist (it results)
-           (let ((buf (nth 1 it)))
+           (let ((buf (cdr it)))
              (when (buffer-live-p buf)
                (with-current-buffer motd--buffer
                  (insert (format "\n%s\n" (with-current-buffer buf (buffer-string))))

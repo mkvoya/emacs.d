@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Configuration Fragment: Org Mode Publishing
 
-(use-package ox-publish)
+(use-package ox-publish :after org :ensure nil)
 
 (setq mk/pub-base-dir "~/sites/dong.mk/src")
 (setq mk/pub-out-dir "~/sites/dong.mk/gen")
