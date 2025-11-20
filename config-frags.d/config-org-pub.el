@@ -5,7 +5,7 @@
 
 (setq mk/pub-base-dir "~/sites/dong.mk/src")
 (setq mk/pub-out-dir "~/sites/dong.mk/gen")
-(setq mk/pub-out-static-dir "~/sites/dong.mk/gen/static")
+;; (setq mk/pub-out-static-dir "~/sites/dong.mk/gen/static")
 
 
 (setq mk/pub-html-head
@@ -16,19 +16,27 @@
        "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css'>\n"
        "<script src='https://ogbe.net/res/code.js'></script>\n"
        "<link rel='stylesheet' href='https://ogbe.net/res/style.css'>\n"
+       "<link rel='stylesheet' href='./static/mkstyle.css'>\n"
        ))
 
-(defun mk/html-preamble (plist)
-  "Respect file-local #+HTML_PREAMBLE if present, else fallback to ./preamble.html.
-PLIST is the export property list passed by ox; we look up :input-file in it."
+(defun mk/xxxamble (plist pre-or-post)
+  "Respect file-local #+HTML_XXXAMBLE if present, else fallback to ./XXXamble.html.
+PLIST is the export property list passed by ox; we look up :input-file in it.
+PRE-OR-POST is \"pre\" or \"post\". "
   (let* ((input-file (plist-get plist :input-file))
-         (dir (and input-file (file-name-directory input-file))))
+         (dir (and input-file (file-name-directory input-file)))
+         (amble-regex (if (string= pre-or-post "pre")
+                          "^#\\+HTML_PREAMBLE:[ \t]*\\(.*\\)$"
+                        "^#\\+HTML_POSTAMBLE:[ \t]*\\(.*\\)$"))
+         (amble-fallback-file (if (string= pre-or-post "pre")
+                                  (concat mk/pub-base-dir "preamble.html")
+                                (concat mk/pub-base-dir "postamble.html"))))
     (when input-file
       (with-temp-buffer
         (insert-file-contents input-file)
         (goto-char (point-min))
-        ;; 捕获 #+HTML_PREAMBLE: 后面的整行内容
-        (if (re-search-forward "^#\\+HTML_PREAMBLE:[ \t]*\\(.*\\)$" nil t)
+        ;; 捕获 #+HTML_XXXAMBLE: 后面的整行内容
+        (if (re-search-forward amble-regex nil t)
             (let* ((val (string-trim (match-string 1)))
                    (maybe-path
                     ;; 如果看起来像路径或文件名（包含 / 或 以 .html/.htm 结尾），则视为文件路径
@@ -41,40 +49,44 @@ PLIST is the export property list passed by ox; we look up :input-file in it."
                 (with-temp-buffer
                   (insert-file-contents maybe-path)
                   (buffer-string)))
-               (t
-                ;; 直接返回字符串值（可以是内联 HTML）
+               (t ;; 直接返回字符串值（可以是内联 HTML）
                 val)))
-          ;; fallback: 如果项目根目录有 preamble.html 就读它
-          (let ((fallback (concat mk/pub-base-dir "preamble.html")))
-            (when (file-exists-p fallback)
+          ;; fallback: 如果项目根目录有 XXXamble.html 就读它
+            (when (file-exists-p amble-fallback-file)
               (with-temp-buffer
-                (insert-file-contents fallback)
-                (buffer-string)))))))))
+                (insert-file-contents amble-fallback-file)
+                (buffer-string))))))))
+
+(defun mk/html-preamble (plist)
+  (mk/xxxamble plist "pre"))
+
+(defun mk/html-postamble (plist)
+  (let ((content (mk/xxxamble plist "post")))
+    (string-replace "[[date]]" (format-time-string "%B %e, %Y" (current-time)) content)))
+
+(defun mk/org-html-remove-head-title (text backend info)
+  "Remove <title> tags from the generated HTML."
+  (if (org-export-derived-backend-p backend 'html)
+      ;; 使用正则将 <title>...</title> 替换为空字符串
+      (replace-regexp-in-string "<title>.*?</title>" "" text)
+    text))
 
 
-(defun mk/org-export-footnotes-as-tooltips (text backend info)
-  "把脚注转换为 tooltip"
-  (when (org-export-derived-backend-p backend 'html)
-    (let* ((footnotes (plist-get info :footnotes))
-           footdef-map)
-      ;; 建立 footnote 映射表
-      (dolist (f footnotes)
-        (let* ((id (car f))
-               (def (org-trim (org-export-data (cdr f) info))))
-          (push (cons id def) footdef-map)))
-
-      ;; 修改脚注引用（footref）
-      (setq text
-            (replace-regexp-in-string
-             (rx "<a href=\"#fn:" (group (+? digit)) "\" class=\"footref\"" (+? anything) ">" (+? anything) "</a>")
-             (lambda (match)
-               (let* ((id (match-string 1 match))
-                      (content (or (cdr (assoc id footdef-map)) "")))
-                 (format "<a class=\"footref\" data-footnote=\"%s\">[%s]</a>"
-                         (org-html-encode-plain-text content)
-                         id)))
-             text))
-       text)))
+(defun mk/org-html-publish-to-html (plist filename pub-dir)
+  "Wrapper around org-html-publish-to-html that removes <title>."
+  (let ((org-html-title ""))
+    (org-html-publish-to-html plist filename pub-dir)
+    ;; 删除 <title> 标签
+    (let ((target-file (expand-file-name
+                        (concat (file-name-sans-extension (file-name-nondirectory filename)) ".html")
+                        pub-dir)))
+      (when (file-exists-p target-file)
+        (with-temp-buffer
+          (insert-file-contents target-file)
+          (goto-char (point-min))
+          (re-search-forward "<title>.*?</title>" nil t)
+          (replace-match "")
+          (write-region (point-min) (point-max) target-file))))))
 
 
 (setq org-export-allow-bind-keywords t)
@@ -84,23 +96,22 @@ PLIST is the export property list passed by ox; we look up :input-file in it."
          :base-directory ,mk/pub-base-dir
          :base-extension "org"
          :publishing-directory ,mk/pub-out-dir
-         :publishing-function org-html-publish-to-html
+         :publishing-function mk/org-html-publish-to-html
          :recursive t
          :section-numbers nil
          :with-toc nil
          :html-preamble mk/html-preamble
-         :html-postamble t
+         :html-postamble mk/html-postamble
          :auto-sitemap nil
          :html-head ,mk/pub-html-head
-         :filter-final-output (mk/org-export-footnotes-as-tooltips)
          )
-        ("images"
+        ("static"
          :base-directory ,mk/pub-base-dir
-         :base-extension "jpg\\|gif\\|png"
+         :base-extension "jpg\\|gif\\|png\\|svg\\|css\\|js"
          :recursive t
-         :publishing-directory ,mk/pub-out-static-dir
+         :publishing-directory ,mk/pub-out-dir
          :publishing-function org-publish-attachment)
         ("dong.mk"
-         :components ("pages" "images"))))
+         :components ("pages" "static"))))
 
 (provide 'config-org-pub)
