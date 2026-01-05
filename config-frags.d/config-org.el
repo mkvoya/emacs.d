@@ -337,7 +337,9 @@
     (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
 
+;; the before-save-hook and after-save-hook will change the cursor position.
 (use-package org-transclusion
+  :disabled t
   :ensure (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
   :after (org org-modern)
   :hook (org-mode . org-transclusion-mode)
@@ -567,7 +569,11 @@
 
 
 ;; ** org -> pandoc -> everything
-(use-package ox-pandoc :defer t)
+(use-package ox-pandoc
+  :disabled t
+  :ensure (:type git :host github :repo "kawabata/oxpandoc")
+  :after (org)
+  :defer t)
 
 
 ;; Paste Image From https://emacs-china.org/t/topic/6601/4

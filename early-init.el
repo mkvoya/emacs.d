@@ -5,6 +5,9 @@
 
 (defvar is-android (string= system-type "android") "Whether on Anroid.")
 
+(setq native-comp-async-report-warnings-errors 'silent) ;; 别报错
+;; (setq native-comp-jit-compilation-deny-list '(".*"))   ;; (可选) 极端做法：暂时禁止所有 JIT
+
 ;; (setq debug-on-error t)
 ;; (setq debug-on-signal t)
 (setq-default

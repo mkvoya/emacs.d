@@ -128,7 +128,7 @@
     :commands maccalfw-open
     :ensure (:host github
                    :repo "haji-ali/maccalfw"
-                   :files ("maccalfw.el" ("src" . "src")))
+                   :files ("maccalfw.el" "ical-form.el" ("src" . "src")))
     :defer t)
   (use-package calfw-cal :ensure nil :defer t)
   :config
