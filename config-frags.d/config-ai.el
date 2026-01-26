@@ -152,8 +152,8 @@
   :config
   (setenv "ANTHROPIC_BASE_URL" "https://anyrouter.top")
   (setenv "ANTHROPIC_AUTH_TOKEN" (remove-trailing-newline (read-file-contents "~/.secrets/anyrouter.key")))
-  (setenv "ANTHROPIC_BASE_URL" "https://open.bigmodel.cn/api/anthropic")
-  (setenv "ANTHROPIC_AUTH_TOKEN" (remove-trailing-newline (read-file-contents "~/.secrets/bigmodel.key")))
+  ;; (setenv "ANTHROPIC_BASE_URL" "https://open.bigmodel.cn/api/anthropic")
+  ;; (setenv "ANTHROPIC_AUTH_TOKEN" (remove-trailing-newline (read-file-contents "~/.secrets/bigmodel.key")))
   (claude-code-ide-emacs-tools-setup)) ; Optionally enable Emacs MCP tools
 
 

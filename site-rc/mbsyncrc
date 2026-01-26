@@ -1,0 +1,76 @@
+IMAPAccount sjtu
+Host mail.sjtu.edu.cn
+User mingkaidong@sjtu.edu.cn
+PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.secrets/sjtu-mailpass.gpg"
+Port 993
+TLSType IMAPS
+AuthMechs Login
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore sjtu-remote
+Account sjtu
+
+MaildirStore sjtu-local
+Subfolders Verbatim
+Path ~/mails/mbsyncmail/sjtu/
+Inbox ~/mails/mbsyncmail/sjtu/INBOX
+
+Channel sjtu
+Far :sjtu-remote:
+Near :sjtu-local:
+Patterns *
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+IMAPAccount gmail
+Host imap.gmail.com
+User mingkaidong@gmail.com
+PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.secrets/gmail-mailpass.gpg"
+Port 993
+TLSType IMAPS
+AuthMechs Login
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore gmail-remote
+Account gmail
+
+MaildirStore gmail-local
+Subfolders Verbatim
+Path ~/mails/mbsyncmail/gmail/
+Inbox ~/mails/mbsyncmail/gmail/INBOX
+
+Channel gmail
+Far :gmail-remote:
+Near :gmail-local:
+Patterns *
+Create Near
+Sync All
+Expunge Both
+SyncState *
+
+IMAPAccount mk
+Host imap.postale.io
+User mk@dong.mk
+PassCmd "gpg -q --for-your-eyes-only --no-tty -d ~/.secrets/mk-mailpass.gpg"
+Port 993
+TLSType IMAPS
+AuthMechs Login
+# CertificateFile /etc/ssl/certs/ca-bundle.crt
+
+IMAPStore mk-remote
+Account mk
+
+MaildirStore mk-local
+Path ~/mails/mbsyncmail/mk/
+Inbox ~/mails/mbsyncmail/mk/INBOX
+
+Channel mk
+Far :mk-remote:
+Near :mk-local:
+Patterns *
+Create Near
+Sync All
+Expunge Both
+SyncState *

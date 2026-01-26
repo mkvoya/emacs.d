@@ -51,6 +51,7 @@
 (require 'config-tramp)
 (require 'config-webkit)
 (require 'config-ai)
+(require 'config-mail)
 (require 'config-misc)
 
 (setq gc-cons-threshold (expt 2 28)

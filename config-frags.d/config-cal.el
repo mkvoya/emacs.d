@@ -125,6 +125,7 @@
     :ensure (:host github :repo "haji-ali/calfw-blocks" :files ("*"))
     :defer t)
   (use-package maccalfw
+    :disabled t
     :commands maccalfw-open
     :ensure (:host github
                    :repo "haji-ali/maccalfw"

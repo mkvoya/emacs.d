@@ -72,8 +72,12 @@
                      :pre-build (("bash" "build.sh")))
   :no-require t
   :config
+  (require 'ripple-click)
+  (ripple-click-mode 1)
   (require 'buffer-transition)
-  (buffer-transition-mode 1)
+  (setq buffer-transition-type 0)
+  (setq buffer-transition-duration 0.5)
+  (buffer-transition-mode +1)
   )
 
 (provide 'config-misc)

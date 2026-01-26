@@ -733,4 +733,6 @@
 
 (use-package org-tempo :ensure nil :after org)
 
+(use-package org-mime :ensure t)
+
 (provide 'config-org)
