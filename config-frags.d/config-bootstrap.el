@@ -44,7 +44,7 @@
 ;; Install use-package support
 (elpaca-wait)
 (setq use-package-always-ensure t)
-(elpaca bind-key) ; elpaca-use-package will trigger bind-key, so we have to specify it before
+(elpaca bind-key :ensure nil) ; elpaca-use-package will trigger bind-key, so we have to specify it before
 (elpaca elpaca-use-package
   ;; Enable use-package :ensure support for Elpaca.
   (elpaca-use-package-mode))

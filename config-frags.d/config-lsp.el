@@ -17,6 +17,9 @@
   (add-to-list 'eglot-server-programs '(LaTeX-mode . ("texlab")))
   (add-to-list 'eglot-server-programs '(c-ts-mode . ("clangd")))
   (add-to-list 'eglot-server-programs '(c++-ts-mode . ("clangd")))
+  (setenv "LANG" "en_US.UTF-8")
+  (setenv "LC_ALL" "en_US.UTF-8")
+  (add-to-list 'process-coding-system-alist '("texlab" . utf-8-unix))
   )
 (use-package eldoc-box :after eglot
   :hook (eglot-managed-mode . eldoc-box-hover-at-point-mode)
@@ -32,7 +35,13 @@
 
 (use-package eglot-booster :ensure (:host github :repo "jdtsmith/eglot-booster")
   :after eglot
-  :config (eglot-booster-mode)
+  :config
+  (add-to-list 'process-coding-system-alist '("emacs-lsp-booster" . utf-8-unix))
+  (add-to-list 'process-coding-system-alist '(".*\\(booster\\).*" . (utf-8-unix . utf-8-unix)))
+  (setenv "LANG" "en_US.UTF-8")
+  (setenv "LC_ALL" "en_US.UTF-8")
+  (setq eglot-booster-io-only t)
+  (eglot-booster-mode +1)
   )
 (use-package consult-eglot :after eglot)
 

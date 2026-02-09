@@ -4,8 +4,10 @@
 (use-package shrink-path :ensure (:host github :repo "zbelial/shrink-path.el"))
 
 (use-package doom-modeline
-  :after (shrink-path)
-  :init (doom-modeline-mode 1)
+  :after (shrink-path nerd-icons)
+  :init
+  (display-battery-mode +1)
+  (doom-modeline-mode +1)
   :config
   (setq inhibit-compacting-font-caches t)
   (setq mode-line-right-align-edge 'right-fringe)
@@ -33,6 +35,8 @@
   (setq doom-modeline-support-imenu t)
   (setq doom-modeline-bar-width 2)
   (setq doom-modeline-hud nil)
+  (display-battery-mode +1)
+  (setq doom-modeline-battery t)
   (setq doom-modeline-project-detection 'auto)
 
   ;; (setq doom-modeline-window-width-limit 85)
