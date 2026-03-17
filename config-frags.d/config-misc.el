@@ -76,7 +76,7 @@
   (ripple-click-mode 1)
   (require 'buffer-transition)
   (setq buffer-transition-type 0)
-  (setq buffer-transition-duration 0.5)
+  (setq buffer-transition-duration 0.2)
   (buffer-transition-mode +1)
   )
 
