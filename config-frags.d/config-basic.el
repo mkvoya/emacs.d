@@ -51,7 +51,7 @@
 (use-package undo-fu :ensure (:host github :repo "emacsmirror/undo-fu")
   :config (setq undo-fu-allow-undo-in-region t))
 ;; This is vundo is not used
-(use-package vundo :ensure (:host github :repo "casouri/vundo"))
+;; (use-package vundo :ensure (:host github :repo "casouri/vundo"))
 
 (use-package ctrlf :defer t
   :config (ctrlf-mode +1))
@@ -123,5 +123,18 @@
   (setq scroll-margin 0)        ; important: scroll-margin>0 not yet supported
   :config
   (ultra-scroll-mode 1))
+
+(use-package scrollview
+  :ensure (:host github :repo "roife/scrollview.el" :files ("*.el"))
+  :defer t
+  :config
+  (setq scrollview-side 'right)              ; or 'left
+  (setq scrollview-visibility 'overflow)     ; overflow, always, info
+  (setq scrollview-current-window-only nil)
+  (setq scrollview-signs-on-startup '(search diagnostics)) ; or 'all
+  (setq scrollview-line-limit 20000)
+  (setq scrollview-byte-limit 1000000)
+  (global-scrollview-mode 1)
+  )
 
 (provide 'config-basic)

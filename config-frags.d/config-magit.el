@@ -9,7 +9,7 @@
 (use-package magit
   ;; :disabled t
   :ensure (:host github :repo "magit/magit")
-  :after (project transient)
+  :after (project transient cond-let)
   :defer t
   :init
   (setq magit-diff-refine-hunk t)
@@ -22,7 +22,7 @@
   (add-hook 'magit-diff-mode-hook #'(lambda () (visual-line-mode t)))
   (add-hook 'magit-status-mode-hook #'(lambda () (visual-line-mode t)))
   )
-(use-package forge :after (magit emacsql) :defer t)
+(use-package forge :after (magit emacsql cond-let) :defer t)
 ;; (use-package git-timemachine)
 
 (use-package diff-hl

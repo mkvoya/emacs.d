@@ -22,4 +22,9 @@
                ("s-n" . vterm-toggle-forward)
                ("s-p" . vterm-toggle-backward))))
 
+
+;; (use-package ghostel
+;;   :ensure (:host github :repo "dakra/ghostel" :files (:defaults "lisp")))
+
+
 (provide 'config-term)

@@ -63,21 +63,21 @@
 
 (use-package xkcd :defer t)
 
-(use-package restclient :defer t)
+;; (use-package restclient :defer t)
 
-(use-package animation
-  :ensure (animation :host github :repo "kekeimiku/animation.el"
-                     :main "buffer-transition.el"
-                     :files ("*")
-                     :pre-build (("bash" "build.sh")))
-  :no-require t
-  :config
-  (require 'ripple-click)
-  (ripple-click-mode 1)
-  (require 'buffer-transition)
-  (setq buffer-transition-type 0)
-  (setq buffer-transition-duration 0.2)
-  (buffer-transition-mode +1)
-  )
+;; (use-package animation
+;;   :ensure (animation :host github :repo "kekeimiku/animation.el"
+;;                      :main "buffer-transition.el"
+;;                      :files ("*")
+;;                      :pre-build (("bash" "build.sh")))
+;;   :no-require t
+;;   :config
+;;   (require 'ripple-click)
+;;   (ripple-click-mode 1)
+;;   (require 'buffer-transition)
+;;   (setq buffer-transition-type 0)
+;;   (setq buffer-transition-duration 0.2)
+;;   (buffer-transition-mode +1)
+;;   )
 
 (provide 'config-misc)

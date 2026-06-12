@@ -631,8 +631,8 @@
 (setq org-modern-fold-stars
       '(("◉" . "○") ("◈" . "◇") ("⯈" . "⯆") ("◉" . "○") ("◈" . "◇")))
 
-(setq-default header-line-format
-              '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"))
+;; (setq-default header-line-format
+;;               '("GC: " (:eval (number-to-string gcs-done)) " - " (:eval (format "%.3f" gc-elapsed)) "s"))
 
 (use-package emacs
   :ensure nil
@@ -734,5 +734,10 @@
 (use-package org-tempo :ensure nil :after org)
 
 (use-package org-mime :ensure t)
+
+(use-package org-tidy
+  :ensure t
+  :hook
+  (org-mode . org-tidy-mode))
 
 (provide 'config-org)

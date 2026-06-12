@@ -60,4 +60,7 @@
 
 (use-package dirvish :defer t)
 
+(use-package nerd-icons-dired
+  :hook (dired-mode . nerd-icons-dired-mode))
+
 (provide 'config-dired)

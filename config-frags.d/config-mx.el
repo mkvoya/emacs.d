@@ -17,6 +17,7 @@
   (vertico-mode)
   )
 
+
 (use-package orderless
   :defer t
   :init
@@ -27,6 +28,13 @@
 (use-package marginalia
   :defer t
   :init (marginalia-mode))
+
+(use-package nerd-icons-completion
+  :ensure t
+  :after marginalia
+  :config
+  (nerd-icons-completion-mode)
+  (add-hook 'marginalia-mode-hook #'nerd-icons-completion-marginalia-setup))
 
 (use-package rg
   :defer t

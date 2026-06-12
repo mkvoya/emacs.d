@@ -50,10 +50,12 @@
 
 (use-package nyan-mode :ensure (:repo "TeMPOraL/nyan-mode")
   :after (doom-modeline)
+  :disabled t
   :demand t
   :config (nyan-mode))
 
 (use-package ef-themes :ensure (:host github :repo "protesilaos/ef-themes")
+  :disabled t
   :after (hl-todo doom-modeline)
   :demand t
   :config
@@ -103,6 +105,11 @@
 ;;  (ef-themes-select 'ef-cyprus)
   (modus-themes-load-theme 'ef-cyprus)
   )
+
+(use-package nano-theme :ensure (:host github :repo "rougier/nano-theme")
+  :config (load-theme 'nano t))
+
+;; (use-package nano-theme :ensure (nano-emacs :type git :host github :repo "rougier/nano-emacs" :main "nano-theme.el"))
 
 
 ;; (use-package page-break-lines :ensure t :defer nil)
