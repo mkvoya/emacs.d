@@ -2,7 +2,7 @@
 ;;; Emacs Configuration Fragment: CJK
 
 ;; * Rime: the input method
-(use-package rime :ensure (:host github :repo "DogLooksGood/emacs-rime" :files ("*.el" "Makefile" "lib.c"))
+(use-package rime :vc (:url "https://github.com/DogLooksGood/emacs-rime.git")
   :if (eq system-type 'darwin)
   :defer t
   :custom
@@ -43,10 +43,10 @@
 
 ;; * CJK jumping
 (setq word-wrap-by-category t)
-(use-package emt :ensure (:host github :repo "roife/emt" :files ("*.el" "module/*" "module"))
+(use-package emt :vc (:url "https://github.com/roife/emt.git")
   :if (eq system-type 'darwin)
   :after (evil)
-  :hook (elpaca-after-init . emt-mode)
+  :hook (after-init . emt-mode)
   :config
   (define-key evil-motion-state-map (kbd "w") #'emt-forward-word)
   (define-key evil-motion-state-map (kbd "b") #'emt-backward-word))

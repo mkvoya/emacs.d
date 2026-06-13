@@ -97,7 +97,7 @@
 (use-package image-click-mode
   :delight
   :after (org)
-  :ensure (:host github :repo "mkvoya/image-click-mode" :files ("*.el"))
+  :vc (:url "https://github.com/mkvoya/image-click-mode.git")
   :config
   ;;(setq org-image-actual-width 400)
   ;; (setq org-image-actual-width '(300))
@@ -105,9 +105,7 @@
   (add-hook 'org-mode-hook (lambda () (image-click-mode))))
 
 (use-package image-slicing
-  :ensure (image-slicing :type git
-                         :host github
-                         :repo "ginqi7/image-slicing")
+  :vc (:url "https://github.com/ginqi7/image-slicing.git")
   :defer t)
 
 ;; (use-package org-sliced-images
@@ -116,7 +114,7 @@
 
 
 (use-package nova
-  :ensure (:host github :repo "thisisran/nova" :files ("*.el")))
+  :vc (:url "https://github.com/thisisran/nova.git"))
 
 (defun childframe-workable-p ()
   "Whether childframe is workable."

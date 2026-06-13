@@ -201,7 +201,7 @@
 
 ;; * citar
 (use-package citar
-  :ensure (:host github :repo "bdarcus/citar")
+  :vc (:url "https://github.com/bdarcus/citar.git")
   :defer t
   :bind (;; ("C-c B" . citar-insert-citation)
          ;; :map minibuffer-local-map
@@ -399,7 +399,7 @@
   (setq zotra-local-server-directory "~/.emacs.d/third-parties/zotra-server/")
   )
 (use-package ebib-collection
-  :ensure (:type git :host github :repo "mkvoya/ebib-collection" :files ("*"))
+  :vc (:url "https://github.com/mkvoya/ebib-collection.git")
   :after (ebib)
   :defer t)
 

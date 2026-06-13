@@ -41,7 +41,15 @@
   :ensure-system-package
   (rg . ripgrep))
 
-(use-package recentf :ensure nil :defer t)
+(use-package recentf
+  :ensure nil ; built in
+  :config
+  ;; 保留 remote 文件，但 recentf 清理时不要 stat/连接它们
+  (setq recentf-auto-cleanup 'never)
+  ;; 保存时不要因为远程文件不可达而报错
+  (setq recentf-save-file (expand-file-name "recentf" user-emacs-directory))
+  (recentf-mode 1))
+
 (use-package consult
   :after (recentf)
   :bind (

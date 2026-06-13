@@ -60,7 +60,7 @@
   :ensure t
   :defer t
   :commands cal-china-x-setup
-  :hook (elpaca-after-init . cal-china-x-setup)
+  :hook (after-init . cal-china-x-setup)
   :config
   ;; 重要节日设置
   (setq cal-china-x-important-holidays cal-china-x-chinese-holidays)
@@ -117,19 +117,17 @@
 
 ;; * Calfw
 (use-package calfw
-  :ensure (:host github :repo "haji-ali/emacs-calfw" :files ("*"))
+  :vc (:url "https://github.com/haji-ali/emacs-calfw.git")
   :defer t
   :init
   (use-package calfw-org :after (org) :defer t)
   (use-package calfw-blocks
-    :ensure (:host github :repo "haji-ali/calfw-blocks" :files ("*"))
+    :vc (:url "https://github.com/haji-ali/calfw-blocks.git")
     :defer t)
   (use-package maccalfw
     :disabled t
     :commands maccalfw-open
-    :ensure (:host github
-                   :repo "haji-ali/maccalfw"
-                   :files ("maccalfw.el" "ical-form.el" ("src" . "src")))
+    :vc (:url "https://github.com/haji-ali/maccalfw.git")
     :defer t)
   (use-package calfw-cal :ensure nil :defer t)
   :config

@@ -13,7 +13,7 @@
 (setq-default
  ;; Package
  load-prefer-newer t ; Load newer packages when available.
- package-enable-at-startup nil  ; do not load packege.el
+;; package-enable-at-startup nil  ; do not load packege.el
  package-quickstart nil
  package-native-compile nil
  ;; GC

@@ -2,11 +2,7 @@
 ;;; Emacs Config Fragement: AucTeX (LaTeX)
 
 (use-package tex
-  :ensure (auctex :repo "https://git.savannah.gnu.org/git/auctex.git" :branch "main"
-                  :pre-build (("make" "elpa"))
-                  :build (:not elpaca--compile-info) ;; Make will take care of this step
-                  :files ("*.el" "doc/*.info*" "etc" "images" "latex" "style")
-                  :version (lambda (_) (require 'auctex) AUCTeX-version))
+  :ensure auctex
   :defer t
   :init
   (setq TeX-source-correlate-method 'synctex)
@@ -93,7 +89,7 @@
 
 ;; Show build progress in modeline
 (use-package procress
-  :ensure (:host github :repo "haji-ali/procress")
+  :vc (:url "https://github.com/haji-ali/procress.git")
   :commands procress-auctex-mode
   :init
   (add-hook 'LaTeX-mode-hook #'procress-auctex-mode)

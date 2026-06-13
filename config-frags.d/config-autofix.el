@@ -4,7 +4,7 @@
 
 (use-package elnode
   :defer
-  :ensure (:type git :host github :repo "jcaw/elnode"))
+  :vc (:url "https://github.com/jcaw/elnode.git"))
 
 (use-package flymake
   :ensure nil  ; built-in
@@ -74,12 +74,12 @@
 ;;   :bind (:map flyspell-mode-map ("C-;" . flyspell-correct-wrapper)))
 
 (use-package grammarly
-  :ensure (:host github :repo "emacs-grammarly/grammarly")
+  :vc (:url "https://github.com/emacs-grammarly/grammarly.git")
   :config
   (grammarly-load-from-authinfo)
   )
 (use-package flymake-grammarly
-  :ensure (:host github :repo "emacs-grammarly/flymake-grammarly")
+  :vc (:url "https://github.com/emacs-grammarly/flymake-grammarly.git")
   :after grammarly
   :hook (LaTeX-mode . flymake-grammarly-load)
   :config

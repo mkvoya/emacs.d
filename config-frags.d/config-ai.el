@@ -17,13 +17,13 @@
   (remove-trailing-newline (read-file-contents "~/.secrets/ipads-chatgpt.key")))
 
 (use-package copilot
-  :ensure (:host github :repo "copilot-emacs/copilot.el" :files ("*.el"))
+  :vc (:url "https://github.com/copilot-emacs/copilot.el.git")
   :bind (:map copilot-completion-map ("<tab>" . #'copilot-accept-completion)
               ("TAB" . #'copilot-accept-completion))
   :defer t)
 
 (use-package elysium
-  :ensure (:host github :repo "lanceberge/elysium" :branch "master" :files ("*.el"))
+  :vc (:url "https://github.com/lanceberge/elysium.git" :branch "master")
   :defer t
   :custom
   ;; Below are the default values
@@ -35,7 +35,7 @@
   :hook (prog-mode . smerge-mode))
 
 (use-package gptel
-  :ensure (:host github :repo "karthink/gptel" :branch "master" :files ("*"))
+  :vc (:url "https://github.com/karthink/gptel.git" :branch "master")
   :config
   (setq gptel-use-curl t)
   (setq gptel-model 'gpt-4.1)
@@ -63,7 +63,7 @@
                "deepseek-v3"))))
 
 (use-package inline-diff
-  :ensure (:repo "https://code.tecosaur.net/tec/inline-diff")
+  :vc (:url "https://code.tecosaur.net/tec/inline-diff.git")
   :after gptel-rewrite)
 
 ;; Updated version available at https://github.com/karthink/gptel/wiki
@@ -95,8 +95,7 @@
 
 ;; install claude-code.el:
 (use-package claude-code
-  :ensure (:type git :host github :repo "stevemolitor/claude-code.el" :branch "main"
-                 :files ("*.el" (:exclude "images/*")))
+  :vc (:url "https://github.com/stevemolitor/claude-code.el.git" :branch "main")
   :bind-keymap ("C-c c" . claude-code-command-map) ;; or your preferred key
   :config
   (setq claude-code-terminal-backend 'vterm)
@@ -147,7 +146,7 @@
   (claude-code-mode))
 
 (use-package claude-code-ide
-  :ensure (:type git :host github :repo "manzaltu/claude-code-ide.el")
+  :vc (:url "https://github.com/manzaltu/claude-code-ide.el.git")
   :bind ("C-c C-'" . claude-code-ide-menu) ; Set your favorite keybinding
   :config
   (setenv "ANTHROPIC_BASE_URL" "https://anyrouter.top")

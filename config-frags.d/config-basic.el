@@ -48,7 +48,7 @@
   (global-set-key (kbd "<mouse-5>") 'scroll-up-line))
 
 ;; Undo
-(use-package undo-fu :ensure (:host github :repo "emacsmirror/undo-fu")
+(use-package undo-fu :vc (:url "https://github.com/emacsmirror/undo-fu.git")
   :config (setq undo-fu-allow-undo-in-region t))
 ;; This is vundo is not used
 ;; (use-package vundo :ensure (:host github :repo "casouri/vundo"))
@@ -72,15 +72,15 @@
 (use-package vlf :defer t)  ; View large files
 ;; Persist history over Emacs restarts. Vertico sorts by history position.
 (use-package savehist :ensure nil
-  :hook (elpaca-after-init . savehist-mode))
+  :hook (after-init . savehist-mode))
 
 ;; Check https://emacs-china.org/t/emacs-builtin-mode/11937
 ;; Winner mode
 (use-package winner :ensure nil
-  :hook (elpaca-after-init . winner-mode))
+  :hook (after-init . winner-mode))
 
 ;; Remember the cursor position of files
-;; (use-package saveplace :ensure nil :hook (elpaca-after-init . save-place-mode))
+;; (use-package saveplace :ensure nil :hook (after-init . save-place-mode))
 
 ;; Better handle of files containing long lines
 (use-package so-long :ensure nil
@@ -116,7 +116,7 @@
          ("C-c r" . visual-replace-from-isearch)))
 
 ;; This implies (pixel-scroll-precision-mode t)
-(use-package ultra-scroll :ensure (:host github :repo "jdtsmith/ultra-scroll")
+(use-package ultra-scroll :vc (:url "https://github.com/jdtsmith/ultra-scroll.git")
   :init
   (setq pixel-scroll-precision-interpolate-page t)
   (setq scroll-conservatively 3) ; or whatever value you prefer, since v0.4
@@ -125,7 +125,7 @@
   (ultra-scroll-mode 1))
 
 (use-package scrollview
-  :ensure (:host github :repo "roife/scrollview.el" :files ("*.el"))
+  :vc (:url "https://github.com/roife/scrollview.el.git")
   :defer t
   :config
   (setq scrollview-side 'right)              ; or 'left

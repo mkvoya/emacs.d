@@ -12,7 +12,7 @@
       )))
 
 (use-package vterm-toggle
-  :ensure (:host github :repo "jixiuf/vterm-toggle")
+  :vc (:url "https://github.com/jixiuf/vterm-toggle.git")
   :after (vterm)
   :defer t
   :bind (("C-`" . vterm-toggle)
@@ -24,7 +24,7 @@
 
 
 ;; (use-package ghostel
-;;   :ensure (:host github :repo "dakra/ghostel" :files (:defaults "lisp")))
+;;   :vc (:url "https://github.com/dakra/ghostel.git")
 
 
 (provide 'config-term)

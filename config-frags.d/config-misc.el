@@ -7,7 +7,7 @@
   (insert (format-time-string "%F %T")))
 
 (use-package golden-ratio
-  :ensure (:host github :repo "roman/golden-ratio.el" :files ("*.el")))
+  :vc (:url "https://github.com/roman/golden-ratio.el.git"))
 
 (use-package unkillable-scratch
   :config (progn (unkillable-scratch 1)))
@@ -15,7 +15,7 @@
 
 ;; Speedy reading
 (use-package spray
-  :ensure (:host github :repo "emacsmirror/spray")
+  :vc (:url "https://github.com/emacsmirror/spray.git")
   :after (bind-key)
   :config (progn
             (setq spray-wpm 400

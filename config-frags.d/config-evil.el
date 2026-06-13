@@ -5,8 +5,7 @@
 ;; * Evil
 
 (use-package evil
-  ;; :disabled t
-  :ensure t
+  :vc (:url "https://github.com/emacs-evil/evil.git")
   :demand t
   :preface
   (defun mk/scroll-page-forward ()
@@ -24,6 +23,8 @@
               ("C-u" . #'mk/scroll-page-backward)
               ("C-f" . #'mk/scroll-page-forward))
   :init
+  (defvar evil-mode-buffers '())
+
   (defvar mk/original-evil-normal-spc-binding nil
     "Original SPC binding for Evil normal mode.")
   (defun mk/evil-toggle-checkbox ()

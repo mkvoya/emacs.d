@@ -2,7 +2,7 @@
 ;;; Emacs Config Fragement: MK's customized packages
 
 (use-package async-cmd
-  :ensure (:type git :host github :repo "mkvoya/async-cmd.el"))
+  :vc (:url "https://github.com/mkvoya/async-cmd.el.git"))
 
 
 (use-package motd
@@ -55,7 +55,7 @@
 
 (use-package emacs-badge
   :demand
-  :ensure (:type git :host github :repo "mkvoya/emacs-badge" :files ("*"))
+  :vc (:url "https://github.com/mkvoya/emacs-badge.git")
   :config
   (setq emacs-badge-timer
         (run-with-timer

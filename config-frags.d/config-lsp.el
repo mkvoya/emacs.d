@@ -28,12 +28,12 @@
   ;; (eldoc-box-offset 1)
   :config (add-to-list 'eldoc-box-frame-parameters '(alpha . 0.90))
   )
-(use-package eglot-x :ensure (:host github :repo "nemethf/eglot-x")
+(use-package eglot-x :vc (:url "https://github.com/nemethf/eglot-x.git")
   :after eglot
   :config (eglot-x-setup)
   )
 
-(use-package eglot-booster :ensure (:host github :repo "jdtsmith/eglot-booster")
+(use-package eglot-booster :vc (:url "https://github.com/jdtsmith/eglot-booster.git")
   :after eglot
   :config
   (add-to-list 'process-coding-system-alist '("emacs-lsp-booster" . utf-8-unix))

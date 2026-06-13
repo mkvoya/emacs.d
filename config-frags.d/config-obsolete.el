@@ -3,7 +3,7 @@
 
 (use-package org-zettel-ref-mode
   :disabled t
-  :ensure (:host github :repo "yibie/org-zettel-ref-mode" :files ("*"))
+  :vc (:url "https://github.com/yibie/org-zettel-ref-mode.git")
   :init
   (setq org-zettel-ref-overview-directory "~/Dropbox/Dreams/Org/orgzet/source-note/")
   :config
@@ -52,12 +52,12 @@
 (use-package org-roam-ui
   :disabled t
   :ensure
-  (:host github :repo "org-roam/org-roam-ui" :branch "main" :files ("*.el" "out"))
+  (:vc (:url "https://github.com/org-roam/org-roam-ui.git") :branch "main")
   :after org-roam
   ;;         normally we'd recommend hooking orui after org-roam, but since org-roam does not have
   ;;         a hookable mode anymore, you're advised to pick something yourself
   ;;         if you don't care about startup time, use
-  ;;  :hook (elpaca-after-init . org-roam-ui-mode)
+  ;;  :hook (after-init . org-roam-ui-mode)
   :config
   (setq org-roam-ui-sync-theme t
         org-roam-ui-follow t
@@ -67,7 +67,7 @@
 
 (use-package aidermacs
   :disabled t
-  :ensure (:host github :repo "MatthewZMD/aidermacs" :files ("*.el"))
+  :vc (:url "https://github.com/MatthewZMD/aidermacs.git")
   :config
   (setq aidermacs-default-model "openai/gpt-4o")
   (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
@@ -82,7 +82,7 @@
   (setq aidermacs-use-architect-mode nil))
 
 (use-package eca
-  :ensure (:host github :repo "editor-code-assistant/eca-emacs" :files ("*.el"))
+  :vc (:url "https://github.com/editor-code-assistant/eca-emacs.git")
   :config
   (setenv "OPENAI_API_BASE" "http://ipads.chat.gpt:3006/v1")
   (setenv "OPENAI_API_KEY" (gptel-api-key))

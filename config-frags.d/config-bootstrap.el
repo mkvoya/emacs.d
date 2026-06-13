@@ -1,74 +1,43 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Configuration Fragment: Bootstrap (should be loaded first)
 
-;; Setup Elpaca
+(setq package-archives
+      '(("gnu"    . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+        ("melpa"  . "https://melpa.org/packages/")))
 
-(defvar elpaca-installer-version 0.12)
-(defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
-(defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
-(defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
-(defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
-                              :ref nil :depth 1 :inherit ignore
-                              :files (:defaults "elpaca-test.el" (:exclude "extensions"))
-                              :build (:not elpaca-activate)))
-(let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
-       (build (expand-file-name "elpaca/" elpaca-builds-directory))
-       (order (cdr elpaca-order))
-       (default-directory repo))
-  (add-to-list 'load-path (if (file-exists-p build) build repo))
-  (unless (file-exists-p repo)
-    (make-directory repo t)
-    (when (<= emacs-major-version 28) (require 'subr-x))
-    (condition-case-unless-debug err
-        (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
-                  ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
-                                                  ,@(when-let* ((depth (plist-get order :depth)))
-                                                      (list (format "--depth=%d" depth) "--no-single-branch"))
-                                                  ,(plist-get order :repo) ,repo))))
-                  ((zerop (call-process "git" nil buffer t "checkout"
-                                        (or (plist-get order :ref) "--"))))
-                  (emacs (concat invocation-directory invocation-name))
-                  ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
-                                        "--eval" "(byte-recompile-directory \".\" 0 'force)")))
-                  ((require 'elpaca))
-                  ((elpaca-generate-autoloads "elpaca" repo)))
-            (progn (message "%s" (buffer-string)) (kill-buffer buffer))
-          (error "%s" (with-current-buffer buffer (buffer-string))))
-      ((error) (warn "%s" err) (delete-directory repo 'recursive))))
-  (unless (require 'elpaca-autoloads nil t)
-    (require 'elpaca)
-    (elpaca-generate-autoloads "elpaca" repo)
-    (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
-(add-hook 'after-init-hook #'elpaca-process-queues)
-(elpaca `(,@elpaca-order))
+(setq package-archive-priorities
+      '(("gnu" . 99)
+        ("nongnu" . 80)
+        ("melpa" . 70)))
+
+(package-initialize)
+
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 ;; Install use-package support
-(elpaca-wait)
+(require 'use-package)
 (setq use-package-always-ensure t)
-;; (elpaca bind-key :ensure nil) ; elpaca-use-package will trigger bind-key, so we have to specify it before
-(elpaca elpaca-use-package
-  ;; Enable use-package :ensure support for Elpaca.
-  (elpaca-use-package-mode))
-(elpaca-wait)
-(use-package cua-base :ensure nil)
-(elpaca-wait)
+(setq use-package-vc-prefer-newest t)
+(setq use-package-compute-statistics t)
 
+(use-package cua-base :ensure nil)
 
 (setq custom-file "~/.emacs.d/customs.el")
-(add-hook 'elpaca-after-init-hook (lambda () (load custom-file 'noerror)))
-
-(setq elpaca-queue-limit 10)
+(add-hook 'after-init-hook (lambda () (load custom-file 'noerror)))
 
 (use-package benchmark-init
   :ensure t
   :config
   ;; To disable collection of benchmark data after init is done.
-  (add-hook 'elpaca-after-init-hook 'benchmark-init/deactivate))
+  (add-hook 'after-init-hook 'benchmark-init/deactivate))
 
 ;; (use-package bind-key :ensure (:wait t))
-(use-package compat :ensure (:wait t))
+(use-package compat :ensure t)
 (use-package use-package-ensure-system-package :ensure nil)
-(use-package delight :ensure (:wait t))
+(use-package delight :ensure t)
 
 ;; Get shell env from user shell.
 ;; https://apple.stackexchange.com/questions/51677/how-to-set-path-for-finder-launched-applications

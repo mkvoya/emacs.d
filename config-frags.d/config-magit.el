@@ -2,13 +2,9 @@
 ;;; Emacs Config Fragement: Magit
 
 
-(use-package cond-let
-  :ensure (:host github :repo "tarsius/cond-let"))
-
 ;; *The main Magit
 (use-package magit
   ;; :disabled t
-  :ensure (:host github :repo "magit/magit")
   :after (project transient cond-let)
   :defer t
   :init

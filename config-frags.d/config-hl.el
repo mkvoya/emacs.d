@@ -4,10 +4,10 @@
 
 ;; Highlight current line
 (use-package hl-line :ensure nil
-  :hook (elpaca-after-init . global-hl-line-mode))
+  :hook (after-init . global-hl-line-mode))
 
 ;; Highlight todo
-(use-package hl-todo :ensure (:host github :repo "tarsius/hl-todo")
+(use-package hl-todo :vc (:url "https://github.com/tarsius/hl-todo.git")
   :custom (hl-todo-color-background t))
 
 ;; Highlight matching parenthesis
@@ -49,13 +49,16 @@
   (window-divider-mode 1))
 
 (use-package symbol-overlay
+  :ensure t
   :hook ((prog-mode html-mode yaml-mode conf-mode) . symbol-overlay-mode)
   :bind (:map symbol-overlay-mode-map
               ("M-i" . symbol-overlay-put)
               ("M-n" . symbol-overlay-jump-next)
               ("M-p" . symbol-overlay-jump-prev)))
 
-(use-package volatile-highlights :ensure (:host github :repo "k-talo/volatile-highlights.el")
+(use-package volatile-highlights :vc (:url "https://github.com/k-talo/volatile-highlights.el.git")
+  :disabled t
+  :after (symbol-overlay)
   :config
   ;;-----------------------------------------------------------------------------
   ;; Supporting evil-mode.

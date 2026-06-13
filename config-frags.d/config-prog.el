@@ -114,13 +114,12 @@
 (use-package lua-mode :defer t)
 (use-package swift-mode :disabled t)
 (use-package typescript-mode :defer t)
-(use-package adoc-mode :defer t :ensure (:host github :repo "sensorflo/adoc-mode"))
 (use-package elm-mode :defer t)
 (use-package jinja2-mode :mode "\\.jinja2\\'" :defer t)
 (use-package vue-mode :mode "\\.vue\\'" :defer t)
 ;; Python Support
 (use-package flymake-ruff
-  :ensure (flymake-ruff :type git :host github :repo "erickgnavar/flymake-ruff")
+  :vc (:url "https://github.com/erickgnavar/flymake-ruff.git")
   :hook (eglot-managed-mode . flymake-ruff-load)
   :config
 

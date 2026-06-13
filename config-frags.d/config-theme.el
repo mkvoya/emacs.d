@@ -1,7 +1,7 @@
 ;; -*- lexical-binding: t; -*-
 ;;; Emacs Configuration Fragment: Periphery Tools
 
-(use-package shrink-path :ensure (:host github :repo "zbelial/shrink-path.el"))
+(use-package shrink-path :vc (:url "https://github.com/zbelial/shrink-path.el.git"))
 
 (use-package doom-modeline
   :after (shrink-path nerd-icons)
@@ -48,13 +48,13 @@
    '(doom-modeline-evil-emacs-state ((t (:italic nil)))))
   )
 
-(use-package nyan-mode :ensure (:repo "TeMPOraL/nyan-mode")
+(use-package nyan-mode :vc (:url "https://github.com/TeMPOraL/nyan-mode.git")
   :after (doom-modeline)
   :disabled t
   :demand t
   :config (nyan-mode))
 
-(use-package ef-themes :ensure (:host github :repo "protesilaos/ef-themes")
+(use-package ef-themes :vc (:url "https://github.com/protesilaos/ef-themes.git")
   :disabled t
   :after (hl-todo doom-modeline)
   :demand t
@@ -106,10 +106,10 @@
   (modus-themes-load-theme 'ef-cyprus)
   )
 
-(use-package nano-theme :ensure (:host github :repo "rougier/nano-theme")
+(use-package nano-theme :vc (:url "https://github.com/rougier/nano-theme.git")
   :config (load-theme 'nano t))
 
-;; (use-package nano-theme :ensure (nano-emacs :type git :host github :repo "rougier/nano-emacs" :main "nano-theme.el"))
+;; (use-package nano-theme :vc (:url "https://github.com/rougier/nano-emacs.git") :main "nano-theme.el")
 
 
 ;; (use-package page-break-lines :ensure t :defer nil)
@@ -117,7 +117,7 @@
 (use-package dashboard
   :if (< (length command-line-args) 2)
   :diminish dashboard-mode
-  :after (org-agenda)
+;;  :after (recentf)
   :ensure t
   :config
   (setq dashboard-banner-logo-title "What a nice day!")
@@ -137,8 +137,8 @@
   ;; (setq dashboard-vertically-center-content t)
   (setq dashboard-agenda-sort-strategy '(time-up todo-state-up))
   (setq initial-buffer-choice (lambda () (get-buffer "*dashboard*")))
-  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
-  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+  (add-hook 'after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'after-init-hook #'dashboard-initialize)
   (dashboard-setup-startup-hook))
 
 

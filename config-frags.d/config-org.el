@@ -258,7 +258,7 @@
                             ))))))))
   )
 
-(use-package org-modern :ensure (:type git :host github :repo "minad/org-modern")
+(use-package org-modern :vc (:url "https://github.com/minad/org-modern.git")
   :after (org)
   :demand
   :config
@@ -271,7 +271,7 @@
                        (((background dark))  :foreground "white" :background "#222222"))))
   (with-eval-after-load 'org (global-org-modern-mode)))
 
-(use-package org-sticky-header :ensure (:host github :repo "alphapapa/org-sticky-header")
+(use-package org-sticky-header :vc (:url "https://github.com/alphapapa/org-sticky-header.git")
   :after (org)
   )
 
@@ -284,14 +284,14 @@
 (use-package websocket :defer t)
 (use-package simple-httpd :defer t)
 
-(use-package org-bars :ensure (:host github :repo "tonyaldon/org-bars")
+(use-package org-bars :vc (:url "https://github.com/tonyaldon/org-bars.git")
   :after (org)
   :config (setq org-bars-with-dynamic-stars-p nil))
 
 
 (use-package org-tag-beautify
   :disabled t
-  :custom (org-tag-beautify-data-dir "~/.emacs.d/ensure/repos/org-tag-beautify/data/")
+  :custom (org-tag-beautify-data-dir "~/.emacs.d/site-lisp/org-tag-beautify/data/")
   :init (org-tag-beautify-mode 1))
 
 (use-package org-rainbow-tags
@@ -340,7 +340,7 @@
 ;; the before-save-hook and after-save-hook will change the cursor position.
 (use-package org-transclusion
   :disabled t
-  :ensure (:host github :repo "nobiot/org-transclusion" :files ("*.el"))
+  :vc (:url "https://github.com/nobiot/org-transclusion.git")
   :after (org org-modern)
   :hook (org-mode . org-transclusion-mode)
   :config
@@ -442,7 +442,7 @@
 
 
 (use-package consult-notes
-  :ensure (:type git :host github :repo "mclear-tools/consult-notes")
+  :vc (:url "https://github.com/mclear-tools/consult-notes.git")
   :commands (consult-notes
              consult-notes-search-in-all-notes)
   :bind ("C-c d f" . consult-notes)
@@ -571,7 +571,7 @@
 ;; ** org -> pandoc -> everything
 (use-package ox-pandoc
   :disabled t
-  :ensure (:type git :host github :repo "kawabata/oxpandoc")
+  :vc (:url "https://github.com/kawabata/oxpandoc.git")
   :after (org)
   :defer t)
 
@@ -666,12 +666,12 @@
                           :underline nil)))
 
   ;; 用法示例：把 header-line 高度设为 20 像素
-  (add-hook 'elpaca-after-init-hook (lambda ()
+  (add-hook 'after-init-hook (lambda ()
                                       (my-set-header-line-height-px 3)))
   )
 
 (use-package org-timeblock
-  :ensure (:type git :host github :repo "ichernyshovvv/org-timeblock")
+  :vc (:url "https://github.com/ichernyshovvv/org-timeblock.git")
   :after (org)
   :defer t)
 
@@ -682,7 +682,7 @@
 (use-package nov :defer t)
 (use-package djvu :defer t)
 (use-package org-noter
-  :ensure (:host github :repo "org-noter/org-noter" :files ("*.el" "modules/*.el"))
+  :vc (:url "https://github.com/org-noter/org-noter.git")
   :after (org nov djvu)
   :defer t)
 

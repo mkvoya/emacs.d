@@ -44,7 +44,7 @@
 (use-package diredfl
   :defer t
   :config (diredfl-global-mode))
-(use-package dired+ :ensure (:host github :repo "emacsmirror/dired-plus")
+(use-package dired+ :vc (:url "https://github.com/emacsmirror/dired-plus.git")
   :defer t)
 (use-package dired-preview
   :config
