@@ -2,6 +2,7 @@
 ;;; Emacs Config Fragement: Terminal
 
 (use-package vterm
+  :disabled t
   :defer t
   :config
   (defun vterm-new()
@@ -13,6 +14,7 @@
 
 (use-package vterm-toggle
   :vc (:url "https://github.com/jixiuf/vterm-toggle.git")
+  :disabled t
   :after (vterm)
   :defer t
   :bind (("C-`" . vterm-toggle)
@@ -23,8 +25,9 @@
                ("s-p" . vterm-toggle-backward))))
 
 
-;; (use-package ghostel
-;;   :vc (:url "https://github.com/dakra/ghostel.git")
-
+(use-package ghostel
+  :vc (:url "https://github.com/dakra/ghostel"
+       :lisp-dir "lisp"
+       :rev :newest))
 
 (provide 'config-term)

@@ -77,7 +77,18 @@
 ;; Check https://emacs-china.org/t/emacs-builtin-mode/11937
 ;; Winner mode
 (use-package winner :ensure nil
-  :hook (after-init . winner-mode))
+  :hook (after-init . winner-mode)
+  :config
+  ;; https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emacs-configs/
+  (defun toggle-delete-other-windows ()
+    "Delete other windows in frame if any, or restore previous window config."
+    (interactive)
+    (if (and winner-mode
+             (equal (selected-window) (next-window)))
+        (winner-undo)
+      (delete-other-windows)))
+  (global-set-key (kbd "C-x 1") #'toggle-delete-other-windows)
+  )
 
 ;; Remember the cursor position of files
 ;; (use-package saveplace :ensure nil :hook (after-init . save-place-mode))
@@ -136,5 +147,30 @@
   (setq scrollview-byte-limit 1000000)
   (global-scrollview-mode 1)
   )
+
+
+
+;; tweaks from https://emacsredux.com/blog/2026/04/07/stealing-from-the-best-emacs-configs/
+
+(setq-default bidi-display-reordering 'left-to-right
+              bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+
+(setq redisplay-skip-fontification-on-input t)
+
+(setq read-process-output-max (* 4 1024 1024)) ; 4MB
+
+(setq-default cursor-in-non-selected-windows nil)
+(setq highlight-nonselected-windows nil)
+
+(setq save-interprogram-paste-before-kill t)
+(setq kill-do-not-save-duplicates t)
+
+(setq reb-re-syntax 'string)
+
+(setq set-mark-command-repeat-pop t)
+
+
+
 
 (provide 'config-basic)
