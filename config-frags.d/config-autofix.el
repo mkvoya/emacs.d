@@ -2,8 +2,12 @@
 ;;; Emacs Config Fragement: Auto Correction & Fix
 
 
+(use-package web)
+(use-package db)
+(use-package fakir)
 (use-package elnode
   :defer
+  :after (fakir web db)
   :vc (:url "https://github.com/jcaw/elnode.git"))
 
 (use-package flymake

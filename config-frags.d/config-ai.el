@@ -22,128 +22,41 @@
               ("TAB" . #'copilot-accept-completion))
   :defer t)
 
-(use-package elysium
-  :vc (:url "https://github.com/lanceberge/elysium.git" :branch "master")
-  :defer t
-  :custom
-  ;; Below are the default values
-  (elysium-window-size 0.33) ; The elysium buffer will be 1/3 your screen
-  (elysium-window-style 'vertical)) ; Can be customized to horizontal
-
-(use-package smerge-mode
-  :ensure nil
-  :hook (prog-mode . smerge-mode))
-
-(use-package gptel
-  :vc (:url "https://github.com/karthink/gptel.git" :branch "master")
+(use-package llm
+  :vc (:url "https://github.com/ahyatt/llm")
   :config
-  (setq gptel-use-curl t)
-  (setq gptel-model 'gpt-4.1)
-  (setq gptel-backend
-   (gptel-make-openai "IPADS GPT"
-     ;; :host "10.0.0.10:3006"
-     ;; :host "ipads.chat.gpt:3006"
-     :host "dong.mk:3006"
-     :protocol "http"
-     :stream t
-     :key #'gptel-api-key
-     :models '(
-               "gpt-4.1"
-               "gemini-2.5-flash"
-               "gemini-2.5-pro"
-               "claude-3-5"
-               "gpt-5"
-               "gpt-5-mini"
-               "gpt-5-nano"
-               "gpt-image-1"
-               "anthropic/claude-sonnet-4"
-               "anthropic/claude-opus-4.1"
-               "x-ai/grok-4"
-               "deepseek-r1"
-               "deepseek-v3"))))
+  (setq llm-warn-on-nonfree nil))
 
-(use-package inline-diff
-  :vc (:url "https://code.tecosaur.net/tec/inline-diff.git")
-  :after gptel-rewrite)
+(setq llm-sjtu-url "https://models.sjtu.edu.cn/api/v1")
+(setq llm-sjtu-key (remove-trailing-newline (read-file-contents "~/.secrets/sjtu-api.key")))
+(setq llm-sjtu-models '("qwen3.5-27b"
+                        "glm-5.1"
+                        "deepseek-v3.2"
+                        "deepseek-chat"
+                        "deepseek-reasoner"
+                        "minimax-m2.7"))
 
-;; Updated version available at https://github.com/karthink/gptel/wiki
-(use-package gptel-rewrite
-  :ensure nil
-  :after gptel
-  :bind (:map gptel-rewrite-actions-map
-         ("C-c C-i" . gptel--rewrite-inline-diff))
+
+(use-package ellama
+  :ensure t
+  :bind ("C-c e" . ellama)
+  ;; send last message in chat buffer with C-c C-c
+  :hook (org-ctrl-c-ctrl-c-hook . ellama-chat-send-last-message)
+  :init (setopt ellama-auto-scroll t)
   :config
-  (defun gptel--rewrite-inline-diff (&optional ovs)
-    "Start an inline-diff session on OVS."
-    (interactive (list (gptel--rewrite-overlay-at)))
-    (unless (require 'inline-diff nil t)
-      (user-error "Inline diffs require the inline-diff package."))
-    (when-let* ((ov-buf (overlay-buffer (or (car-safe ovs) ovs)))
-                ((buffer-live-p ov-buf)))
-      (with-current-buffer ov-buf
-        (cl-loop for ov in (ensure-list ovs)
-                 for ov-beg = (overlay-start ov)
-                 for ov-end = (overlay-end ov)
-                 for response = (overlay-get ov 'gptel-rewrite)
-                 do (delete-overlay ov)
-                 (inline-diff-words
-                  ov-beg ov-end response)))))
-  (when (boundp 'gptel--rewrite-dispatch-actions)
-    (add-to-list
-     'gptel--rewrite-dispatch-actions '(?i "inline-diff")
-     'append)))
+  ;; show ellama context in header line in all buffers
+  (ellama-context-header-line-global-mode +1)
+  ;; show ellama session id in header line in all buffers
+  (ellama-session-header-line-global-mode +1)
 
-;; install claude-code.el:
-(use-package claude-code
-  :vc (:url "https://github.com/stevemolitor/claude-code.el.git" :branch "main")
-  :bind-keymap ("C-c c" . claude-code-command-map) ;; or your preferred key
-  :config
-  (setq claude-code-terminal-backend 'vterm)
-
-  (defun read-claude-auth-token ()
-    "Read the contents of FILE-PATH and return it as a string."
-    (with-temp-buffer
-      (insert-file-contents "~/.secrets/claude-api.key")
-      (remove-trailing-newline (buffer-string))))
-  (add-to-list 'vterm-environment "ANTHROPIC_BASE_URL=https://anyrouter.top")
-  (add-to-list 'vterm-environment (concat "ANTHROPIC_AUTH_TOKEN=" (read-claude-auth-token)))
-
-  ;; macOS notification
-  (defun my-claude-notify (title message)
-    "Display a macOS notification with sound."
-    (call-process "osascript" nil nil nil
-                  "-e" (format "display notification \"%s\" with title \"%s\" sound name \"Glass\""
-                               message title)))
-  (setq claude-code-notification-function #'my-claude-notify)
-
-  ;; Allow vterm windows to be as narrow as 40 columns
-  (setopt vterm-min-window-width 40)
-
-  (add-to-list 'display-buffer-alist
-               '("^\\*claude"
-                 (display-buffer-in-side-window)
-                 (side . right)
-                 (window-width . 90)))
-
-  ;; important - tell emacs to use our fontset settings
-  (setq use-default-font-for-symbols nil)
-
-  ;; add least preferred fonts first, most preferred last
-  (set-fontset-font t 'symbol "STIX Two Math" nil 'prepend)
-  (set-fontset-font t 'symbol "Zapf Dingbats" nil 'prepend)
-  (set-fontset-font t 'symbol "Menlo" nil 'prepend)
-
-  ;; add your default, preferred font last
-  (set-fontset-font t 'symbol "Maple Mono" nil 'prepend)
-
-  ;; increase the buffer size for claude code
-  (add-hook 'claude-code-start-hook
-            (lambda ()
-              ;; Only increase scrollback for vterm backend
-              (when (eq claude-code-terminal-backend 'vterm)
-                (setq-local vterm-max-scrollback 100000))))
-
-  (claude-code-mode))
+  (setopt ellama-language "Chinese")
+  (require 'llm-openai)
+  (setopt ellama-provider
+          (make-llm-openai-compatible
+           :url llm-sjtu-url
+           :key llm-sjtu-key
+           :chat-model "qwen3.5-27b"))
+  )
 
 (use-package claude-code-ide
   :vc (:url "https://github.com/manzaltu/claude-code-ide.el.git")

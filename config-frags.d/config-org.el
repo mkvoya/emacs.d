@@ -735,9 +735,19 @@
 
 (use-package org-mime :ensure t)
 
-(use-package org-tidy
-  :ensure t
-  :hook
-  (org-mode . org-tidy-mode))
+;; (use-package org-tidy
+;;   :ensure t
+;;   :hook
+;;   (org-mode . org-tidy-mode))
+
+
+(use-package websocket-bridge
+  :vc (:url "https://github.com/ginqi7/websocket-bridge.git"))
+(use-package org-reminders
+  :vc (:url "https://github.com/ginqi7/org-reminders.git")
+  :after (websocket-bridge websocket)
+  :config
+  (setq org-reminders-sync-file "~/Dropbox/Dreams/Org/Tasks.org")
+  )
 
 (provide 'config-org)
