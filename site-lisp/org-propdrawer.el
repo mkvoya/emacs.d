@@ -52,8 +52,29 @@ It may be one of the predefined symbols, a literal string, or nil:
   :type 'boolean
   :group 'org-propdrawer)
 
+(defcustom org-propdrawer-svg-line-height-scale 0.5
+  "Height of the `svg-line' dash as a fraction of the text line height.
+The SVG canvas height is this fraction of `default-line-height'.  Only
+the `svg-line' indicator style uses this."
+  :type 'number
+  :group 'org-propdrawer)
+
+(defcustom org-propdrawer-compact-indicator-line nil
+  "When non-nil, shrink the indicator line to the height of its content.
+This puts a `line-height' of t on the newline terminating the indicator
+line, so the line is only as tall as the indicator instead of a full
+text line.  The `svg-line' indicator style is always compacted,
+regardless of this option."
+  :type 'boolean
+  :group 'org-propdrawer)
+
 (defvar-local org-propdrawer--overlays nil
   "List of overlays covering property drawers in the current buffer.")
+
+(defvar-local org-propdrawer--lh-markers nil
+  "Markers at newlines carrying a `line-height' text property we set.
+Tracked so the property can be removed precisely on refresh, even after
+the buffer has been edited.")
 
 (defvar-local org-propdrawer--idle-timer nil
   "Idle timer used to refresh hidden drawers after edits.")
@@ -63,15 +84,25 @@ It may be one of the predefined symbols, a literal string, or nil:
   "Face for the indicator shown in place of a hidden property drawer."
   :group 'org-propdrawer)
 
+(defun org-propdrawer--svg-line-px-height ()
+  "Return the pixel height of the `svg-line' dash.
+Scaled from the buffer's `default-line-height' by
+`org-propdrawer-svg-line-height-scale'."
+  (max 1 (round (* org-propdrawer-svg-line-height-scale
+                   (default-line-height)))))
+
 (defun org-propdrawer--svg-line ()
   "Return a display string showing a short, low-height SVG dash.
 Falls back to the text \"---\" when SVG images are unavailable."
   (if (image-type-available-p 'svg)
-      (let* ((w 28) (h 10) (y (/ h 2))
+      (let* ((w 28)
+             (h (org-propdrawer--svg-line-px-height))
+             (y (/ h 2.0))
              (color (or (face-foreground 'org-propdrawer-indicator-face nil t)
                         "gray"))
              (svg (svg-create w h)))
-        (svg-line svg 3 y (- w 3) y :stroke-color color :stroke-width 2)
+        (svg-line svg 3 y (- w 3) y :stroke-color color
+                  :stroke-width (min 2 h))
         (propertize " " 'display (svg-image svg :ascent 'center :scale 1)))
     (propertize " ---" 'face 'org-propdrawer-indicator-face)))
 
@@ -85,29 +116,60 @@ Falls back to the text \"---\" when SVG images are unavailable."
      (propertize org-propdrawer-indicator 'face 'org-propdrawer-indicator-face))
     (_ nil)))
 
-(defun org-propdrawer--make-overlay (beg end)
-  "Hide the drawer spanning BEG to END with an overlay.
-END is the position right after `:END:', before its trailing newline.
-When an indicator is shown that newline is left visible so the
-indicator occupies its own line yet still corresponds to a real buffer
-position (otherwise cursor motion would skip across the drawer).  When
-there is no indicator the newline is hidden too, fully collapsing the
-drawer."
-  (let* ((indicator (org-propdrawer--indicator-string))
-         (oend (if indicator end (min (point-max) (1+ end))))
+(defun org-propdrawer--make-overlay (group)
+  "Hide the drawer GROUP with a single overlay.
+GROUP is a non-empty list of (BEG . END) conses for one or more
+drawers sitting on consecutive lines (they belong to the same
+heading); the whole region is collapsed together so their indicators
+share one line.
+
+END of the last drawer is the position right after `:END:', before its
+trailing newline.  When an indicator is shown that newline is left
+visible so the indicators occupy their own line yet still correspond to
+a real buffer position (otherwise cursor motion would skip across the
+drawers).  When there is no indicator the newline is hidden too, fully
+collapsing the drawers."
+  (let* ((beg (caar group))
+         (end (cdar (last group)))
+         (indicator (org-propdrawer--indicator-string))
+         (before (and indicator
+                      (apply #'concat (make-list (length group) indicator))))
+         (oend (if before end (min (point-max) (1+ end))))
          (ov (make-overlay beg oend nil t nil)))
     (overlay-put ov 'org-propdrawer t)
     (overlay-put ov 'invisible 'org-propdrawer)
     (overlay-put ov 'evaporate t)
-    (when indicator
-      (overlay-put ov 'before-string indicator))
+    (when before
+      (overlay-put ov 'before-string before)
+      ;; Tighten the indicator line by setting `line-height' on the
+      ;; (visible) newline that terminates it.  `line-height' is honored
+      ;; only as a text property (not as an overlay property), so set it
+      ;; directly, silently, and remember the spot for cleanup.  For
+      ;; `svg-line' an explicit pixel height (the dash height) is used so
+      ;; the line can shrink below the font height; for other styles `t'
+      ;; merely drops the extra leading.
+      (let ((lh (cond ((eq org-propdrawer-indicator 'svg-line)
+                       (org-propdrawer--svg-line-px-height))
+                      (org-propdrawer-compact-indicator-line t))))
+        (when (and lh (< end (point-max)))
+          (with-silent-modifications
+            (put-text-property end (1+ end) 'line-height lh))
+          (push (copy-marker end) org-propdrawer--lh-markers))))
     (push ov org-propdrawer--overlays)
     ov))
 
 (defun org-propdrawer--clear ()
-  "Remove all property-drawer overlays in the current buffer."
+  "Remove all property-drawer overlays and indicator text properties."
   (mapc #'delete-overlay org-propdrawer--overlays)
-  (setq org-propdrawer--overlays nil))
+  (setq org-propdrawer--overlays nil)
+  (when org-propdrawer--lh-markers
+    (with-silent-modifications
+      (dolist (m org-propdrawer--lh-markers)
+        (let ((pos (marker-position m)))
+          (when (and pos (< pos (point-max)))
+            (remove-text-properties pos (1+ pos) '(line-height nil)))
+          (set-marker m nil))))
+    (setq org-propdrawer--lh-markers nil)))
 
 (defun org-propdrawer--logbook-re ()
   "Return a regexp matching a `:LOGBOOK:' drawer.
@@ -153,13 +215,30 @@ This is the region that should stay revealed for convenient editing."
                   (line-beginning-position))))
            (and (>= (point) heading-beg) (<= (point) end))))))
 
+(defun org-propdrawer--group-bounds (bounds)
+  "Group BOUNDS that sit on consecutive lines into sublists.
+BOUNDS is the ascending list returned by `org-propdrawer--drawer-bounds'.
+Two drawers are grouped when the next one begins on the line
+immediately following the previous drawer's `:END:'."
+  (let ((groups nil) (cur nil) (prev-end nil))
+    (dolist (b bounds)
+      (if (and prev-end (= (car b) (1+ prev-end)))
+          (setq cur (cons b cur))
+        (when cur (push (nreverse cur) groups))
+        (setq cur (list b)))
+      (setq prev-end (cdr b)))
+    (when cur (push (nreverse cur) groups))
+    (nreverse groups)))
+
 (defun org-propdrawer-refresh (&rest _)
   "Recompute and apply the property-drawer overlays in this buffer."
   (when (derived-mode-p 'org-mode)
     (org-propdrawer--clear)
-    (dolist (b (org-propdrawer--drawer-bounds))
-      (unless (org-propdrawer--point-in-p (car b) (cdr b))
-        (org-propdrawer--make-overlay (car b) (cdr b))))))
+    (dolist (group (org-propdrawer--group-bounds (org-propdrawer--drawer-bounds)))
+      (let ((beg (caar group))
+            (end (cdar (last group))))
+        (unless (org-propdrawer--point-in-p beg end)
+          (org-propdrawer--make-overlay group))))))
 
 (defun org-propdrawer--schedule-refresh (&rest _)
   "Schedule a refresh on the next idle moment, coalescing rapid edits."
