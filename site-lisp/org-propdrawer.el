@@ -17,15 +17,24 @@
 
 (require 'org)
 (require 'org-element)
+(require 'svg)
 
 (defgroup org-propdrawer nil
   "Hide property drawers in org mode."
   :group 'org)
 
-(defcustom org-propdrawer-indicator " [...]"
-  "String shown in place of a hidden property drawer.
-When nil the drawer is hidden without any visible indicator."
-  :type '(choice (const :tag "No indicator" nil) string)
+(defcustom org-propdrawer-indicator 'ellipsis
+  "Indicator shown in place of a hidden drawer.
+It may be one of the predefined symbols, a literal string, or nil:
+
+  `ellipsis'  the text \" [...]\";
+  `svg-line'  a short, low-height SVG dash (---);
+  a string    shown verbatim;
+  nil         no indicator at all."
+  :type '(choice (const :tag "Ellipsis  [...]" ellipsis)
+                 (const :tag "Short SVG dash  ---" svg-line)
+                 (const :tag "No indicator" nil)
+                 (string :tag "Custom string"))
   :group 'org-propdrawer)
 
 (defcustom org-propdrawer-reveal-at-point t
@@ -54,16 +63,44 @@ When nil the drawer is hidden without any visible indicator."
   "Face for the indicator shown in place of a hidden property drawer."
   :group 'org-propdrawer)
 
+(defun org-propdrawer--svg-line ()
+  "Return a display string showing a short, low-height SVG dash.
+Falls back to the text \"---\" when SVG images are unavailable."
+  (if (image-type-available-p 'svg)
+      (let* ((w 28) (h 10) (y (/ h 2))
+             (color (or (face-foreground 'org-propdrawer-indicator-face nil t)
+                        "gray"))
+             (svg (svg-create w h)))
+        (svg-line svg 3 y (- w 3) y :stroke-color color :stroke-width 2)
+        (propertize " " 'display (svg-image svg :ascent 'center :scale 1)))
+    (propertize " ---" 'face 'org-propdrawer-indicator-face)))
+
+(defun org-propdrawer--indicator-string ()
+  "Return the before-string to display for a hidden drawer, or nil."
+  (pcase org-propdrawer-indicator
+    ('nil nil)
+    ('ellipsis (propertize " [...]" 'face 'org-propdrawer-indicator-face))
+    ('svg-line (org-propdrawer--svg-line))
+    ((pred stringp)
+     (propertize org-propdrawer-indicator 'face 'org-propdrawer-indicator-face))
+    (_ nil)))
+
 (defun org-propdrawer--make-overlay (beg end)
-  "Hide the property drawer spanning BEG to END with an overlay."
-  (let ((ov (make-overlay beg end nil t nil)))
+  "Hide the drawer spanning BEG to END with an overlay.
+END is the position right after `:END:', before its trailing newline.
+When an indicator is shown that newline is left visible so the
+indicator occupies its own line yet still corresponds to a real buffer
+position (otherwise cursor motion would skip across the drawer).  When
+there is no indicator the newline is hidden too, fully collapsing the
+drawer."
+  (let* ((indicator (org-propdrawer--indicator-string))
+         (oend (if indicator end (min (point-max) (1+ end))))
+         (ov (make-overlay beg oend nil t nil)))
     (overlay-put ov 'org-propdrawer t)
     (overlay-put ov 'invisible 'org-propdrawer)
     (overlay-put ov 'evaporate t)
-    (when org-propdrawer-indicator
-      (overlay-put ov 'before-string
-                   (propertize org-propdrawer-indicator
-                               'face 'org-propdrawer-indicator-face)))
+    (when indicator
+      (overlay-put ov 'before-string indicator))
     (push ov org-propdrawer--overlays)
     ov))
 
@@ -84,8 +121,8 @@ back to \"LOGBOOK\"."
 
 (defun org-propdrawer--drawer-bounds ()
   "Return a list of (BEG . END) conses for every drawer to hide.
-BEG is the beginning of the line holding the drawer's opening line
-and END is the position just past the newline following `:END:'.
+BEG is the beginning of the drawer's opening line and END is the
+position right after `:END:' (before its trailing newline).
 Which drawer types are collected depends on
 `org-propdrawer-hide-properties' and `org-propdrawer-hide-logbook'."
   (let ((case-fold-search t)
@@ -100,7 +137,7 @@ Which drawer types are collected depends on
         (goto-char (point-min))
         (while (re-search-forward re nil t)
           (let ((beg (match-beginning 0))
-                (end (min (point-max) (1+ (match-end 0)))))
+                (end (match-end 0)))
             (push (cons beg end) bounds)))))
     (sort bounds #'car-less-than-car)))
 

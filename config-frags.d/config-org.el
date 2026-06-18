@@ -740,6 +740,12 @@
 ;;   :hook
 ;;   (org-mode . org-tidy-mode))
 
+(use-package org-propdrawer
+  :load-path "~/.emacs.d/site-lisp/"
+  :config
+  (setq org-propdrawer-reveal-at-point nil)
+  (setq org-propdrawer-indicator 'svg-line)
+  )
 
 (use-package websocket-bridge
   :vc (:url "https://github.com/ginqi7/websocket-bridge.git"))
